@@ -15,6 +15,9 @@
 .crit-mode-herdr #shareBtn,
 .crit-mode-herdr #commitDropdown { display: none !important; }
 
+/* The submit is parked until delivery exists (step 3). */
+.crit-mode-herdr #finishBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .crit-mode-herdr .header-notify.crit-herdr-sweep {
   color: var(--crit-editor-fg-muted);
   font-family: var(--crit-font-mono);

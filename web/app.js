@@ -6919,7 +6919,9 @@
         unresolvedComments += reviewComments.filter(function(c) { return !c.resolved; }).length;
         unresolvedComments += hiddenUnresolved;
         finishBtn.textContent = unresolvedComments === 0 ? 'Approve' : 'Finish Review';
-        if (!promptTrustConfig.project_prompts_untrusted) {
+        // A herdr session delivers nothing yet (POST /api/finish answers 409):
+        // the button stays parked with the step-3 tooltip set by enterHerdrMode.
+        if (!promptTrustConfig.project_prompts_untrusted && !isHerdr()) {
           finishBtn.disabled = false;
         }
         finishBtn.classList.add('btn-primary');
@@ -7023,6 +7025,11 @@
 
   document.getElementById('finishBtn').addEventListener('click', async function() {
     if (uiState !== 'reviewing') return;
+    if (isHerdr()) {
+      // Nothing is delivered in step 2; the server answers 409 to /api/finish.
+      showMiniToast('Nothing is sent yet: ' + window.crit.herdrModel.STEP3_TOOLTIP);
+      return;
+    }
 
     // Check if user took no action but there are unresolved comments.
     // Only warn when ALL unresolved comments are carried-forward (from a previous round)
