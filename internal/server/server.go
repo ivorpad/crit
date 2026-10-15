@@ -67,6 +67,8 @@ type Server struct {
 	prInfoMu            sync.RWMutex
 	author              string
 	agentCmd            string
+	herdrMu             sync.RWMutex
+	herdr               HerdrProvider
 	currentVersion      string
 	latestVersion       string
 	installationSource  string
@@ -179,6 +181,9 @@ func NewServer(session *Session, frontendFS embed.FS, shareURL string, proxyAuth
 	mux.HandleFunc("/api/config", s.withReady(s.handleConfig))
 	mux.HandleFunc("/api/code-fonts", s.withReady(s.handleCodeFonts))
 	mux.HandleFunc("/api/session", s.withReady(s.handleSession))
+	mux.HandleFunc("/api/herdr", s.withReady(s.handleHerdr))
+	mux.HandleFunc("/api/herdr/viewed", s.withReady(s.handleHerdrViewed))
+	mux.HandleFunc("/api/herdr/plan", s.withReady(s.handleHerdrPlan))
 	mux.HandleFunc("/api/share", s.withReady(s.handleShare))
 	mux.HandleFunc("/api/share-consent", s.withReady(s.handleShareConsent))
 	mux.HandleFunc("/api/project-prompts/trust", s.withReady(s.handleProjectPromptTrust))
@@ -2486,6 +2491,9 @@ func (s *Server) handleRoundComplete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if refuseHerdrRound(w, s.session.Load()) {
+		return
+	}
 	sess := s.session.Load()
 	sess.RLock()
 	isRange := sess.Focus.Kind == FocusRange
@@ -2535,6 +2543,9 @@ func (s *Server) handleFinish(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sess := s.session.Load()
+	if refuseHerdrRound(w, sess) {
+		return
+	}
 	// Synchronous, serialized flush before building the agent-facing payload.
 	// Bare WriteFiles races with the debounce timer (both call session.AtomicWriteFile
 	// concurrently on the same target, which has manifested as ENOENT failures on

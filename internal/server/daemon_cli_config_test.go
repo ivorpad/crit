@@ -878,3 +878,16 @@ func TestResolveDaemonCLIConfig_NotifyOnRoundReady(t *testing.T) {
 		t.Fatal("NotifyOnRoundReady should be true when set in global config")
 	}
 }
+
+func TestParseDaemonFlags_Herdr(t *testing.T) {
+	// --herdr takes no value: the flag after it must keep its own.
+	for _, args := range [][]string{
+		{"--herdr", "--port", "4317", "--no-open"},
+		{"--port", "4317", "--herdr", "--no-open"},
+	} {
+		sf := parseDaemonFlags(args)
+		if !sf.herdr || sf.port != 4317 || !sf.noOpen || len(sf.fileArgs) != 0 {
+			t.Errorf("parseDaemonFlags(%q) = herdr %v port %d noOpen %v files %v", args, sf.herdr, sf.port, sf.noOpen, sf.fileArgs)
+		}
+	}
+}

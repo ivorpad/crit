@@ -51,6 +51,7 @@ type DaemonCLIConfig struct {
 	LiveOrigin                  string
 	LiveCookie                  string
 	PreviewFile                 string
+	Herdr                       bool   // herdr-control-center: panes on every herdr machine
 	SessionID                   string // user-facing reconnect ID from --session
 	SessionKeyOverride          string // internal: force session registry key in _serve
 }
@@ -81,6 +82,7 @@ type daemonFlagSet struct {
 	liveOrigin                  string
 	liveCookie                  string
 	previewFile                 string
+	herdr                       bool
 	sessionID                   string
 	sessionKeyOverride          string
 }
@@ -127,6 +129,7 @@ func parseDaemonFlags(args []string) daemonFlagSet {
 	liveOrigin := fs.String("live-origin", "", "")
 	liveCookie := fs.String("live-cookie", "", "")
 	previewFile := fs.String("preview-file", "", "")
+	herdr := fs.Bool("herdr", false, "")
 	sessionID := fs.String("session", "", "Reconnect to an existing review session by ID")
 	sessionKeyOverride := fs.String("session-key", "", "")
 	fs.Usage = func() {
@@ -144,6 +147,7 @@ func parseDaemonFlags(args []string) daemonFlagSet {
 		"q":                                    true,
 		"no-ignore":                            true,
 		"remote":                               true,
+		"herdr":                                true,
 	})
 	fs.Parse(args)
 	shareURLSet := false
@@ -178,6 +182,7 @@ func parseDaemonFlags(args []string) daemonFlagSet {
 		liveOrigin:                  *liveOrigin,
 		liveCookie:                  *liveCookie,
 		previewFile:                 *previewFile,
+		herdr:                       *herdr,
 		sessionID:                   *sessionID,
 		sessionKeyOverride:          *sessionKeyOverride,
 	}
@@ -345,6 +350,7 @@ func ResolveDaemonCLIConfig(args []string) (*DaemonCLIConfig, error) { //nolint:
 		LiveOrigin:                  sf.liveOrigin,
 		LiveCookie:                  sf.liveCookie,
 		PreviewFile:                 sf.previewFile,
+		Herdr:                       sf.herdr,
 		SessionID:                   sf.sessionID,
 		SessionKeyOverride:          sf.sessionKeyOverride,
 	}, nil
