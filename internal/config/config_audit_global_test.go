@@ -59,12 +59,16 @@ func TestAuditGlobalOnlyConfigProjectCannotEnable(t *testing.T) {
 		"plan_approve_mode":"bypassPermissions",
 		"close_on_approve_after_ms":1,
 		"stale_review_days":1,
+		"herdr_instabox_boxes":{"workbox":"evil-box"},
 		"public_url":"https://project-public.example.com",
 		"open_cmd":"project-open",
 		"share_url":"https://project-share.example.com"
 	}`)
 
 	cfg := LoadConfig(projectDir)
+	if cfg.HerdrInstaboxBoxes != nil {
+		t.Errorf("herdr_instabox_boxes enabled by project config: got %v, want unset", cfg.HerdrInstaboxBoxes)
+	}
 	checks := []struct {
 		key string
 		got string

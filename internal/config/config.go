@@ -63,15 +63,19 @@ type Config struct {
 	// milliseconds after an Approve. Global-only (like open_cmd/agent_cmd) so
 	// a project repo cannot force tabs to close. Nil means disabled; the CLI
 	// treats negative values as disabled too (see CloseOnApproveAfterMsEnabled).
-	CloseOnApproveAfterMs *int              `json:"close_on_approve_after_ms,omitempty"`
-	VCS                   string            `json:"vcs,omitempty"`   // preferred VCS backend: "git", "sl", "jj"
-	Forge                 string            `json:"forge,omitempty"` // remote review provider: "auto", "github", "gitlab"
-	GitLabURL             string            `json:"gitlab_url,omitempty"`
-	ShareConsented        bool              `json:"share_consented,omitempty"`
-	LiveCookie            string            `json:"live_cookie,omitempty"`
-	LiveCookieFile        string            `json:"live_cookie_file,omitempty"`
-	LiveCDPURL            string            `json:"live_cdp_url,omitempty"`
-	Prompts               map[string]string `json:"prompts,omitempty"`
+	CloseOnApproveAfterMs *int `json:"close_on_approve_after_ms,omitempty"`
+	// HerdrInstaboxBoxes maps a herdr machine label to its instabox box name, for
+	// boxes `crit herdr` cannot infer from the SSH target (workdone-ib5 -> ib5).
+	// Global-only: it names the box `crit herdr --wake` resumes.
+	HerdrInstaboxBoxes map[string]string `json:"herdr_instabox_boxes,omitempty"`
+	VCS                string            `json:"vcs,omitempty"`   // preferred VCS backend: "git", "sl", "jj"
+	Forge              string            `json:"forge,omitempty"` // remote review provider: "auto", "github", "gitlab"
+	GitLabURL          string            `json:"gitlab_url,omitempty"`
+	ShareConsented     bool              `json:"share_consented,omitempty"`
+	LiveCookie         string            `json:"live_cookie,omitempty"`
+	LiveCookieFile     string            `json:"live_cookie_file,omitempty"`
+	LiveCDPURL         string            `json:"live_cdp_url,omitempty"`
+	Prompts            map[string]string `json:"prompts,omitempty"`
 	// Hooks are shell commands/scripts executed at the same finish lifecycle
 	// points as prompt templates (on_finish_unresolved / on_finish_approved,
 	// optionally mode-suffixed :files/:diff/:live/:preview). Values use the

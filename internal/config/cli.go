@@ -64,6 +64,11 @@ Keys worth knowing:
       Delete reviews untouched for this many days in the background sweep
       that runs when a review starts. Global-only. Defaults to 14.
 
+  herdr_instabox_boxes {"<herdr label>": "<box>"}
+      instabox box names for herdr machines whose SSH target does not say it
+      (workdone-ib5 is inferred as ib5). Used by 'crit herdr --wake'.
+      Global-only.
+
 Run 'crit config --generate' for the full key list with default values.
 `)
 }
