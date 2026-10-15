@@ -256,6 +256,73 @@
     return { url: '/api/herdr/focus', body: { path: item.path } };
   }
 
+  // canSend: the pane takes text from the page (POST /api/herdr/send). It
+  // needs a herdr state_change_seq to bind the send to; exited and background
+  // panes have none.
+  function canSend(item) {
+    if (!isObject(item) || typeof item.path !== 'string' || !item.path) return false;
+    if (item.status === 'exited' || item.status === 'background') return false;
+    return typeof item.state_change_seq === 'number';
+  }
+
+  var QUOTE_MAX_LINES = 6;
+  var QUOTE_MAX_CHARS = 200;
+
+  // quoteLines is the commented text as "> " lines: the comment's own quote
+  // when it has one, else its source lines from the pane document.
+  function quoteLines(comment, lines) {
+    var src;
+    if (typeof comment.quote === 'string' && comment.quote.trim()) {
+      src = comment.quote.split('\n');
+    } else if (comment.scope !== 'file' && comment.start_line > 0 && Array.isArray(lines)) {
+      var end = comment.end_line >= comment.start_line ? comment.end_line : comment.start_line;
+      src = lines.slice(comment.start_line - 1, end);
+    } else {
+      return [];
+    }
+    var out = src.slice(0, QUOTE_MAX_LINES).map(function (l) {
+      return '> ' + (l.length > QUOTE_MAX_CHARS ? l.slice(0, QUOTE_MAX_CHARS) + '…' : l);
+    });
+    if (src.length > QUOTE_MAX_LINES) out.push('> …');
+    return out;
+  }
+
+  // commentBlock is one comment as it reaches the agent: the quoted lines,
+  // the body, then any replies the owner added to the thread.
+  function commentBlock(comment, lines) {
+    var parts = quoteLines(comment, lines);
+    parts.push(String(comment.body || '').trim());
+    (comment.replies || []).forEach(function (r) {
+      if (r && r.author !== 'crit' && String(r.body || '').trim()) parts.push(String(r.body).trim());
+    });
+    return parts.join('\n');
+  }
+
+  // composeMessage is the one prompt a pane receives for its comments, in
+  // line order. One comment is its quote and body; several are numbered.
+  function composeMessage(comments, content) {
+    var lines = typeof content === 'string' ? content.split('\n') : [];
+    var list = (comments || []).slice().sort(function (a, b) {
+      return (a.start_line || 0) - (b.start_line || 0);
+    });
+    if (list.length === 0) return '';
+    if (list.length === 1) return commentBlock(list[0], lines);
+    return list.length + ' review comments:\n\n' + list.map(function (c, i) {
+      return (i + 1) + '.\n' + commentBlock(c, lines);
+    }).join('\n\n');
+  }
+
+  // sendErrorMessage turns a refused POST /api/herdr/send into what the owner
+  // should do next.
+  function sendErrorMessage(status, body) {
+    var err = body && body.error;
+    if (status === 409 && err === 'stale') return 'This pane changed since the last sweep. Read it again, then send.';
+    if (status === 409 && err === 'blocked') return 'A dialog is up on this pane. Answer it in herdr first (Focus), then send.';
+    if (status === 409 && err === 'working') return 'The agent is working; keys wait until it stops.';
+    if (status === 404) return 'This pane is gone from herdr.';
+    return 'Send failed: ' + (err || ('HTTP ' + status));
+  }
+
   // paneExtrasModel: everything the block above a pane's document shows.
   // null when there is nothing to show for this pane.
   function paneExtrasModel(item, machine) {
@@ -293,6 +360,9 @@
     classifyGhost: classifyGhost,
     planInfo: planInfo,
     focusRequest: focusRequest,
+    canSend: canSend,
+    composeMessage: composeMessage,
+    sendErrorMessage: sendErrorMessage,
     paneExtrasModel: paneExtrasModel,
   };
 });

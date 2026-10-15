@@ -1,6 +1,6 @@
 # herdr control center API
 
-`crit herdr` runs one daemon for every herdr machine. The review page is crit's normal code-review page with `session.review_type === "herdr"`: each agent pane is a synthetic markdown file, grouped by machine in the file tree. Nothing in this API sends input to a pane. Delivery is step 3 and does not exist yet.
+`crit herdr` runs one daemon for every herdr machine. The review page is crit's normal code-review page with `session.review_type === "herdr"`: each agent pane is a synthetic markdown file, grouped by machine in the file tree. `POST /api/herdr/send` is the only route that types into a pane, one pane per call. The page calls it only on a click: **Send now** on a comment form sends that comment, and a pane header's **Finish review** sends every unresolved comment on that pane as one prompt. Other panes are never touched by either.
 
 Fixture: `web/__tests__/fixtures/herdr-sweep.json`, the /api/herdr shape built from a real sweep on 2026-10-15 (step-1 collector, so `completion_seq`/`state_change_seq` are null and there is no dialog, exited or unreadable item in it).
 
@@ -67,9 +67,31 @@ The plan of a pane whose dialog is Claude's ExitPlanMode. 200 `{"path", "plan_pa
 
 Body `{"path": "<review path>"}` (a pane file or its plan file). Focuses that pane in the owner's herdr TUI on this Mac: `herdr agent focus <pane_id>` for `local`, `herdr --machine <label> agent focus <pane_id>` for any other machine. It moves focus only and types nothing into the pane. 200 `{"path", "machine", "pane_id"}`; 400 bad body; 404 path not in the latest sweep or not a herdr session; 405 not POST; 502 `{"error": "<herdr's stderr>"}` when herdr fails (paused box, pane gone). Same `Sec-Fetch-Site` rule as every POST. It waits up to 20 s: a remote machine answers in about 1 s, a paused box hangs.
 
+### `POST /api/herdr/send`
+
+Body `{"path", "expect_state_change_seq", "text"}`, or `"keys": [...]`, or `"option": n` instead of `text` (exactly one). `path` is a pane file or its plan file; `expect_state_change_seq` is the seq of the sweep the owner was reading.
+
+Before typing anything the daemon reads the pane fresh with `herdr [--machine <label>] agent get <pane>` and refuses with 409 when:
+
+| Body | When |
+|---|---|
+| `{"error": "stale", "state_change_seq": N}` | the pane's seq is no longer `expect_state_change_seq`: it moved since that sweep |
+| `{"error": "blocked"}` | `text` while a dialog is up: an enter would answer the dialog |
+| `{"error": "working"}` | `keys` or `option` while the agent works |
+
+Text goes out as one `herdr [--machine <label>] agent prompt <pane> <text>` (no `--wait`): a working Claude takes it mid-turn, Codex queues it. Keys go one `agent send-keys` call each, 150 ms apart, from a fixed allowlist (`enter esc up down left right tab shift+tab shift+left shift+right space backspace ctrl+] y n p 1-9`; no `ctrl+c`). `option` is turned into keys by the per-agent table in `internal/herdr/keys.go` (see `/api/herdr/keys`); the page does not offer option sends yet. A one-word text starting with `-` is a 400, because herdr would read it as a flag; `- a list` is fine.
+
+200 `{"path", "machine", "pane_id", "sent": "text"|"keys", "state_change_seq_before"}`. Every send is appended to `herdr-sent.jsonl` in the review folder, and the item's `delivery` field shows it until the daemon restarts. 400 bad body or input; 404 path not in the latest sweep, or herdr no longer knows the pane; 405 not POST; 502 herdr failed. Same `Sec-Fetch-Site` rule as every POST.
+
+After a 200 the page adds a reply "Sent to <machine> <pane> at HH:MM" to each comment it sent and resolves it, so a later Finish review does not send it again. The prompt is built by `composeMessage` in `web/herdr-mode.model.js`: one comment is its quoted lines (`> `, at most 6, cut at 200 characters) and its body; several are numbered in line order under `N review comments:`.
+
+### `GET /api/herdr/keys?path=<review path>&option=<n>`
+
+The keys `POST /api/herdr/send` would press for option `n` of the pane's parsed dialog, without pressing them. 200 `{"path", "machine", "pane_id", "option", "keys"}`; 400 when the table has no sequence for that agent, dialog kind or option (free-text options, pi); 404 path not in the latest sweep.
+
 ### Rounds, Finish and Approve
 
-Nothing is delivered in step 2, so a herdr session has no review rounds: `POST /api/finish` and `POST /api/round-complete` answer 409 `{"error": "herdr sessions do not deliver anything yet"}`. Without this guard an Approve would end the daemon and, with `cleanup_on_approve`, delete the review folder with every read mark. The round stays 1. "What changed" per pane is the read-mark baseline above.
+Delivery is per pane, so a herdr session has no review rounds: `POST /api/finish` and `POST /api/round-complete` answer 409, and the header's global Finish Review stays disabled (each pane header has its own Finish review, above). Without this guard an Approve would end the daemon and, with `cleanup_on_approve`, delete the review folder with every read mark. The round stays 1. "What changed" per pane is the read-mark baseline above.
 
 ### SSE `herdr-updated`
 
@@ -120,8 +142,9 @@ Sent after a sweep that changed any file or any item/machine field (timings excl
 | `input_line` | `{text, ghost}`? | `ghost: true` = dim suggestion, never send; `false` = typed; `null` = cannot tell (gateway without ANSI reads, or mixed) |
 | `resume_command` | string? | `exited` only: `claude --resume <id>`, `codex resume <id>`, `opencode -s ses_<id>` |
 | `notes` | string[]? | what is missing and why, in plain words; show them |
+| `delivery` | `{at, seq_before, kind, acknowledged}`? | the last `POST /api/herdr/send` to this pane since the daemon started; `acknowledged` once `state_change_seq` moved past `seq_before` (`/api/herdr` only) |
 
-Dialog: `{dialog_id, kind, text, options: [{n, label, current?, checked?, free_text?}], multi, free_text, go_ahead}`. `kind` is `question`, `permission`, `gated`, or a go-ahead kind. Option buttons stay disabled until step 3.
+Dialog: `{dialog_id, kind, text, options: [{n, label, current?, checked?, free_text?}], multi, free_text, go_ahead}`. `kind` is `question`, `permission`, `gated`, or a go-ahead kind. The option buttons on the page stay disabled: answer a dialog in herdr (Focus), or through `POST /api/herdr/send` with `option`.
 
 LastText: `{text, source: "transcript"|"screen", at?, truncated, in_progress?: {prompt, latest_text?, interrupted}}`. Screen text is the last 12 viewport lines with the input box cut off; earlier lines are lost.
 

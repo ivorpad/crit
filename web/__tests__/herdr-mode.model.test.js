@@ -232,3 +232,38 @@ test('paneExtrasModel is null for a quiet pane and populated otherwise', () => {
   assert.equal(paused.badge.action.kind, 'wake');
   assert.equal(paused.tooltip, M.STEP3_TOOLTIP);
 });
+
+test('canSend needs a review path and a numeric state_change_seq; exited and background panes cannot take text', () => {
+  assert.equal(M.canSend({ path: 'local/wA:p1.md', status: 'idle', state_change_seq: 7 }), true);
+  assert.equal(M.canSend({ path: 'local/wA:p1.md', status: 'working', state_change_seq: 0 }), true);
+  assert.equal(M.canSend({ path: 'local/wA:p1.md', status: 'idle', state_change_seq: null }), false);
+  assert.equal(M.canSend({ path: 'local/wA:p1.md', status: 'exited', state_change_seq: 7 }), false);
+  assert.equal(M.canSend({ path: 'local/wA:p1.md', status: 'background', state_change_seq: 7 }), false);
+  assert.equal(M.canSend({ status: 'idle', state_change_seq: 7 }), false);
+  assert.equal(M.canSend(null), false);
+});
+
+test('composeMessage: one comment is its quote and body; several are numbered in line order with owner replies', () => {
+  const content = ['# Title', 'line two', 'line three', 'x'.repeat(250)].join('\n');
+  assert.equal(M.composeMessage([], content), '');
+  assert.equal(
+    M.composeMessage([{ start_line: 2, end_line: 3, body: ' fix this ' }], content),
+    '> line two\n> line three\nfix this');
+  assert.equal(M.composeMessage([{ scope: 'file', body: '- a list reply' }], content), '- a list reply');
+  assert.equal(M.composeMessage([{ start_line: 1, end_line: 1, quote: 'Tit', body: 'b' }], content), '> Tit\nb');
+  const two = M.composeMessage([
+    { start_line: 4, end_line: 4, body: 'second', replies: [{ author: 'crit', body: 'Sent to local wA:p1 at 10:00' }, { author: 'ivor', body: 'more' }] },
+    { start_line: 1, end_line: 1, body: 'first' },
+  ], content);
+  assert.equal(two, '2 review comments:\n\n1.\n> # Title\nfirst\n\n2.\n> ' + 'x'.repeat(200) + '…\nsecond\nmore');
+  const long = M.composeMessage([{ start_line: 1, end_line: 8, body: 'b' }], 'a\nb\nc\nd\ne\nf\ng\nh');
+  assert.equal(long, '> a\n> b\n> c\n> d\n> e\n> f\n> …\nb');
+});
+
+test('sendErrorMessage names what to do for each refusal', () => {
+  assert.match(M.sendErrorMessage(409, { error: 'stale' }), /changed since the last sweep/);
+  assert.match(M.sendErrorMessage(409, { error: 'blocked' }), /dialog is up/);
+  assert.match(M.sendErrorMessage(404, { error: 'x' }), /gone/);
+  assert.equal(M.sendErrorMessage(502, { error: 'herdr: boom' }), 'Send failed: herdr: boom');
+  assert.equal(M.sendErrorMessage(500, null), 'Send failed: HTTP 500');
+});

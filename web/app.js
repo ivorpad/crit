@@ -1388,6 +1388,78 @@
     });
   }
 
+  // herdrSendComments sends comments on one pane to that pane's agent as one
+  // prompt (POST /api/herdr/send), then gives each a receipt reply and
+  // resolves it, so a later Finish review does not send it again. One send
+  // per pane at a time.
+  const herdrSending = new Set();
+  async function herdrSendComments(filePath, comments) {
+    const H = window.crit.herdr;
+    const item = herdrByPath[filePath];
+    if (!item || !H.canSend(item)) {
+      H.toast('This pane cannot take text right now.', 'error');
+      return false;
+    }
+    if (!comments.length) {
+      H.toast('No open comments on this pane.', 'info');
+      return false;
+    }
+    if (herdrSending.has(filePath)) return false;
+    herdrSending.add(filePath);
+    try {
+      const file = getFileByPath(filePath);
+      const res = await H.sendText(item, H.composeMessage(comments, file ? file.content : ''));
+      if (!res.ok) {
+        H.toast(res.message, 'error');
+        if (res.error === 'stale') reloadHerdr();
+        return false;
+      }
+      const at = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const receipt = 'Sent to ' + item.machine + ' ' + item.pane_id + ' at ' + at;
+      for (const c of comments) {
+        try {
+          const rep = await fetch('/api/comment/' + c.id + '/replies?path=' + enc(filePath), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ body: receipt, author: 'crit' }),
+          });
+          if (!rep.ok) throw new Error('reply: ' + rep.status);
+          const resv = await fetch('/api/comment/' + c.id + '/resolve?path=' + enc(filePath), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resolved: true }),
+          });
+          if (!resv.ok) throw new Error('resolve: ' + resv.status);
+        } catch (err) {
+          console.error('herdr receipt for ' + c.id + ':', err);
+        }
+      }
+      H.toast((comments.length === 1 ? 'Comment' : comments.length + ' comments') + ' sent to ' + item.machine + ' ' + item.pane_id, 'success');
+      userActedThisRound = true;
+      await refreshFileComments(filePath);
+      return true;
+    } finally {
+      herdrSending.delete(filePath);
+    }
+  }
+
+  // herdrFinishPane is a pane header's Finish review: every unresolved
+  // comment on that pane, fetched fresh, goes to that pane only.
+  async function herdrFinishPane(filePath) {
+    const file = getFileByPath(filePath);
+    if (!file) return false;
+    try {
+      const res = await fetch('/api/file/comments?path=' + enc(filePath));
+      if (!res.ok) throw new Error('GET /api/file/comments: ' + res.status);
+      file.comments = await res.json();
+    } catch (err) {
+      console.error(err);
+      window.crit.herdr.toast('Could not read this pane’s comments.', 'error');
+      return false;
+    }
+    return herdrSendComments(filePath, (file.comments || []).filter(function(c) { return !c.resolved; }));
+  }
+
   // A sweep changed something (SSE herdr-updated): reload the panes without
   // ending the round, so open comment forms, selection and focus stay.
   function reloadHerdr() {
@@ -3186,7 +3258,7 @@
         (file.deletions ? '<span class="del">-' + file.deletions + '</span>' : '') +
       '</span>' : '') +
       '';
-    if (isHerdr()) window.crit.herdr.decorateHeader(header, herdrByPath[file.path], document);
+    if (isHerdr()) window.crit.herdr.decorateHeader(header, herdrByPath[file.path], document, { finishPane: herdrFinishPane });
 
     (function(filePath) {
       const copyPathBtn = header.querySelector('.file-header-copy-path');
@@ -4938,6 +5010,32 @@
         }
       });
       actions.appendChild(sendBtn);
+    }
+
+    // herdr: a new comment on a pane is either added to that pane's review
+    // (sent later by the header's Finish review) or sent to the pane now.
+    if (isHerdr() && formObj.scope !== 'review' && !opts.editingId && !formObj.editingId &&
+        window.crit.herdr.canSend(herdrByPath[formObj.filePath])) {
+      submitBtn.textContent = 'Add to review';
+      const herdrSendBtn = document.createElement('button');
+      herdrSendBtn.className = 'btn btn-sm btn-primary crit-herdr-send-now';
+      herdrSendBtn.textContent = 'Send now';
+      herdrSendBtn.title = 'Save this comment and send it to this pane’s agent now';
+      herdrSendBtn.addEventListener('click', async function() {
+        if (herdrSendBtn.disabled || !textarea.value.trim()) return;
+        herdrSendBtn.disabled = true;
+        submitBtn.disabled = true;
+        const fp = formObj.filePath;
+        const comment = await submitComment(textarea.value, formObj);
+        if (!comment) {
+          herdrSendBtn.disabled = false;
+          submitBtn.disabled = false;
+          return;
+        }
+        renderFileByPath(fp);
+        await herdrSendComments(fp, [comment]);
+      });
+      actions.appendChild(herdrSendBtn);
     }
 
     form.appendChild(header);

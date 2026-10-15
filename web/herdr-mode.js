@@ -7,9 +7,11 @@
 // GET /api/herdr: header badges, the agent-authored dialog card, ghost text,
 // the plan controls, machine notices and the "k of N panes need you" count.
 //
-// Nothing here sends anything to a pane. Every button that would is
-// disabled with the step-3 tooltip (window.crit.herdrModel.STEP3_TOOLTIP);
-// in step 3 clicks queue until Finish Review.
+// Comments reach a pane as text, one pane at a time and only on a click:
+// "Send now" on a comment form, or a pane header's "Finish review", which
+// sends every open comment on that pane as one prompt (sendText, POST
+// /api/herdr/send). Dialog options, Resume and Wake stay disabled with the
+// step-3 tooltip (window.crit.herdrModel.STEP3_TOOLTIP).
 //
 // Contract: docs/herdr-api.md. Dependencies: window.crit.herdrModel,
 // window.crit.herdrExtras (card, ghost line, save bar builders),
@@ -70,7 +72,7 @@
     if (finish) {
       finish.disabled = true;
       finish.setAttribute('aria-disabled', 'true');
-      finish.title = model().STEP3_TOOLTIP;
+      finish.title = 'Each pane has its own Finish review in its header: comments go to that pane only';
       finish.textContent = 'Finish Review';
     }
   }
@@ -90,8 +92,9 @@
 
   // decorateHeader adds "agent · title", the status badge and the badge's
   // disabled action (Resume / Wake) to a pane's crit file header, before the
-  // Viewed checkbox. Idempotent per header element.
-  function decorateHeader(header, item, doc) {
+  // Viewed checkbox, plus Finish review when deps.finishPane is given and the
+  // pane takes text. Idempotent per header element.
+  function decorateHeader(header, item, doc, deps) {
     doc = doc || document;
     if (!header || !item || header.querySelector('.crit-herdr-badge')) return;
     var M = model();
@@ -130,6 +133,45 @@
         focusPane(req, focus);
       });
       header.insertBefore(focus, anchor);
+    }
+
+    // Finish review: every open comment on this pane goes to this pane as one
+    // prompt. Other panes are untouched.
+    if (deps && typeof deps.finishPane === 'function' && M.canSend(item)) {
+      var fin = doc.createElement('button');
+      fin.type = 'button';
+      fin.className = 'btn btn-sm btn-primary crit-herdr-finish';
+      fin.textContent = 'Finish review';
+      fin.title = 'Send every open comment on this pane to its agent as one message';
+      fin.setAttribute('aria-label', 'Finish review: send this pane’s open comments to its agent');
+      fin.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (fin.disabled) return;
+        fin.disabled = true;
+        Promise.resolve(deps.finishPane(item.path)).finally(function () { fin.disabled = false; });
+      });
+      header.insertBefore(fin, anchor);
+    }
+  }
+
+  // sendText posts one prompt to the pane at item.path, bound to the
+  // state_change_seq of the sweep the owner is looking at. Resolves to
+  // {ok: true, body} or {ok: false, message}; never throws.
+  async function sendText(item, text) {
+    var M = model();
+    if (!M.canSend(item)) return { ok: false, message: 'This pane cannot take text (no herdr state to bind the send to).' };
+    try {
+      var res = await fetch('/api/herdr/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: item.path, expect_state_change_seq: item.state_change_seq, text: text }),
+      });
+      var body = await res.json().catch(function () { return null; });
+      if (!res.ok) return { ok: false, status: res.status, error: body && body.error, message: M.sendErrorMessage(res.status, body) };
+      return { ok: true, body: body };
+    } catch (err) {
+      return { ok: false, message: 'Send failed: ' + (err && err.message ? err.message : String(err)) };
     }
   }
 
@@ -268,6 +310,10 @@
     treeDotHTML: treeDotHTML,
     buildPaneExtras: buildPaneExtras,
     focusPane: focusPane,
+    sendText: sendText,
+    canSend: function (item) { return model().canSend(item); },
+    composeMessage: function (comments, content) { return model().composeMessage(comments, content); },
+    toast: toast,
     hasExtras: hasDialog,
     useGhost: function (path, text, deps) { return extras().useGhost(path, text, deps); },
     renderMachineNotices: renderMachineNotices,
