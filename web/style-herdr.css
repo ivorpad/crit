@@ -1,0 +1,241 @@
+/* style-herdr.css — herdr control center chrome on the code-review page.
+   Loaded by herdr-mode.js enterMode() only for review_type "herdr", so a
+   normal review never fetches it. <html class="crit-mode-herdr">.
+
+   Class prefix: .crit-herdr-*. Badges reuse .file-header-badge; the dialog
+   card reuses .comment-card. Colours come from theme.css only. */
+
+/* Chrome that has no meaning for panes: diff targets, scopes, share. */
+.crit-mode-herdr .compare-rail,
+.crit-mode-herdr #scopeToggle,
+.crit-mode-herdr #storyViewToggle,
+.crit-mode-herdr #diffToggle,
+.crit-mode-herdr #diffModeToggle,
+.crit-mode-herdr #prToggle,
+.crit-mode-herdr #shareBtn,
+.crit-mode-herdr #commitDropdown { display: none !important; }
+
+/* The submit is parked until delivery exists (step 3). */
+.crit-mode-herdr #finishBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.crit-mode-herdr .header-notify.crit-herdr-sweep {
+  color: var(--crit-editor-fg-muted);
+  font-family: var(--crit-font-mono);
+  font-weight: 400;
+}
+
+/* ===== File header: meta line, status badge, parked action ===== */
+.crit-herdr-header-meta {
+  color: var(--crit-editor-fg-muted);
+  font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crit-herdr-badge { white-space: nowrap; }
+.crit-herdr-badge-blocked { background: var(--crit-badge-deleted-bg); color: var(--crit-red); border: 1px solid color-mix(in srgb, var(--crit-red) 25%, transparent); }
+.crit-herdr-badge-question { background: var(--crit-yellow-bg); color: var(--crit-yellow); border: 1px solid var(--crit-yellow-border); }
+.crit-herdr-badge-working { background: var(--crit-brand-bg); color: var(--crit-brand); border: 1px solid color-mix(in srgb, var(--crit-brand) 25%, transparent); }
+.crit-herdr-badge-idle { background: var(--crit-green-subtle); color: var(--crit-green); border: 1px solid color-mix(in srgb, var(--crit-green) 20%, transparent); }
+.crit-herdr-badge-exited,
+.crit-herdr-badge-background,
+.crit-herdr-badge-unreadable,
+.crit-herdr-badge-unknown { background: var(--crit-badge-removed-bg); color: var(--crit-badge-removed-color); border: 1px solid var(--crit-badge-removed-border); }
+.crit-herdr-badge-paused { background: color-mix(in srgb, var(--crit-purple) 12%, transparent); color: var(--crit-purple); border: 1px solid color-mix(in srgb, var(--crit-purple) 25%, transparent); }
+
+/* Disabled controls keep their tooltip through the wrapper span. */
+.crit-herdr-tip { display: inline-flex; }
+.crit-herdr-tip .btn:disabled,
+.crit-herdr-tip input:disabled { cursor: not-allowed; opacity: 0.6; }
+.file-header .crit-herdr-action .btn,
+.file-header .crit-herdr-focus { font-size: 10px; padding: 1px 8px; }
+.file-header .crit-herdr-focus:disabled { opacity: 0.6; cursor: progress; }
+
+/* Needs-you dot in the tree. */
+.crit-herdr-needs-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--crit-herdr-needs-you);
+  flex-shrink: 0;
+}
+
+/* ===== Pane extras: the block above the rendered document ===== */
+.crit-herdr-extras {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--crit-font-body);
+}
+.crit-herdr-extras .comment-block { padding: 0; }
+
+/* The agent-authored card: same card, warmer header to say "not yours". */
+.comment-card.crit-herdr-dialog { border-color: color-mix(in srgb, var(--crit-herdr-dialog-accent) 45%, transparent); }
+.comment-card.crit-herdr-dialog .comment-header { background: color-mix(in srgb, var(--crit-herdr-dialog-accent) 12%, transparent); }
+.crit-herdr-dialog-kind {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--crit-herdr-dialog-accent);
+}
+.crit-herdr-screen {
+  margin: 0;
+  padding: 10px 14px;
+  font-family: var(--crit-font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 320px;
+  overflow: auto;
+  background: var(--crit-editor-code-bg);
+  color: var(--crit-editor-fg);
+}
+.crit-herdr-dialog-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 14px 0;
+}
+.crit-herdr-dialog-options--multi { flex-direction: column; align-items: flex-start; }
+.crit-herdr-option { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.crit-herdr-option.current .btn { box-shadow: inset 0 0 0 1px var(--crit-brand); }
+.crit-herdr-option-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--crit-editor-fg);
+  cursor: not-allowed;
+}
+.crit-herdr-free-text input {
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid var(--crit-border);
+  border-radius: var(--crit-r-md);
+  background: var(--crit-editor-bg);
+  color: var(--crit-editor-fg);
+  min-width: 180px;
+}
+.crit-herdr-dialog-note {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--crit-editor-fg-muted);
+}
+
+/* Input line: dim when it is the agent's suggestion. */
+.crit-herdr-ghost {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 6px 12px;
+  border: 1px dashed var(--crit-border);
+  border-radius: var(--crit-r-md);
+  font-size: 13px;
+}
+.crit-herdr-ghost-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--crit-editor-fg-muted);
+  white-space: nowrap;
+}
+.crit-herdr-ghost-text {
+  font-family: var(--crit-font-mono);
+  color: var(--crit-editor-fg);
+  overflow-wrap: anywhere;
+  flex: 1;
+  min-width: 0;
+}
+.crit-herdr-ghost--ghost .crit-herdr-ghost-text { color: var(--crit-herdr-ghost-fg); font-style: italic; }
+.crit-herdr-ghost--unverified .crit-herdr-ghost-label { color: var(--crit-yellow); }
+.crit-herdr-ghost-use {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--crit-brand);
+  cursor: pointer;
+  text-decoration: underline;
+}
+.crit-herdr-ghost-use:hover { color: var(--crit-brand-hover); }
+.crit-herdr-ghost-use:focus-visible { box-shadow: var(--crit-focus); border-radius: 2px; }
+
+/* Exited pane: the resume line. */
+.crit-herdr-resume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--crit-editor-fg-secondary);
+}
+.crit-herdr-resume-cmd {
+  font-family: var(--crit-font-mono);
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: var(--crit-r-sm);
+  background: var(--crit-editor-code-bg);
+  color: var(--crit-editor-fg);
+}
+
+/* Save as .md: two parked modes. */
+.crit-herdr-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--crit-editor-fg-muted);
+}
+.crit-herdr-save-path { font-family: var(--crit-font-mono); font-size: 11px; }
+.crit-herdr-save-error { color: var(--crit-red); }
+
+.crit-herdr-notes {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--crit-editor-fg-muted);
+}
+
+/* ===== Tree: machines with no pane (paused, unreachable, error) ===== */
+.crit-herdr-machines {
+  margin-top: 8px;
+  border-top: 1px solid var(--crit-border);
+  padding: 8px 0 4px;
+}
+.crit-herdr-machines-title {
+  padding: 0 16px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--crit-editor-fg-muted);
+}
+.crit-herdr-machine {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 4px 16px;
+  font-size: 12px;
+  color: var(--crit-editor-fg-secondary);
+}
+.crit-herdr-machine-name { font-weight: 500; color: var(--crit-editor-fg); }
+.crit-herdr-machine-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.crit-herdr-machine--paused .crit-herdr-machine-text { color: var(--crit-purple); }
+.crit-herdr-machine--error .crit-herdr-machine-text,
+.crit-herdr-machine--unreachable .crit-herdr-machine-text { color: var(--crit-red); }
+
+@media (max-width: 768px) {
+  .crit-herdr-extras { padding: 8px 12px 0; }
+  .crit-herdr-header-meta { display: none; }
+}
