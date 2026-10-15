@@ -33,6 +33,14 @@ func (f *fakeHerdr) Focus(_ context.Context, path string) (string, string, bool,
 	return "", "", true, errors.New("no such pane")
 }
 
+func (f *fakeHerdr) SendJSON(_ context.Context, _ []byte) (int, []byte) {
+	return http.StatusNotImplemented, []byte(`{"error":"not in the fake"}`)
+}
+
+func (f *fakeHerdr) KeysJSON(_ string, _ int) (int, []byte) {
+	return http.StatusNotImplemented, []byte(`{"error":"not in the fake"}`)
+}
+
 func (f *fakeHerdr) SetViewed(path string, viewed bool) error {
 	if path == "gone.md" {
 		return errors.New("no pane gone.md")

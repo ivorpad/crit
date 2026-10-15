@@ -3,8 +3,10 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 // HerdrProvider is the herdr-control-center collector as the server sees it. The
@@ -22,6 +24,60 @@ type HerdrProvider interface {
 	// notFound reports a path that is not in the latest sweep; any other error
 	// is herdr's own failure.
 	Focus(ctx context.Context, path string) (machine, paneID string, notFound bool, err error)
+	// SendJSON delivers one reply (text, keys or a dialog option) to the pane at
+	// path and answers as HTTP: the status and a JSON body. See docs/herdr-api.md.
+	SendJSON(ctx context.Context, body []byte) (status int, resp []byte)
+	// KeysJSON is the key sequence SendJSON would press for option on the pane's
+	// dialog, as HTTP status and JSON body.
+	KeysJSON(path string, option int) (status int, resp []byte)
+}
+
+// POST /api/herdr/send {"path", "expect_state_change_seq", "text"|"keys"|"option"}
+func (s *Server) handleHerdrSend(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	p := s.herdrProvider()
+	if p == nil {
+		http.Error(w, "Not a herdr session", http.StatusNotFound)
+		return
+	}
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 64<<10))
+	if err != nil {
+		http.Error(w, "Body too large or unreadable", http.StatusBadRequest)
+		return
+	}
+	status, resp := p.SendJSON(r.Context(), body)
+	writeHerdrJSON(w, status, resp)
+}
+
+// GET /api/herdr/keys?path=<review path>&option=<n>
+func (s *Server) handleHerdrKeys(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	p := s.herdrProvider()
+	if p == nil {
+		http.Error(w, "Not a herdr session", http.StatusNotFound)
+		return
+	}
+	q := r.URL.Query()
+	option, err := strconv.Atoi(q.Get("option"))
+	if q.Get("path") == "" || err != nil {
+		http.Error(w, "Query must have path and a numeric option", http.StatusBadRequest)
+		return
+	}
+	status, resp := p.KeysJSON(q.Get("path"), option)
+	writeHerdrJSON(w, status, resp)
+}
+
+func writeHerdrJSON(w http.ResponseWriter, status int, resp []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(status)
+	_, _ = w.Write(resp)
 }
 
 // POST /api/herdr/focus {"path": "<review path>"}
@@ -55,8 +111,9 @@ func (s *Server) handleHerdrFocus(w http.ResponseWriter, r *http.Request) {
 }
 
 // refuseHerdrRound answers 409 for Finish and round-complete in a herdr session:
-// nothing is delivered yet, and an Approve would stop the daemon and, with
-// cleanup_on_approve, delete the review folder and every read mark.
+// replies go out one at a time through /api/herdr/send, there is no batch yet,
+// and an Approve would stop the daemon and, with cleanup_on_approve, delete the
+// review folder and every read mark.
 func refuseHerdrRound(w http.ResponseWriter, sess *Session) bool {
 	if sess == nil || sess.ReviewType != "herdr" {
 		return false

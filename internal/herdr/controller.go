@@ -31,8 +31,8 @@ type Options struct {
 	ReadStatePath string
 }
 
-// Controller keeps the herdr session's files in step with the machines. It never
-// sends anything to a pane.
+// Controller keeps the herdr session's files in step with the machines, and
+// delivers one reply at a time to a pane (send.go).
 type Controller struct {
 	opts Options
 	col  collectOptions
@@ -45,6 +45,10 @@ type Controller struct {
 	baseline map[string]string
 	sess     *session.Session
 	last     string // fingerprint of the last published sweep
+	// sent is the last delivery per pane path (send.go); in memory only.
+	sent   map[string]Delivery
+	keyGap time.Duration // pause between send-keys calls; tests set 0
+	kick   chan struct{} // a send asks Run for a sweep now
 }
 
 // NewController loads the read marks; the first Sweep fills it.
@@ -63,6 +67,9 @@ func NewController(o Options) *Controller {
 		},
 		read:     map[string]string{},
 		baseline: map[string]string{},
+		sent:     map[string]Delivery{},
+		keyGap:   keyGap,
+		kick:     make(chan struct{}, 1),
 	}
 	if o.ReadStatePath != "" {
 		if data, err := os.ReadFile(o.ReadStatePath); err == nil {
@@ -141,6 +148,7 @@ func (c *Controller) Run(ctx context.Context, sess *session.Session) {
 		case <-ctx.Done():
 			return
 		case <-time.After(c.opts.Interval):
+		case <-c.kick:
 		}
 		if _, err := c.Sweep(ctx); err != nil {
 			if !errors.Is(err, context.Canceled) {
@@ -205,6 +213,8 @@ type viewItem struct {
 	Viewed     bool   `json:"viewed"`
 	PlanFile   string `json:"plan_file,omitempty"`
 	PlanViewed *bool  `json:"plan_viewed,omitempty"`
+	// Delivery is the last send to this pane and whether the agent took it.
+	Delivery *Delivery `json:"delivery,omitempty"`
 }
 
 // SnapshotJSON is the latest sweep for the review page.
@@ -218,7 +228,7 @@ func (c *Controller) SnapshotJSON() ([]byte, error) {
 	need := 0
 	for i, it := range c.snap.Items {
 		p := itemPath(it)
-		v := viewItem{Item: it, Path: p, Viewed: c.read[p] != "" && c.read[p] == turnKey(it)}
+		v := viewItem{Item: it, Path: p, Viewed: c.read[p] != "" && c.read[p] == turnKey(it), Delivery: c.deliveryFor(it)}
 		if hasPlanFile(it) {
 			pp := planFilePath(it)
 			read := c.read[pp] != "" && c.read[pp] == turnKey(it)
@@ -319,25 +329,14 @@ var paneIDRE = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_.-]{0,63}$`)
 var ErrNoPane = errors.New("no such pane in the latest sweep")
 
 // Focus brings the pane at path (a pane file or its plan file) to the front of
-// the owner's herdr TUI on this Mac. Discovery already reads herdr's CLI (agent
-// list, pane list); this is the one herdr call the daemon makes that changes
-// anything, and all it changes is which pane the TUI shows: it never types into
-// the pane, so it is safe without the delivery checks step 3 will need.
+// the owner's herdr TUI on this Mac. It changes which pane the TUI shows and
+// types nothing, so it needs none of the checks send.go makes.
 func (c *Controller) Focus(ctx context.Context, path string) (machineLabel, paneID string, err error) {
 	c.mu.Lock()
-	var found *Item
-	if c.snap != nil {
-		for i := range c.snap.Items {
-			it := &c.snap.Items[i]
-			if itemPath(*it) == path || (hasPlanFile(*it) && planFilePath(*it) == path) {
-				found = it
-				break
-			}
-		}
-	}
+	found, ok := c.itemAt(path)
 	run := c.col.run
 	c.mu.Unlock()
-	if found == nil {
+	if !ok {
 		return "", "", ErrNoPane
 	}
 	if !paneIDRE.MatchString(found.PaneID) {
