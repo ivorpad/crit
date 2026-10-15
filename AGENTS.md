@@ -73,6 +73,7 @@ crit <file|dir> [...]         # Review specific files or directories (falls thro
 crit review [...]             # Explicit review invocation (same as default)
 crit live <url>               # Review a running web app in live mode (also: crit <url>)
 crit preview <file.html>      # Review a local HTML file in preview mode (also: crit <file.html>)
+crit herdr [--print|--json]   # herdr control center: one review file per agent pane on every herdr machine (read-only)
 crit stop [--all]             # Stop daemon for current directory; --all stops every daemon
 crit status [--json]          # Show review file path, daemon status, comment stats
 crit resume [--list | <id>]   # Pick a stored review to reopen (interactive list of ~/.crit/reviews)
@@ -106,7 +107,7 @@ Two-level JSON config files, merged (project overrides global):
 - **Global**: `~/.crit.config.json` — user-wide defaults
 - **Project**: `.crit.config.json` in repo root — per-project overrides
 
-Config keys: `port`, `host`, `no_open`, `share_url`, `quiet`, `output`, `author`, `base_branch`, `ignore_patterns`, `auto_viewed_patterns`, `default_markdown_view`, `agent_cmd`, `auth_token`, `auth_user_name`, `auth_user_email`, `auth_user_id`, `plan_approve_mode`, `cleanup_on_approve`, `notify_on_round_ready`, `disable_stats`, `no_update_check`, `no_integration_check`, `vcs`, `proxy_auth`, `live_cookie`, `live_cookie_file`, `live_cdp_url`, `close_on_approve_after_ms`, `stale_review_days`.
+Config keys: `port`, `host`, `no_open`, `share_url`, `quiet`, `output`, `author`, `base_branch`, `ignore_patterns`, `auto_viewed_patterns`, `default_markdown_view`, `agent_cmd`, `auth_token`, `auth_user_name`, `auth_user_email`, `auth_user_id`, `plan_approve_mode`, `cleanup_on_approve`, `notify_on_round_ready`, `disable_stats`, `no_update_check`, `no_integration_check`, `vcs`, `proxy_auth`, `live_cookie`, `live_cookie_file`, `live_cdp_url`, `close_on_approve_after_ms`, `stale_review_days`, `herdr_instabox_boxes`.
 
 - `base_branch` overrides auto-detected default branch (used as diff base in git mode, and by `crit pull`/`crit push`/`crit comment`)
 - `author` falls back to the configured VCS user name if not set
@@ -120,6 +121,7 @@ Config keys: `port`, `host`, `no_open`, `share_url`, `quiet`, `output`, `author`
 - `ignore_patterns` are unioned (global + project both apply); types: `*.ext`, `dir/`, `exact.file`, `path/*.ext`
 - `auto_viewed_patterns` are unioned (global + project both apply); matched client-side against file paths and applied once per launch to auto-mark matching files viewed (collapsed). No runtime default (empty). Plumbed through `/api/config` only — Go does no glob matching.
 - `default_markdown_view` (`"diff"` | `"document"`, default unset = diff in git mode) — initial view for markdown files (Document/Diff toggle) in git mode. Project **overrides** global (scalar, not unioned). Invalid values are ignored with a stderr warning. No CLI flag. Plumbed through `/api/config` only.
+- `herdr_instabox_boxes` (global-only, map of herdr machine label → instabox box name) — for `crit herdr`, when the box name can't be inferred from the SSH target (`workdone-ib5` → `ib5`); it names the box `--wake` resumes. Not in `--generate` scaffolding.
 - `vcs` selects backend: `"git"` (default), `"sl"` (sapling), or `"jj"` (Jujutsu)
 - `auth_*` keys hold cached hosted-crit-web credentials (set by `crit auth`); treat as secrets
 - `live_cookie` / `live_cookie_file` forward session cookies to the upstream app in live mode (global or project; prefer gitignored `live_cookie_file` e.g. `.crit/live-cookies.txt`). CLI: `crit live --cookie`, `--cookie-file`
@@ -245,6 +247,8 @@ Session-scoped:
 - `POST /api/agent/request` — send comment to configured `agent_cmd`
 - `GET  /api/branches` — list local branches (for base-branch picker)
 - `GET|POST /api/base-branch` — read/update active base branch
+- `GET  /api/herdr` — herdr sessions only (404 otherwise): latest sweep, one item per pane with `path` and `viewed`
+- `POST /api/herdr/viewed` — `{path, viewed}`: mark a pane's current turn read (stored in `herdr-read.json` in the review folder)
 - `GET  /api/commits` — list commits between base ref and HEAD (git mode only)
 - `GET  /api/files/list` — list session files (lighter than `/api/session`)
 - `GET  /api/files/comments` — every file's visible comments keyed by path (`?round=N` in files mode); one request instead of one per file
