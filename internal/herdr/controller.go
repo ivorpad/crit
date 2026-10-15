@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"sync"
 	"time"
@@ -308,4 +309,52 @@ func (c *Controller) PlanJSON(path string) ([]byte, error) {
 		}
 	}
 	return nil, fmt.Errorf("no plan for %s in the latest sweep", path)
+}
+
+// paneIDRE is a herdr pane id (w3:p4, wNR:pC). It reaches argv, so nothing that
+// could read as a flag gets through.
+var paneIDRE = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9:_.-]{0,63}$`)
+
+// ErrNoPane means the path is not a pane (or plan) in the latest sweep.
+var ErrNoPane = errors.New("no such pane in the latest sweep")
+
+// Focus brings the pane at path (a pane file or its plan file) to the front of
+// the owner's herdr TUI on this Mac. Discovery already reads herdr's CLI (agent
+// list, pane list); this is the one herdr call the daemon makes that changes
+// anything, and all it changes is which pane the TUI shows: it never types into
+// the pane, so it is safe without the delivery checks step 3 will need.
+func (c *Controller) Focus(ctx context.Context, path string) (machineLabel, paneID string, err error) {
+	c.mu.Lock()
+	var found *Item
+	if c.snap != nil {
+		for i := range c.snap.Items {
+			it := &c.snap.Items[i]
+			if itemPath(*it) == path || (hasPlanFile(*it) && planFilePath(*it) == path) {
+				found = it
+				break
+			}
+		}
+	}
+	run := c.col.run
+	c.mu.Unlock()
+	if found == nil {
+		return "", "", ErrNoPane
+	}
+	if !paneIDRE.MatchString(found.PaneID) {
+		return "", "", fmt.Errorf("unsafe pane id %q", found.PaneID)
+	}
+	m := machine{Label: found.Machine}
+	if found.Machine != localLabel {
+		m.Target = found.Machine // any non-empty target makes herdrArgv use --machine <label>
+	}
+	argv, err := herdrArgv(m, "agent", "focus", found.PaneID)
+	if err != nil {
+		return "", "", err
+	}
+	callCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	if _, err := run(callCtx, nil, argv); err != nil {
+		return "", "", err
+	}
+	return found.Machine, found.PaneID, nil
 }

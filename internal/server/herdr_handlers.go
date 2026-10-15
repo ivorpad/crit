@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -17,6 +18,40 @@ type HerdrProvider interface {
 	// PlanJSON is the ExitPlanMode plan of the pane at path; an error means the
 	// pane has no plan in the latest sweep.
 	PlanJSON(path string) ([]byte, error)
+	// Focus brings the pane at path to the front of the owner's herdr TUI.
+	// notFound reports a path that is not in the latest sweep; any other error
+	// is herdr's own failure.
+	Focus(ctx context.Context, path string) (machine, paneID string, notFound bool, err error)
+}
+
+// POST /api/herdr/focus {"path": "<review path>"}
+func (s *Server) handleHerdrFocus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	p := s.herdrProvider()
+	if p == nil {
+		http.Error(w, "Not a herdr session", http.StatusNotFound)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
+	var req struct {
+		Path string `json:"path"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Path == "" {
+		http.Error(w, "Body must be {\"path\": string}", http.StatusBadRequest)
+		return
+	}
+	machine, paneID, notFound, err := p.Focus(r.Context(), req.Path)
+	switch {
+	case notFound:
+		http.Error(w, err.Error(), http.StatusNotFound)
+	case err != nil:
+		writeJSONStatus(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
+	default:
+		writeJSON(w, map[string]string{"path": req.Path, "machine": machine, "pane_id": paneID})
+	}
 }
 
 // refuseHerdrRound answers 409 for Finish and round-complete in a herdr session:

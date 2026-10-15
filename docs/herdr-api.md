@@ -63,6 +63,10 @@ Body `{"path": "<review path>", "viewed": true|false}`. The path is a pane file 
 
 The plan of a pane whose dialog is Claude's ExitPlanMode. 200 `{"path", "plan_path", "text", "error", "source"}`: `source` is `gateway` (its `read_file`) or `local_disk` (this Mac's own `~/.claude/plans/<name>.md`, read by the daemon when the gateway refuses it); `error` is set and `text` empty when neither worked, which is the case for every remote plan today. 404 when the path has no plan or is not in the latest sweep, or not a herdr session; 405 not GET.
 
+### `POST /api/herdr/focus`
+
+Body `{"path": "<review path>"}` (a pane file or its plan file). Focuses that pane in the owner's herdr TUI on this Mac: `herdr agent focus <pane_id>` for `local`, `herdr --machine <label> agent focus <pane_id>` for any other machine. It moves focus only and types nothing into the pane. 200 `{"path", "machine", "pane_id"}`; 400 bad body; 404 path not in the latest sweep or not a herdr session; 405 not POST; 502 `{"error": "<herdr's stderr>"}` when herdr fails (paused box, pane gone). Same `Sec-Fetch-Site` rule as every POST. It waits up to 20 s: a remote machine answers in about 1 s, a paused box hangs.
+
 ### Rounds, Finish and Approve
 
 Nothing is delivered in step 2, so a herdr session has no review rounds: `POST /api/finish` and `POST /api/round-complete` answer 409 `{"error": "herdr sessions do not deliver anything yet"}`. Without this guard an Approve would end the daemon and, with `cleanup_on_approve`, delete the review folder with every read mark. The round stays 1. "What changed" per pane is the read-mark baseline above.

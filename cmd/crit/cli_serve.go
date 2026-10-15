@@ -323,7 +323,7 @@ func runServe(args []string) {
 	}
 	srv.SetSession(sess)
 	if herdrCtrl != nil {
-		srv.SetHerdrProvider(herdrCtrl)
+		srv.SetHerdrProvider(herdrProvider{herdrCtrl})
 		go herdrCtrl.Run(ctx, sess)
 	}
 

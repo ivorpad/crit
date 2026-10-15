@@ -184,6 +184,7 @@ func NewServer(session *Session, frontendFS embed.FS, shareURL string, proxyAuth
 	mux.HandleFunc("/api/herdr", s.withReady(s.handleHerdr))
 	mux.HandleFunc("/api/herdr/viewed", s.withReady(s.handleHerdrViewed))
 	mux.HandleFunc("/api/herdr/plan", s.withReady(s.handleHerdrPlan))
+	mux.HandleFunc("/api/herdr/focus", s.withReady(s.handleHerdrFocus))
 	mux.HandleFunc("/api/share", s.withReady(s.handleShare))
 	mux.HandleFunc("/api/share-consent", s.withReady(s.handleShareConsent))
 	mux.HandleFunc("/api/project-prompts/trust", s.withReady(s.handleProjectPromptTrust))

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -20,6 +21,16 @@ func (f *fakeHerdr) PlanJSON(path string) ([]byte, error) {
 		return nil, errors.New("no plan for " + path)
 	}
 	return []byte(`{"path":"local/wA:p1.md","plan_path":"~/.claude/plans/p.md","text":"# Plan","source":"local_disk"}`), nil
+}
+
+func (f *fakeHerdr) Focus(_ context.Context, path string) (string, string, bool, error) {
+	switch path {
+	case "local/wA:p1.md":
+		return "local", "wA:p1", false, nil
+	case "workbox2/w4:p1.md":
+		return "", "", false, errors.New("herdr: exit status 1: machine workbox2 is not reachable")
+	}
+	return "", "", true, errors.New("no such pane")
 }
 
 func (f *fakeHerdr) SetViewed(path string, viewed bool) error {
@@ -60,6 +71,11 @@ func TestHerdrRoutes(t *testing.T) {
 		{"plan", http.MethodGet, "/api/herdr/plan?path=local%2FwA%3Ap1.md", "", http.StatusOK, `"source":"local_disk"`},
 		{"plan unknown pane", http.MethodGet, "/api/herdr/plan?path=local%2FwA%3Ap2.md", "", http.StatusNotFound, ""},
 		{"plan wrong method", http.MethodPost, "/api/herdr/plan?path=x", "", http.StatusMethodNotAllowed, ""},
+		{"focus", http.MethodPost, "/api/herdr/focus", `{"path":"local/wA:p1.md"}`, http.StatusOK, `"pane_id":"wA:p1"`},
+		{"focus unknown pane", http.MethodPost, "/api/herdr/focus", `{"path":"gone.md"}`, http.StatusNotFound, ""},
+		{"focus herdr fails", http.MethodPost, "/api/herdr/focus", `{"path":"workbox2/w4:p1.md"}`, http.StatusBadGateway, "not reachable"},
+		{"focus bad body", http.MethodPost, "/api/herdr/focus", `{}`, http.StatusBadRequest, ""},
+		{"focus wrong method", http.MethodGet, "/api/herdr/focus", "", http.StatusMethodNotAllowed, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
