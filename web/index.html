@@ -493,6 +493,10 @@
       var shr = document.createElement('script'); shr.src = 'crit-share.js'; shr.async = false; document.body.appendChild(shr);
       // Glob matcher for auto-viewed-patterns (window.crit.globMatch). Must load before app.js.
       var gm = document.createElement('script'); gm.src = 'crit-glob-match.js'; gm.async = false; document.body.appendChild(gm);
+      // herdr control center (review_type "herdr"): pure model, then pane
+      // decorations (window.crit.herdrModel / window.crit.herdr). Must load before app.js.
+      var hm = document.createElement('script'); hm.src = 'herdr-mode.model.js'; hm.async = false; document.body.appendChild(hm);
+      var hd = document.createElement('script'); hd.src = 'herdr-mode.js'; hd.async = false; document.body.appendChild(hd);
       // Tab title badge when a round becomes ready while the tab is hidden.
       var tr = document.createElement('script'); tr.src = 'crit-tab-ready.js'; tr.async = false; document.body.appendChild(tr);
       // @pierre/diffs (window.PierreDiffs) — split ESM bundle; module scripts

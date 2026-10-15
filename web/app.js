@@ -358,6 +358,10 @@
   // (window.crit.share). The controller is created in init() once /api/config
   // resolves, and stored here so other code can call reveal()/closeModal().
   let shareCtl = null;
+  // herdr control center (session.review_type === 'herdr'): one review file per
+  // agent pane, decorated from GET /api/herdr by herdr-mode.js. See docs/herdr-api.md.
+  let herdrByPath = Object.create(null);
+  let herdrReloadInFlight = null;
   let promptTrustConfig = { project_prompts_untrusted: false };
 
   let uiState = 'reviewing';
@@ -846,6 +850,7 @@
   }
 
   function saveViewedState() {
+    if (isHerdr()) return; // the server keeps herdr read marks, per turn
     const viewed = {};
     for (let i = 0; i < files.length; i++) {
       if (files[i].viewed) viewed[files[i].path] = true;
@@ -854,6 +859,7 @@
   }
 
   function restoreViewedState() {
+    if (isHerdr()) { applyHerdrViewed(); return; }
     try {
       const data = JSON.parse(localStorage.getItem(viewedStorageKey()) || '{}');
       for (let i = 0; i < files.length; i++) {
@@ -868,6 +874,7 @@
     if (!file) return;
     file.viewed = !file.viewed;
     saveViewedState();
+    if (isHerdr()) postHerdrViewed(file);
     updateViewedCount();
     updateTreeViewedState();
     if (pierreView && pierreViewActive()) {
@@ -972,6 +979,10 @@
     sessionRes = await hydrateFullSessionForStoryIfNeeded(sessionRes);
     session = sessionRes;
     reviewComments = sessionRes.review_comments || [];
+    if (isHerdr()) {
+      enterHerdrMode();
+      try { await fetchHerdrSnapshot(); } catch (err) { console.error('GET /api/herdr:', err); }
+    }
 
     // Fire-and-forget: verify file list endpoint is available for @-mention autocomplete
     fetch('/api/files/list')
@@ -1013,7 +1024,7 @@
         : null,
       sharedVisibility: configRes.share_org ? (configRes.share_visibility || '') : '',
       shareBtnEl: document.getElementById('shareBtn'),
-      canShare: session.mode !== 'git',
+      canShare: session.mode !== 'git' && !isHerdr(),
       onCommentsRefreshed: refreshAllComments,
       toast: { show: showToast, dismiss: dismissToast },
       escapeHtml: escapeHtml,
@@ -1184,7 +1195,7 @@
     }
 
     updateHeaderRound();
-    setDocumentTitle(session.mode === 'git'
+    setDocumentTitle(isHerdr() ? 'Crit — herdr' : session.mode === 'git'
       ? 'Crit — ' + (session.branch || 'review')
       : 'Crit — ' + (session.files || []).map(f => f.path).join(', '));
 
@@ -1327,6 +1338,96 @@
   const relativeTime = _ccHelpers.relativeTime;
   const formatTime = _ccHelpers.formatTime;
 
+  // ===== herdr control center =====
+  // A herdr session is a files-mode review whose files are agent panes; the
+  // DOM pieces live in herdr-mode.js (window.crit.herdr). These are the seams.
+  function isHerdr() { return !!session && session.review_type === 'herdr'; }
+
+  async function fetchHerdrSnapshot() {
+    const res = await window.crit.herdr.fetchSnapshot();
+    herdrByPath = res.byPath;
+  }
+
+  // herdr documents are agent output from other machines: raw HTML and
+  // remote images never reach this page (docs/herdr-api.md).
+  function enterHerdrMode() {
+    documentMd.set({ html: false });
+    documentMd.disable('image');
+    window.crit.herdr.enterMode();
+  }
+
+  function applyHerdrViewed() {
+    for (let i = 0; i < files.length; i++) {
+      const item = herdrByPath[files[i].path];
+      files[i].viewed = !!(item && item.viewed);
+      if (files[i].viewed) files[i].collapsed = true;
+    }
+  }
+
+  // The read mark is per turn and kept by the server; revert the checkbox
+  // when it does not take.
+  function postHerdrViewed(file) {
+    const viewed = file.viewed;
+    fetch('/api/herdr/viewed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: file.path, viewed: viewed }),
+    }).then(function(res) {
+      if (!res.ok) throw new Error('POST /api/herdr/viewed: ' + res.status);
+      const item = herdrByPath[file.path];
+      if (item) item.viewed = viewed;
+      updateViewedCount();
+      updateTreeViewedState();
+    }).catch(function(err) {
+      console.error(err);
+      file.viewed = !viewed;
+      updateViewedCount();
+      updateTreeViewedState();
+      renderFileByPath(file.path);
+      showMiniToast('Could not save the read mark for this pane');
+    });
+  }
+
+  // A sweep changed something (SSE herdr-updated): reload the panes without
+  // ending the round, so open comment forms, selection and focus stay.
+  function reloadHerdr() {
+    if (herdrReloadInFlight) return herdrReloadInFlight;
+    herdrReloadInFlight = (async function() {
+      try {
+        const prev = {};
+        for (let i = 0; i < files.length; i++) {
+          prev[files[i].path] = { viewMode: files[i].viewMode, collapsed: files[i].collapsed, viewed: files[i].viewed };
+        }
+        await fetchHerdrSnapshot();
+        const sessionRes = await fetchWhenReady('/api/session');
+        session = sessionRes;
+        reviewComments = sessionRes.review_comments || [];
+        files = await loadAllFileData(session.files || [], currentFileDataScope());
+        applyHerdrViewed();
+        for (let i = 0; i < files.length; i++) {
+          const p = prev[files[i].path];
+          if (!p) continue;
+          files[i].viewMode = p.viewMode;
+          // A pane marked read stays folded; one that became unread opens.
+          if (files[i].viewed) files[i].collapsed = true;
+          else if (!p.viewed) files[i].collapsed = p.collapsed;
+          else files[i].collapsed = false;
+        }
+        renderFileTree();
+        renderAllFiles();
+        buildToc();
+        updateCommentCount();
+        updateViewedCount();
+        updateTreeViewedState();
+      } catch (err) {
+        console.error('Error reloading herdr panes:', err);
+      } finally {
+        herdrReloadInFlight = null;
+      }
+    })();
+    return herdrReloadInFlight;
+  }
+
   function getFileByPath(path) {
     return files.find(f => f.path === path);
   }
@@ -1436,6 +1537,7 @@
     conversationSection.appendChild(buildReviewConversationTreeRow());
 
     renderTreeNode(body, tree, 0, '');
+    if (isHerdr()) window.crit.herdr.renderMachineNotices(body);
 
     renderMobileFilePicker();
   }
@@ -1585,6 +1687,9 @@
       if (f.viewed) {
         innerHtml += '<span class="tree-viewed-check" title="Viewed">&#10003;</span>';
       }
+      // Inline check (not isHerdr()): file-tree-order.test.js evaluates this
+      // function on its own with only `session` in scope.
+      if (session.review_type === 'herdr') innerHtml += window.crit.herdr.treeDotHTML(herdrByPath[f.path]);
       const unresolvedCount = f.comments.filter(function(c) { return !c.resolved; }).length;
       if (unresolvedCount > 0) {
         innerHtml += '<span class="tree-comment-badge">' + unresolvedCount + '</span>';
@@ -1817,6 +1922,11 @@
       }
       const fileForm = getFileComposeForm(file.path);
       if (fileForm && !fileForm.editingId) out.push(A.annotationForForm(fileForm));
+      // herdr: the agent's dialog card, input line and parked actions sit
+      // above the pane's document.
+      if (isHerdr() && window.crit.herdr.hasExtras(herdrByPath[file.path])) {
+        out.push({ side: 'additions', lineNumber: 0, metadata: { kind: 'herdr-extras', id: file.path } });
+      }
       out.push({ side: 'additions', lineNumber: 0, metadata: { kind: 'document', id: file.path } });
       return out;
     }
@@ -2133,6 +2243,12 @@
         if (kind === 'outdated') return buildPierreOutdated(filePath);
         if (kind === 'document') return buildPierreDocument(filePath);
         if (kind === 'placeholder') return buildPierrePlaceholder(filePath);
+        if (kind === 'herdr-extras') {
+          return window.crit.herdr.buildPaneExtras(herdrByPath[filePath], {
+            buildCommentCard: buildCommentCard,
+            openFileCommentForm: openFileCommentForm,
+          });
+        }
         if (kind === 'loading') return buildPierreLoading();
         return buildPierreThread(filePath, id);
       },
@@ -3070,6 +3186,7 @@
         (file.deletions ? '<span class="del">-' + file.deletions + '</span>' : '') +
       '</span>' : '') +
       '';
+    if (isHerdr()) window.crit.herdr.decorateHeader(header, herdrByPath[file.path], document);
 
     (function(filePath) {
       const copyPathBtn = header.querySelector('.file-header-copy-path');
@@ -6743,6 +6860,11 @@
       if (files[i].viewed) viewed++;
     }
     const el = document.getElementById('viewedCount');
+    if (isHerdr()) {
+      el.textContent = window.crit.herdr.countLabel();
+      el.classList.toggle('all-viewed', !files.some(function(f) { return window.crit.herdr.needsYou(herdrByPath[f.path]); }));
+      return;
+    }
     if (files.length <= 1) { el.textContent = ''; return; }
     el.textContent = viewed + ' / ' + files.length + ' files viewed';
     el.classList.toggle('all-viewed', viewed === files.length);
@@ -7068,6 +7190,9 @@
           }
         }
       } catch {}
+      },
+      'herdr-updated': function() {
+        if (isHerdr()) reloadHerdr();
       },
       'comments-changed': async function() {
       try {
