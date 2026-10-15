@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tomasz-tomczyk/crit/internal/herdr"
 	"github.com/tomasz-tomczyk/crit/internal/reviewpath"
 	"github.com/tomasz-tomczyk/crit/internal/server"
 )
@@ -25,6 +26,9 @@ const liveSessionArgsTag = "live"
 func serveSessionKey(sc *server.DaemonCLIConfig) string {
 	if sc.SessionKeyOverride != "" {
 		return sc.SessionKeyOverride
+	}
+	if sc.Herdr {
+		return herdrSessionKey()
 	}
 	cwd, _ := resolvedCWD()
 	if sc.PlanDir != "" {
@@ -136,8 +140,10 @@ func runServe(args []string) {
 		homeDir = home
 	}
 	key := serveSessionKey(sc)
+	// A herdr daemon is not about the cwd's repository: an empty branch keeps bare
+	// `crit` in that directory from finding it.
 	branch := ""
-	if vcs := DetectVCS(sc.VCSOverride); vcs != nil {
+	if vcs := DetectVCS(sc.VCSOverride); vcs != nil && !sc.Herdr {
 		branch = vcs.CurrentBranch()
 	}
 	sc.ReviewPath, err = resolveServeReviewPath(sc.OutputDir, sc.PlanDir, key)
@@ -150,10 +156,15 @@ func runServe(args []string) {
 		cliArgs = []string{"live", sc.LiveOrigin}
 	case sc.PreviewFile != "":
 		cliArgs = []string{"preview", sc.PreviewFile}
+	case sc.Herdr:
+		cliArgs = []string{"herdr"}
 	default:
 		cliArgs = sc.Files
 	}
 	sessionArgs := sc.Files
+	if sc.Herdr {
+		sessionArgs = []string{"herdr"}
+	}
 	if sc.LiveOrigin != "" {
 		sessionArgs = []string{liveSessionArgsTag, sc.LiveOrigin}
 	}
@@ -237,7 +248,14 @@ func runServe(args []string) {
 		err     error
 	}
 	ch := make(chan sessionResult, 1)
+	var herdrCtrl *herdr.Controller
 	go func() {
+		if sc.Herdr {
+			s, c, err := herdrSession(ctx, sc)
+			herdrCtrl = c
+			ch <- sessionResult{s, err}
+			return
+		}
 		s, err := server.CreateSession(sc)
 		ch <- sessionResult{s, err}
 	}()
@@ -272,6 +290,8 @@ func runServe(args []string) {
 		sess.CLIArgs = []string{"live", sc.LiveOrigin}
 	case sc.PreviewFile != "":
 		sess.CLIArgs = []string{"preview", sc.PreviewFile}
+	case sc.Herdr:
+		sess.CLIArgs = []string{"herdr"}
 	default:
 		sess.CLIArgs = sc.Files
 	}
@@ -302,6 +322,10 @@ func runServe(args []string) {
 		})
 	}
 	srv.SetSession(sess)
+	if herdrCtrl != nil {
+		srv.SetHerdrProvider(herdrCtrl)
+		go herdrCtrl.Run(ctx, sess)
+	}
 
 	if sess.Mode == "git" {
 		go func() {

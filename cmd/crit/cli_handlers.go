@@ -6,6 +6,7 @@ import (
 	"github.com/tomasz-tomczyk/crit/internal/comment"
 	"github.com/tomasz-tomczyk/crit/internal/config"
 	"github.com/tomasz-tomczyk/crit/internal/forge"
+	"github.com/tomasz-tomczyk/crit/internal/herdr"
 	"github.com/tomasz-tomczyk/crit/internal/live"
 	"github.com/tomasz-tomczyk/crit/internal/preview"
 	"github.com/tomasz-tomczyk/crit/internal/review"
@@ -32,6 +33,7 @@ func runMR(args []string)        { clicmd.Exit(forge.RunChange(forge.GitLab, arg
 
 func runLive(args []string)    { live.RunLive(args) }
 func runPreview(args []string) { preview.RunPreview(args) }
+func runHerdr(args []string)   { herdr.RunHerdr(args) }
 func runAuth(args []string)    { auth.RunAuth(args) }
 func runStats(args []string)   { session.RunStats(args) }
 

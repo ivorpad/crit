@@ -46,6 +46,7 @@ var (
 	sessionKey         = daemon.SessionKey
 	liveSessionKey     = daemon.LiveSessionKey
 	previewSessionKey  = preview.PreviewSessionKey
+	herdrSessionKey    = daemon.HerdrSessionKey
 	planSessionKey     = session.PlanSessionKey
 	writeSessionFile   = daemon.WriteSessionFile
 	writeDaemonFailure = daemon.WriteDaemonFailure

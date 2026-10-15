@@ -121,6 +121,22 @@ Options:
       --share-url <url>    Share service URL
       --no-open            Do not open a browser
   -q, --quiet              On success, suppress connect/start status, tips, and session summary`},
+	{name: "herdr", handler: runHerdr, help: `Usage: crit herdr [options]
+       crit herdr --print | --json [--wake] [--timeout <dur>]
+
+Open the herdr control center: crit's review page with one file per agent pane
+on every herdr machine (herdr's saved SSH profiles plus this Mac), grouped by
+machine, refreshed every 15 seconds. Each machine is read through its WorkDone
+gateway. Nothing is sent to any pane.
+
+Options:
+      --print           Print one sweep as text and exit
+      --json            Print one sweep as JSON and exit
+      --wake            With --print/--json: resume paused instabox boxes first
+      --timeout <dur>   With --print/--json: per-machine timeout (default 30s)
+  -p, --port <port>     Port to listen on
+      --no-open         Do not open a browser
+  -q, --quiet           Suppress status lines`},
 	{name: "preview", handler: runPreview, help: `Usage: crit preview [options] <file.html>
 
 Review a local HTML file in preview mode.
