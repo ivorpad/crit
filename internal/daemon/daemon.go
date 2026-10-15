@@ -205,6 +205,13 @@ func LiveSessionKey(cwd, origin string) string {
 	return hex.EncodeToString(h.Sum(nil))[:12]
 }
 
+// HerdrSessionKey is the key of the one herdr-control-center daemon. It covers
+// every machine, so it depends on nothing local: not the cwd, not a branch.
+func HerdrSessionKey() string {
+	h := sha256.Sum256([]byte("\x00herdr\x00control-center"))
+	return hex.EncodeToString(h[:])[:12]
+}
+
 // ValidSessionKey reports whether key looks like a crit session ID (12 lowercase hex chars).
 func ValidSessionKey(key string) bool {
 	if len(key) != 12 {

@@ -69,6 +69,7 @@ type writeFilesSnapshot struct {
 	reviewComments  []Comment
 	cliArgs         []string
 	cwd             string
+	reviewType      string
 	// story is the session's in-memory narrative (nil if none). Carried into
 	// CritJSON like the other daemon-managed fields above so `crit story`'s
 	// daemon-side mutators (set via s.SetStory) are actually persisted —
@@ -170,6 +171,11 @@ func buildCritJSON(snap writeFilesSnapshot) CritJSON {
 	// pointer back to its working tree.
 	if snap.cwd != "" {
 		cj.CWD = snap.cwd
+	}
+	// Like cwd: only a session that knows its type records it, so status,
+	// resume and the stale sweep can tell a live/preview/herdr review apart.
+	if snap.reviewType != "" {
+		cj.ReviewType = snap.reviewType
 	}
 	cj.Story = snap.story
 	cj.PendingRemoteDeletes = reconcilePendingRemoteDeletes(
@@ -429,6 +435,7 @@ func (s *Session) snapshotForWrite(critPath string) writeFilesSnapshot {
 		reviewComments:          rc,
 		cliArgs:                 s.CLIArgs,
 		cwd:                     s.CWD,
+		reviewType:              s.ReviewType,
 		story:                   s.story,
 		pendingRemoteDeletes:    pendDeletes,
 		lastLoadedRemoteDeletes: lastLoaded,

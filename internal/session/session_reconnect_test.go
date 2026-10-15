@@ -626,6 +626,7 @@ func TestValidSessionKey(t *testing.T) {
 		{"839f3b4cd5d", false},
 		{"839f3b4cd5d6x", false},
 		{"", false},
+		{daemon.HerdrSessionKey(), true},
 	}
 	for _, tc := range tests {
 		if got := daemon.ValidSessionKey(tc.key); got != tc.want {
@@ -647,6 +648,7 @@ func TestDaemonArgsFromCliArgs(t *testing.T) {
 		{"range", []string{"range:abc..def"}, []string{"--session-key", key, "--quiet", "--range", "abc..def"}},
 		{"live", []string{"live", "http://localhost:3000"}, []string{"--session-key", key, "--quiet", "live", "http://localhost:3000"}},
 		{"preview", []string{"preview", "/tmp/x.html"}, []string{"--session-key", key, "--quiet", "preview", "/tmp/x.html"}},
+		{"herdr", []string{"herdr"}, []string{"--session-key", key, "--quiet", "--herdr"}},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {

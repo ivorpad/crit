@@ -62,6 +62,9 @@ func daemonArgsFromCliArgs(sessionKey string, cliArgs []string) []string {
 	if len(cliArgs) == 0 {
 		return args
 	}
+	if len(cliArgs) == 1 && cliArgs[0] == "herdr" {
+		return append(args, "--herdr")
+	}
 	if len(cliArgs) >= 2 && cliArgs[0] == "live" {
 		return append(args, "live", cliArgs[1])
 	}
