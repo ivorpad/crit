@@ -48,7 +48,9 @@
 .crit-herdr-tip { display: inline-flex; }
 .crit-herdr-tip .btn:disabled,
 .crit-herdr-tip input:disabled { cursor: not-allowed; opacity: 0.6; }
-.file-header .crit-herdr-action .btn { font-size: 10px; padding: 1px 8px; }
+.file-header .crit-herdr-action .btn,
+.file-header .crit-herdr-focus { font-size: 10px; padding: 1px 8px; }
+.file-header .crit-herdr-focus:disabled { opacity: 0.6; cursor: progress; }
 
 /* Needs-you dot in the tree. */
 .crit-herdr-needs-dot {

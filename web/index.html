@@ -496,6 +496,7 @@
       // herdr control center (review_type "herdr"): pure model, then pane
       // decorations (window.crit.herdrModel / window.crit.herdr). Must load before app.js.
       var hm = document.createElement('script'); hm.src = 'herdr-mode.model.js'; hm.async = false; document.body.appendChild(hm);
+      var hx = document.createElement('script'); hx.src = 'herdr-mode.extras.js'; hx.async = false; document.body.appendChild(hx);
       var hd = document.createElement('script'); hd.src = 'herdr-mode.js'; hd.async = false; document.body.appendChild(hd);
       // Tab title badge when a round becomes ready while the tab is hidden.
       var tr = document.createElement('script'); tr.src = 'crit-tab-ready.js'; tr.async = false; document.body.appendChild(tr);

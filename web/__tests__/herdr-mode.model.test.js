@@ -211,6 +211,13 @@ test('planInfo names the plan file and the default save path', () => {
   assert.equal(M.planInfo({}), null);
 });
 
+test('focusRequest targets POST /api/herdr/focus with the review path', () => {
+  assert.deepEqual(M.focusRequest({ path: 'workbox3/w3:p4.md' }), { url: '/api/herdr/focus', body: { path: 'workbox3/w3:p4.md' } });
+  assert.equal(M.focusRequest({ id: 'a/b' }), null);
+  assert.equal(M.focusRequest(null), null);
+  for (const it of sweep.items) assert.equal(M.focusRequest(it).body.path, it.path);
+});
+
 test('paneExtrasModel is null for a quiet pane and populated otherwise', () => {
   assert.equal(M.paneExtrasModel({ status: 'working', path: 'a/b.md' }, null), null);
   assert.equal(M.paneExtrasModel(null), null);

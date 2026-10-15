@@ -248,6 +248,14 @@
     };
   }
 
+  // focusRequest: the POST /api/herdr/focus body for a pane. Focus only moves
+  // the owner's local herdr TUI to that pane; nothing reaches the agent, so
+  // this is the one header control that is live in step 2. null without a path.
+  function focusRequest(item) {
+    if (!isObject(item) || typeof item.path !== 'string' || !item.path) return null;
+    return { url: '/api/herdr/focus', body: { path: item.path } };
+  }
+
   // paneExtrasModel: everything the block above a pane's document shows.
   // null when there is nothing to show for this pane.
   function paneExtrasModel(item, machine) {
@@ -284,6 +292,7 @@
     dialogCardModel: dialogCardModel,
     classifyGhost: classifyGhost,
     planInfo: planInfo,
+    focusRequest: focusRequest,
     paneExtrasModel: paneExtrasModel,
   };
 });
