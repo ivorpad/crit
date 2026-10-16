@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strconv"
@@ -18,9 +19,12 @@ import (
 // open. Codex keeps <codex home>/sessions/YYYY/MM/DD/rollout-<time>-<thread>.jsonl
 // open while the session runs, and one more for every sub-agent it spawned
 // (wSP:p2 held four). The pane's own thread is the rollout whose first line,
-// session_meta, names no parent thread. Two Codex panes can share a cwd, so
-// the cwd never picks a rollout. The page parses the rollout itself
-// (herdr-transcript-codex.js); this file only finds it and reads its bytes.
+// session_meta, names no parent thread. A TUI that runs on Codex's shared
+// daemon holds none (the daemon holds them all), and is joined through
+// Codex's thread index instead (rolloutByTitle). Two Codex panes can share a
+// cwd, so the cwd alone never picks a rollout. The page parses the rollout
+// itself (herdr-transcript-codex.js); this file only finds it and reads its
+// bytes.
 
 // rolloutRE is a rollout file; the group is its thread id.
 var rolloutRE = regexp.MustCompile(`/sessions/[0-9]{4}/[0-9]{2}/[0-9]{2}/rollout-[0-9T-]+-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.jsonl$`)
@@ -118,7 +122,9 @@ func readLocalCodex(ctx context.Context, run runner, m machine, it Item, prev *t
 	}
 	p, thread, ok := rootRollout(paths)
 	if !ok {
-		return transcriptRead{}, &noTranscript{fmt.Sprintf("Codex (pid %d) has no session file open yet. It writes one with the first prompt", pids[0])}
+		if p, thread, err = rolloutByTitle(ctx, run, m, it); err != nil {
+			return transcriptRead{}, err
+		}
 	}
 	r := transcriptRead{source: "local", kind: refCodexRollout, pid: pids[0], path: p, file: tildePath(p), session: thread}
 	offset := int64(0)
@@ -127,6 +133,93 @@ func readLocalCodex(ctx context.Context, run runner, m machine, it Item, prev *t
 	}
 	r.data, r.from, err = readLocalFrom(p, offset)
 	return r, err
+}
+
+// codexHome is Codex's home: $CODEX_HOME, else ~/.codex.
+func codexHome() string {
+	if d := os.Getenv("CODEX_HOME"); filepath.IsAbs(d) {
+		return filepath.Clean(d)
+	}
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".codex")
+}
+
+// stateDBRE is Codex's thread index, state_<schema>.sqlite (0.162 and 0.163
+// write state_5). Copies such as state_5.before-retag-20260723.sqlite do not
+// match.
+var stateDBRE = regexp.MustCompile(`^state_([0-9]+)\.sqlite$`)
+
+// codexStateDB is the thread index with the highest schema number, or "".
+func codexStateDB() string {
+	dir := codexHome()
+	entries, _ := os.ReadDir(dir)
+	best, bestN := "", -1
+	for _, e := range entries {
+		if m := stateDBRE.FindStringSubmatch(e.Name()); m != nil {
+			if n, _ := strconv.Atoi(m[1]); n > bestN {
+				best, bestN = filepath.Join(dir, e.Name()), n
+			}
+		}
+	}
+	return best
+}
+
+// rolloutByTitle finds the rollout of a Codex TUI that holds none open. From
+// 0.159 a TUI can run on Codex's shared daemon (`codex app-server
+// --managed-daemon`), which holds every thread's rollout itself, so lsof finds
+// nothing on the pane's process. The TUI's terminal title still names its
+// task, "<task name> | <project>" (with a status part such as "[ ! ] Action
+// Required" while it waits), and Codex's thread index keeps that name per
+// thread (threads.name). The pane's thread is the root thread in the pane's
+// cwd whose name is one of the title's parts, the one updated last. A title
+// that names no task yet finds nothing.
+func rolloutByTitle(ctx context.Context, run runner, m machine, it Item) (file, thread string, err error) {
+	title, cwd := it.Title, it.CWD
+	if fresh, err := agentGet(ctx, run, m, it.PaneID); err == nil {
+		title, cwd = deref(fresh.Title), fresh.cwd()
+	}
+	db := codexStateDB()
+	switch {
+	case db == "":
+		return "", "", &noTranscript{"Codex holds no session file open, and " + tildePath(codexHome()) + " has no thread index (state_*.sqlite)"}
+	case !filepath.IsAbs(cwd) || strings.ContainsAny(cwd, "\x00\n"):
+		return "", "", &noTranscript{"Codex holds no session file open, and herdr names no directory for this pane"}
+	}
+	q := fmt.Sprintf(`select json_object('id',id,'rollout',rollout_path,'name',name) from threads`+
+		` where cwd='%s' and archived=0 and coalesce(thread_source,'')<>'subagent' and name<>''`+
+		` order by updated_at desc limit 50;`, strings.ReplaceAll(cwd, "'", "''"))
+	out, err := run(ctx, nil, []string{"sqlite3", "-readonly", "-bail", "-batch", db, q})
+	if err != nil {
+		return "", "", fmt.Errorf("reading Codex's thread index: %w", err)
+	}
+	parts := strings.Split(title, "|")
+	for _, line := range strings.Split(string(out), "\n") {
+		var row struct{ ID, Rollout, Name string }
+		if json.Unmarshal([]byte(line), &row) != nil || !namedIn(row.Name, parts) {
+			continue
+		}
+		mm := rolloutRE.FindStringSubmatch(row.Rollout)
+		if mm == nil || mm[1] != row.ID {
+			continue
+		}
+		if meta, ok := readRolloutMeta(row.Rollout); ok && meta.ID == row.ID && meta.ParentThread == "" && meta.ThreadSource != "subagent" {
+			return row.Rollout, row.ID, nil
+		}
+	}
+	return "", "", &noTranscript{fmt.Sprintf("Codex holds no session file open (it runs on Codex's shared daemon), and no thread in %s is named after its title %q yet", tildePath(cwd), title)}
+}
+
+// namedIn reports whether a thread's name is one of the title's parts, whole,
+// or cut short with "…".
+func namedIn(name string, parts []string) bool {
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		cut, short := strings.CutSuffix(p, "…")
+		if p == name || (short && len(cut) >= 8 && strings.HasPrefix(name, cut)) {
+			return true
+		}
+	}
+	return false
 }
 
 // rolloutNoise are rollout lines the page never draws: the model's own copy of
