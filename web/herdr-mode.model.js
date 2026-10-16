@@ -293,7 +293,8 @@
     var parts = quoteLines(comment, lines);
     parts.push(String(comment.body || '').trim());
     (comment.replies || []).forEach(function (r) {
-      if (r && r.author !== 'crit' && String(r.body || '').trim()) parts.push(String(r.body).trim());
+      // The page's own "Sent to …" receipts are by drover (crit before the rename).
+      if (r && r.author !== 'drover' && r.author !== 'crit' && String(r.body || '').trim()) parts.push(String(r.body).trim());
     });
     return parts.join('\n');
   }

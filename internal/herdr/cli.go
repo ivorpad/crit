@@ -39,7 +39,7 @@ func RunHerdr(args []string) {
 		clicmd.Exit(clicmd.Usage(err.Error()))
 	}
 	if fs.NArg() > 0 {
-		clicmd.Exit(clicmd.Usage("crit herdr takes no arguments"))
+		clicmd.Exit(clicmd.Usage("drover herdr takes no arguments"))
 	}
 	if *wake && !*asJSON && !*asText {
 		clicmd.Exit(clicmd.Usage("--wake goes with --print or --json; the review page never wakes boxes"))
@@ -58,21 +58,22 @@ func RunHerdr(args []string) {
 }
 
 // openControlCenter attaches to the herdr daemon, or starts it, and stays until
-// Ctrl+C, which stops the daemon.
+// Ctrl+C, which stops the daemon. The page is /herdr; a daemon it starts opens
+// that page itself.
 func openControlCenter(cfg config.Config, port int, noOpenResolved, quietResolved bool) {
 	key := daemon.HerdrSessionKey()
 	if entry, alive := daemon.FindAliveSession(key); alive {
 		if !quietResolved {
-			fmt.Fprintf(os.Stderr, "[crit] herdr control center already running: %s\n", entry.BaseURL())
+			fmt.Fprintf(os.Stderr, "[drover] herdr control center already running: %s\n", pageURL(entry))
 		}
 		if !noOpenResolved && !daemon.DaemonHasBrowser(entry) {
-			go browser.OpenBrowserWithCommand(entry.BaseURL(), cfg.OpenCmd)
+			go browser.OpenBrowserWithCommand(pageURL(entry), cfg.OpenCmd)
 		}
 		daemon.RunReviewClient(entry, key, quietResolved)
 		return
 	}
 	if !quietResolved {
-		fmt.Fprintln(os.Stderr, "[crit] reading every herdr machine (a few seconds)...")
+		fmt.Fprintln(os.Stderr, "[drover] reading every herdr machine (a few seconds)...")
 	}
 	daemonArgs := daemon.AppendCommonDaemonFlags([]string{"--herdr"}, daemon.CommonDaemonFlags{
 		Port:   config.ResolvePort(port, cfg.Port),
@@ -91,10 +92,15 @@ func openControlCenter(cfg config.Config, port int, noOpenResolved, quietResolve
 		clicmd.Exitf("Error: could not start the herdr daemon: %v", err)
 	}
 	if !quietResolved {
-		fmt.Fprintf(os.Stderr, "[crit] herdr control center: %s (Ctrl+C stops it)\n", entry.BaseURL())
+		fmt.Fprintf(os.Stderr, "[drover] herdr control center: %s (Ctrl+C stops it)\n", pageURL(entry))
 	}
 	installDaemonSignalHandler(entry.PID)
 	daemon.RunReviewClient(entry, key, quietResolved)
+}
+
+// pageURL is the control center page of a running herdr daemon.
+func pageURL(entry daemon.SessionEntry) string {
+	return daemon.AdvertisedURL(entry.PublicURL, entry.Host, entry.Port, "/herdr")
 }
 
 func printOnce(cfg config.Config, wake bool, timeout time.Duration, asJSON bool) {
@@ -164,7 +170,7 @@ func machineLine(m MachineStatus) string {
 	}
 	switch m.State {
 	case "paused":
-		return name + ": paused, not contacted; crit herdr --wake resumes it"
+		return name + ": paused, not contacted; drover herdr --wake resumes it"
 	case "reachable":
 		woke := ""
 		if m.Woken {

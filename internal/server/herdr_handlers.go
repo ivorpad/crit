@@ -30,6 +30,109 @@ type HerdrProvider interface {
 	// KeysJSON is the key sequence SendJSON would press for option on the pane's
 	// dialog, as HTTP status and JSON body.
 	KeysJSON(path string, option int) (status int, resp []byte)
+	// TranscriptJSON is the Claude transcript of the pane at path, filtered, as
+	// HTTP status and JSON body; with since, only the lines after that version.
+	TranscriptJSON(ctx context.Context, path, since string) (status int, resp []byte)
+	// RenameJSON sets or clears herdr's agent name for the pane at path, as HTTP
+	// status and JSON body.
+	RenameJSON(ctx context.Context, body []byte) (status int, resp []byte)
+	// ImageBytes is one picture of the pane's transcript: the line with that uuid,
+	// block "i" or "i.j" of its message. On 200 the body is the picture and
+	// contentType its media type; otherwise a JSON error.
+	ImageBytes(ctx context.Context, path, uuid, block string) (status int, contentType string, body []byte)
+	// FileBytes is a picture on the pane's machine by its absolute path (one an
+	// agent linked in an answer). On 200 the body is the picture and contentType
+	// its sniffed type; otherwise a JSON error.
+	FileBytes(ctx context.Context, path, file string) (status int, contentType string, body []byte)
+}
+
+// GET /api/herdr/transcript?path=<review path>[&since=<version>]
+func (s *Server) handleHerdrTranscript(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	p := s.herdrProvider()
+	if p == nil {
+		writeHerdrJSON(w, http.StatusNotFound, []byte(`{"error":"unknown pane"}`))
+		return
+	}
+	q := r.URL.Query()
+	status, resp := p.TranscriptJSON(r.Context(), q.Get("path"), q.Get("since"))
+	writeHerdrJSON(w, status, resp)
+}
+
+// GET /api/herdr/image?path=<review path>&uuid=<line uuid>&block=<i>[.<j>]
+func (s *Server) handleHerdrImage(w http.ResponseWriter, r *http.Request) {
+	if p := s.herdrPictureProvider(w, r); p != nil {
+		q := r.URL.Query()
+		status, contentType, body := p.ImageBytes(r.Context(), q.Get("path"), q.Get("uuid"), q.Get("block"))
+		writeHerdrPicture(w, status, contentType, body, "private, max-age=86400")
+	}
+}
+
+// GET /api/herdr/file?path=<review path>&file=<absolute path on the pane's machine>
+func (s *Server) handleHerdrFile(w http.ResponseWriter, r *http.Request) {
+	if p := s.herdrPictureProvider(w, r); p != nil {
+		q := r.URL.Query()
+		status, contentType, body := p.FileBytes(r.Context(), q.Get("path"), q.Get("file"))
+		// The file can change under the same path.
+		writeHerdrPicture(w, status, contentType, body, "no-cache")
+	}
+}
+
+// herdrPictureProvider is the provider for a picture GET, or nil once it has
+// answered the request itself. A GET passes the server's Sec-Fetch-Site check,
+// so picture routes refuse other sites here: no page elsewhere can put a pane's
+// pictures in an <img>.
+func (s *Server) herdrPictureProvider(w http.ResponseWriter, r *http.Request) HerdrProvider {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return nil
+	}
+	// "none" is the person opening the URL themselves (address bar, bookmark).
+	if site := r.Header.Get("Sec-Fetch-Site"); site != "" && site != "same-origin" && site != "none" {
+		writeHerdrJSON(w, http.StatusForbidden, []byte(`{"error":"cross-site request"}`))
+		return nil
+	}
+	p := s.herdrProvider()
+	if p == nil {
+		writeHerdrJSON(w, http.StatusNotFound, []byte(`{"error":"unknown pane"}`))
+	}
+	return p
+}
+
+// writeHerdrPicture writes a picture on 200, else the JSON error in body.
+func writeHerdrPicture(w http.ResponseWriter, status int, contentType string, body []byte, cacheControl string) {
+	if status != http.StatusOK {
+		writeHerdrJSON(w, status, body)
+		return
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Cache-Control", cacheControl)
+	_, _ = w.Write(body)
+}
+
+// POST /api/herdr/rename {"path", "name"} or {"path", "clear": true}
+func (s *Server) handleHerdrRename(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	p := s.herdrProvider()
+	if p == nil {
+		http.Error(w, "Not a herdr session", http.StatusNotFound)
+		return
+	}
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 64<<10))
+	if err != nil {
+		http.Error(w, "Body too large or unreadable", http.StatusBadRequest)
+		return
+	}
+	status, resp := p.RenameJSON(r.Context(), body)
+	writeHerdrJSON(w, status, resp)
 }
 
 // POST /api/herdr/send {"path", "expect_state_change_seq", "text"|"keys"|"option"}

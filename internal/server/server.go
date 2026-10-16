@@ -152,6 +152,8 @@ func NewServer(session *Session, frontendFS embed.FS, shareURL string, proxyAuth
 
 	// Theme preview page — static samples, no session needed.
 	mux.HandleFunc("/themes", s.serveHTML("themes.html"))
+	// The herdr control center page. Its /api/herdr calls wait for the session.
+	mux.HandleFunc("/herdr", s.serveHTML("herdr.html"))
 
 	// Live-mode routes — NOT wrapped in withReady.
 	mux.HandleFunc("/live", s.serveIndexHTML())
@@ -187,6 +189,10 @@ func NewServer(session *Session, frontendFS embed.FS, shareURL string, proxyAuth
 	mux.HandleFunc("/api/herdr/focus", s.withReady(s.handleHerdrFocus))
 	mux.HandleFunc("/api/herdr/send", s.withReady(s.handleHerdrSend))
 	mux.HandleFunc("/api/herdr/keys", s.withReady(s.handleHerdrKeys))
+	mux.HandleFunc("/api/herdr/transcript", s.withReady(s.handleHerdrTranscript))
+	mux.HandleFunc("/api/herdr/image", s.withReady(s.handleHerdrImage))
+	mux.HandleFunc("/api/herdr/file", s.withReady(s.handleHerdrFile))
+	mux.HandleFunc("/api/herdr/rename", s.withReady(s.handleHerdrRename))
 	mux.HandleFunc("/api/share", s.withReady(s.handleShare))
 	mux.HandleFunc("/api/share-consent", s.withReady(s.handleShareConsent))
 	mux.HandleFunc("/api/project-prompts/trust", s.withReady(s.handleProjectPromptTrust))
@@ -314,7 +320,7 @@ func (s *Server) hostForbiddenMessage(r *http.Request) string {
 	host := requestHost(r.Host)
 	if s.publicURLHost == "" {
 		return fmt.Sprintf(
-			"Forbidden: request Host %q does not match loopback (set --public-url if reaching Crit via a reverse proxy)",
+			"Forbidden: request Host %q does not match loopback (set --public-url if reaching Drover via a reverse proxy)",
 			host,
 		)
 	}
@@ -2667,7 +2673,7 @@ func listComments(sess *Session, unresolvedOnly bool) []comment.ListedComment {
 }
 
 func buildCommentsListCommand(sess *Session) string {
-	return "crit comments --json " + shellQuoteArg(sess.CritJSONPath())
+	return "drover comments --json " + shellQuoteArg(sess.CritJSONPath())
 }
 
 // APIVersion is the HTTP API protocol version returned by GET /api/health as
@@ -2810,7 +2816,7 @@ func (s *Server) handleReviewCycle(w http.ResponseWriter, r *http.Request) {
 					"status":   "shutdown",
 					"approved": false,
 					"comments": []comment.ListedComment{},
-					"prompt":   "crit daemon shut down before review was finished.",
+					"prompt":   "drover daemon shut down before review was finished.",
 				})
 				return
 			}
@@ -3314,7 +3320,7 @@ func buildAgentPrompt(c Comment, filePath string) string {
 		b.WriteString(fmt.Sprintf("Reply from %s:\n> %s\n\n", reply.Author, reply.Body))
 	}
 	b.WriteString("Address this comment. If it requires a code change, make the edit.\n\n" +
-		"IMPORTANT: Do NOT run `crit comment` or `crit` commands. " +
+		"IMPORTANT: Do NOT run `drover comment` or `drover` commands. " +
 		"Just print your response to stdout — it will be posted as a reply automatically.\n")
 	return b.String()
 }

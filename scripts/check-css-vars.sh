@@ -33,10 +33,10 @@ BLOCK_ALLOWLIST="--crit-dur-base --crit-dur-fast --crit-dur-slow --crit-ease --c
 # ── Extract refs and defs ───────────────────────────────────────────────────
 
 # All var(--xxx) references (POSIX ERE, works on macOS and Linux)
-REFS=$(grep -oE 'var\(--[a-zA-Z0-9_-]+' web/style.css web/style-live.css web/style-herdr.css web/theme.css web/crit-palette.css 2>/dev/null | sed 's/.*var(//' | sort -u)
+REFS=$(grep -oE 'var\(--[a-zA-Z0-9_-]+' web/style.css web/style-live.css web/style-herdr.css web/herdr-page.css web/theme.css web/crit-palette.css 2>/dev/null | sed 's/.*var(//' | sort -u)
 
 # All --xxx: definitions (use perl for lookahead, portable)
-DEFS=$(perl -nle 'print $1 if /^\s*(--[a-zA-Z0-9_-]+)\s*:/' web/theme.css web/style.css web/style-live.css web/style-herdr.css web/crit-palette.css 2>/dev/null | sort -u)
+DEFS=$(perl -nle 'print $1 if /^\s*(--[a-zA-Z0-9_-]+)\s*:/' web/theme.css web/style.css web/style-live.css web/style-herdr.css web/herdr-page.css web/crit-palette.css 2>/dev/null | sort -u)
 
 # Add dynamic vars to definitions for the undefined-ref check
 DEFS_PLUS_DYNAMIC="$DEFS"
@@ -203,7 +203,7 @@ LITERALS=$(perl -ne '
   next if /^\s*--/;                                 # custom property definitions
   s/rgba?\(\s*(0|255)\s*,\s*\1\s*,\s*\1\s*(,[^)]*)?\)//g;   # neutral black/white
   print "$ARGV:$.: $_" if /#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/;
-  close ARGV if eof;' web/style.css web/style-live.css)
+  close ARGV if eof;' web/style.css web/style-live.css web/herdr-page.css)
 if [ -n "$LITERALS" ]; then
   echo "ERROR: Hardcoded colours in component CSS (use a --crit-* variable):"
   echo "$LITERALS"

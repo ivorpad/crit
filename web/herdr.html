@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>herdr · Drover</title>
+<link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="stylesheet" href="theme.css">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="herdr-page.css">
+</head>
+<body class="hp-page">
+<header class="hp-top" id="hpTop">
+  <span class="hp-logo">drover <b>·</b> herdr</span>
+  <span class="hp-pos" id="hpPos" aria-live="polite"></span>
+  <span class="hp-bar" id="hpBar" role="progressbar" aria-label="Panes done in this pass" aria-valuemin="0"><i id="hpFill"></i></span>
+  <span class="hp-done-n" id="hpDone"></span>
+  <span class="hp-upnext" id="hpUpNext"></span>
+  <span class="hp-spacer"></span>
+  <span class="hp-sweep" id="hpSweep"></span>
+  <button type="button" class="btn btn-sm hp-ghost hp-findbtn" id="hpFindBtn" title="Find a pane by name, pane id, agent, machine, project or state">Find <kbd>/</kbd></button>
+  <button type="button" class="hp-arrivals" id="hpArrivals" hidden></button>
+  <button type="button" class="btn btn-sm hp-ghost" id="hpStartPass">Start next pass</button>
+</header>
+<nav class="hp-strip" id="hpStrip" aria-label="Every pane, by machine"></nav>
+<main class="hp-main" id="hpMain"></main>
+<button type="button" class="btn btn-sm btn-primary hp-selbtn" id="selbtn" hidden>+ Comment on selection</button>
+<dialog class="hp-findDlg" id="findDlg" aria-label="Find a pane">
+  <div class="hp-find-box">
+    <input type="search" class="hp-find-input" id="findInput" placeholder="Name, pane id (wSJ:pD), agent, machine, project or state" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="findList" aria-autocomplete="list" aria-label="Find a pane">
+    <div class="hp-find-list" id="findList" role="listbox" aria-label="Panes"></div>
+    <p class="hp-find-keys"><kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>↵</kbd> open · <kbd>Esc</kbd> close</p>
+  </div>
+</dialog>
+<dialog class="hp-preview" id="preview" aria-labelledby="pv-title">
+  <h2 id="pv-title">Send</h2>
+  <p class="hp-pv-sub" id="pv-sub"></p>
+  <pre id="pv-text"></pre>
+  <p class="hp-pv-error" id="pv-error" role="alert" hidden></p>
+  <div class="hp-pv-acts">
+    <button type="button" class="btn" id="pv-cancel">Cancel</button>
+    <button type="button" class="btn btn-primary" id="pv-send">Send</button>
+  </div>
+</dialog>
+<dialog class="hp-preview hp-rename" id="renameDlg" aria-labelledby="rn-title">
+  <h2 id="rn-title">Rename in herdr</h2>
+  <label class="hp-pv-sub" for="rn-input">herdr names are lowercase letters, digits, "-" or "_", up to 32 characters, starting with a letter.</label>
+  <input type="text" id="rn-input" class="hp-rn-input" autocomplete="off" spellcheck="false">
+  <p class="hp-rn-result">It will be saved as <code id="rn-result"></code></p>
+  <p class="hp-pv-error" id="rn-error" role="alert" hidden></p>
+  <div class="hp-pv-acts">
+    <button type="button" class="btn hp-rn-clear" id="rn-clear">Clear the name</button>
+    <button type="button" class="btn" id="rn-cancel">Cancel</button>
+    <button type="button" class="btn btn-primary" id="rn-save">Save</button>
+  </div>
+</dialog>
+<script src="crit-shared.js"></script>
+<script src="crit-sse.js"></script>
+<script src="herdr-mode.model.js"></script>
+<script src="herdr-transcript-rules.js"></script>
+<script src="herdr-transcript-parse.js"></script>
+<script src="herdr-transcript-codex.js"></script>
+<script src="herdr-transcript-pi.js"></script>
+<script src="herdr-transcript-opencode.js"></script>
+<script src="herdr-transcript-grok.js"></script>
+<script src="herdr-transcript-cursor.js"></script>
+<script src="herdr-transcript-md.js"></script>
+<script src="herdr-transcript-view.js"></script>
+<script src="herdr-transcript-ctl.js"></script>
+<script src="herdr-page.model.js"></script>
+<script src="herdr-page.view.js"></script>
+<script src="herdr-page.js"></script>
+</body>
+</html>

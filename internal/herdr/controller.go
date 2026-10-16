@@ -10,7 +10,9 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/tomasz-tomczyk/crit/internal/session"
@@ -31,8 +33,9 @@ type Options struct {
 	ReadStatePath string
 }
 
-// Controller keeps the herdr session's files in step with the machines, and
-// delivers one reply at a time to a pane (send.go).
+// Controller keeps the herdr session's files in step with the machines, delivers
+// one reply at a time to a pane (send.go), and reads the panes' Claude
+// transcripts (transcript.go).
 type Controller struct {
 	opts Options
 	col  collectOptions
@@ -49,6 +52,15 @@ type Controller struct {
 	sent   map[string]Delivery
 	keyGap time.Duration // pause between send-keys calls; tests set 0
 	kick   chan struct{} // a send asks Run for a sweep now
+
+	// transcripts is each read pane's Claude transcript, by item id
+	// (transcript.go). In memory only.
+	transcripts map[string]*transcriptState
+	reuse       time.Duration // see transcriptReuse; tests set 0
+	// boot and epochs name every read from byte 0, so a version the page holds
+	// never matches a text read again from the start, even after a restart.
+	boot   string
+	epochs atomic.Int64
 }
 
 // NewController loads the read marks; the first Sweep fills it.
@@ -70,6 +82,10 @@ func NewController(o Options) *Controller {
 		sent:     map[string]Delivery{},
 		keyGap:   keyGap,
 		kick:     make(chan struct{}, 1),
+
+		transcripts: map[string]*transcriptState{},
+		reuse:       transcriptReuse,
+		boot:        strconv.FormatInt(time.Now().UnixNano(), 36),
 	}
 	if o.ReadStatePath != "" {
 		if data, err := os.ReadFile(o.ReadStatePath); err == nil {
@@ -115,7 +131,9 @@ func (c *Controller) Sweep(ctx context.Context) ([]session.SyntheticFile, error)
 	snap.Items = orderItems(snap)
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	old := c.snap
 	c.snap = snap
+	c.keepTranscripts(old, snap)
 	return c.files(snap.Items), nil
 }
 

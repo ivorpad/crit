@@ -1,7 +1,6 @@
 package herdr
 
 import (
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -15,6 +14,11 @@ const (
 	sourceTranscript  = "transcript"
 	sourceScreen      = "screen"
 	refClaudeJSONL    = "claude_jsonl"
+	refCodexRollout   = "codex_rollout"
+	refPiJSONL        = "pi_jsonl"
+	refOpencodeSQLite = "opencode_sqlite"
+	refGrokJSONL      = "grok_jsonl"
+	refCursorJSONL    = "cursor_jsonl"
 	attentionDialog   = "dialog"
 	attentionQuestion = "question"
 )
@@ -210,6 +214,9 @@ func itemFromAgent(m machine, a snapshotAgent, h *herdrAgent) Item {
 	}
 	if h != nil {
 		it.HerdrStatus = h.AgentStatus
+		if it.Name == "" {
+			it.Name = deref(h.Name)
+		}
 		it.CompletionSeq, it.StateChangeSeq = h.CompletionSeq, h.StateChangeSeq
 	}
 	if it.Dialog == nil && a.DialogScreen != "" {
@@ -263,7 +270,7 @@ func (it Item) dialogText() string {
 func itemFromHerdr(m machine, h herdrAgent) Item {
 	it := Item{
 		ID: m.Label + "/" + h.PaneID, Machine: m.Label, Box: m.Box, PaneID: h.PaneID,
-		Agent: deref(h.Agent), Status: statusUnreadable, HerdrStatus: h.AgentStatus, CWD: h.cwd(),
+		Agent: deref(h.Agent), Name: deref(h.Name), Status: statusUnreadable, HerdrStatus: h.AgentStatus, CWD: h.cwd(),
 		Title: deref(h.Title), WorkspaceID: h.WorkspaceID, TabID: h.TabID,
 		CompletionSeq: h.CompletionSeq, StateChangeSeq: h.StateChangeSeq,
 		Notes: []string{"outside the gateway's allowedRoots: herdr's fields only, nothing read from the pane"},
@@ -298,23 +305,47 @@ func itemFromExited(m machine, p herdrAgent, cmd, kind string) Item {
 var uuidRE = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)
 
 // fallbackRef is the transcript reference the collector can name without the
-// gateway's readers: Claude's session from herdr's agent_session.
+// gateway's readers, from herdr's agent_session: Claude's session id, the pi
+// session file on this Mac, opencode's, grok's and cursor-agent's session id.
 func fallbackRef(m machine, agent, cwd string, h *herdrAgent) *TranscriptRef {
-	if agent != "claude" || h == nil || h.AgentSession == nil || !uuidRE.MatchString(h.AgentSession.Value) {
+	if h == nil || h.AgentSession == nil {
 		return nil
 	}
-	return claudeRef(m, cwd, h.AgentSession.Value)
+	s := h.AgentSession
+	if r, ok := sessionIDRefs[agent]; ok && s.Kind == "id" && r.id.MatchString(s.Value) {
+		return &TranscriptRef{Kind: r.kind, Session: s.Value}
+	}
+	switch {
+	case agent == "claude" && uuidRE.MatchString(s.Value):
+		return claudeRef(m, cwd, s.Value)
+	case agent == "pi" && s.Kind == "path" && m.Target == "" && isPiSession(s.Value):
+		return &TranscriptRef{Kind: refPiJSONL, Path: s.Value}
+	}
+	return nil
 }
 
-// claudeRef names a Claude transcript. On the local machine the path is checked;
-// elsewhere only the session is known.
+// sessionIDRefs are the agents herdr names by a session id: the ref kind each
+// gets, and the form the id must have.
+var sessionIDRefs = map[string]struct {
+	kind string
+	id   *regexp.Regexp
+}{
+	"opencode": {refOpencodeSQLite, opencodeIDRE},
+	"grok":     {refGrokJSONL, uuidRE},
+	"cursor":   {refCursorJSONL, uuidRE},
+}
+
+// claudeRef names a Claude transcript. On the local machine the path is checked
+// in every config dir (~/.claude, ~/.claude-work, $CLAUDE_CONFIG_DIR); elsewhere
+// only the session is known.
 func claudeRef(m machine, cwd, session string) *TranscriptRef {
 	ref := &TranscriptRef{Kind: refClaudeJSONL, Session: session}
 	if m.Target == "" && cwd != "" {
-		home, _ := os.UserHomeDir()
-		p := filepath.Join(home, ".claude", "projects", claudeSlug(cwd), session+".jsonl")
-		if _, err := os.Stat(p); err == nil {
-			ref.Path = p
+		for _, d := range claudeConfigDirs() {
+			if p := filepath.Join(d, "projects", claudeSlug(cwd), session+".jsonl"); isFile(p) {
+				ref.Path = p
+				break
+			}
 		}
 	}
 	return ref

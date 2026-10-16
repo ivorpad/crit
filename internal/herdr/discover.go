@@ -13,6 +13,7 @@ import (
 type herdrAgent struct {
 	PaneID         string        `json:"pane_id"`
 	Agent          *string       `json:"agent"`
+	Name           *string       `json:"name"`
 	AgentStatus    string        `json:"agent_status"`
 	CWD            string        `json:"cwd"`
 	ForegroundCWD  string        `json:"foreground_cwd"`

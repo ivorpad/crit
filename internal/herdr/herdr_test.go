@@ -190,12 +190,12 @@ var localSnapshot = `{"agents":[
 ],"background":[{"name":"bg","pane_id":"wA:p9","agent":"claude","status":"background","cwd":"/src/c"}]}`
 
 const seqAgents = `[
- {"pane_id":"wA:p1","agent":"claude","agent_status":"blocked","cwd":"/src/a","completion_seq":11,"state_change_seq":12},
+ {"pane_id":"wA:p1","agent":"claude","name":"fix-it","agent_status":"blocked","cwd":"/src/a","completion_seq":11,"state_change_seq":12},
  {"pane_id":"wA:p2","agent":"claude","agent_status":"done","cwd":"/src/a","completion_seq":21,"state_change_seq":22,"agent_session":{"kind":"id","value":"0b1e2c3d-0000-4000-8000-000000000001"}},
  {"pane_id":"wA:p3","agent":"codex","agent_status":"working","cwd":"/src/b","completion_seq":31,"state_change_seq":32},
  {"pane_id":"wA:p4","agent":"claude","agent_status":"blocked","cwd":"/src/a","completion_seq":41,"state_change_seq":42},
  {"pane_id":"wA:p5","agent":"claude","agent_status":"idle","cwd":"/src/a","completion_seq":51,"state_change_seq":52},
- {"pane_id":"wB:p1","agent":"claude","agent_status":"idle","cwd":"/Users/me","terminal_title_stripped":"Home","completion_seq":61,"state_change_seq":62}
+ {"pane_id":"wB:p1","agent":"claude","name":"home-check","agent_status":"idle","cwd":"/Users/me","terminal_title_stripped":"Home","completion_seq":61,"state_change_seq":62}
 ]`
 
 const seqPanes = `[
@@ -273,6 +273,9 @@ func TestCollect(t *testing.T) {
 	if d.Dialog == nil || d.Dialog.ID != "abc" || len(d.Dialog.Options) != 2 || !d.NeedsYou || d.InputLine != nil {
 		t.Errorf("dialog item = %+v", d)
 	}
+	if d.Name != "fix-it" {
+		t.Errorf("herdr's name fills in when the gateway has none: %q", d.Name)
+	}
 	if d.CompletionSeq == nil || *d.CompletionSeq != 11 || d.StateChangeSeq == nil || *d.StateChangeSeq != 12 {
 		t.Errorf("seqs must come from herdr: %v %v", d.CompletionSeq, d.StateChangeSeq)
 	}
@@ -301,7 +304,7 @@ func TestCollect(t *testing.T) {
 		t.Errorf("background item = %+v", bg)
 	}
 	u := items["local/wB:p1"]
-	if u.Status != statusUnreadable || u.HerdrStatus != "idle" || u.CWD != "/Users/me" || u.CompletionSeq == nil || *u.CompletionSeq != 61 || u.Last != nil {
+	if u.Status != statusUnreadable || u.Name != "home-check" || u.HerdrStatus != "idle" || u.CWD != "/Users/me" || u.CompletionSeq == nil || *u.CompletionSeq != 61 || u.Last != nil {
 		t.Errorf("herdr-only item = %+v", u)
 	}
 	e := items["local/wC:p1"]

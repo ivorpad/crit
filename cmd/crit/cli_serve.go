@@ -131,7 +131,7 @@ func runServe(args []string) {
 	srv.SetListenHost(sc.Host)
 	srv.SetPublicURL(sc.PublicURL)
 	if sc.AllowUnauthenticatedNetwork {
-		fmt.Fprintln(os.Stderr, "crit: WARNING: unauthenticated network exposure enabled. Anyone who can reach this port can read review files and write comments.")
+		fmt.Fprintln(os.Stderr, "drover: WARNING: unauthenticated network exposure enabled. Anyone who can reach this port can read review files and write comments.")
 	}
 
 	cwd, _ := resolvedCWD()
@@ -232,10 +232,13 @@ func runServe(args []string) {
 
 	if !sc.NoOpen {
 		openPath := ""
-		if sc.LiveOrigin != "" {
+		switch {
+		case sc.LiveOrigin != "":
 			openPath = "/live"
-		} else if sc.PreviewFile != "" {
+		case sc.PreviewFile != "":
 			openPath = "/preview"
+		case sc.Herdr:
+			openPath = "/herdr"
 		}
 		openURL := advertisedURL(sc.PublicURL, sc.Host, addr.Port, openPath)
 		go openBrowser(openURL, sc.OpenCmd)
