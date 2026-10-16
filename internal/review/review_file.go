@@ -190,7 +190,7 @@ func sessionKeyForArgs(cwd string, fileArgs []string) string {
 
 // AmbiguousSessionsError is returned when multiple live sessions match cwd+branch.
 func AmbiguousSessionsError(keys []string) error {
-	return fmt.Errorf("multiple active review sessions match this directory and branch (%s); choose one with --session <id> (run `crit status` to list them)", strings.Join(keys, ", "))
+	return fmt.Errorf("multiple active review sessions match this directory and branch (%s); choose one with --session <id> (run `drover status` to list them)", strings.Join(keys, ", "))
 }
 
 // MatchingLiveSessions returns alive sessions for cwd (falling back to the VCS
@@ -417,7 +417,7 @@ func walkReviewIdentities(visit func(identity string, data []byte) error) error 
 			data, readErr := session.ReadFileShared(filepath.Join(folder, "review.json"))
 			if readErr != nil {
 				if !os.IsNotExist(readErr) {
-					fmt.Fprintf(os.Stderr, "crit: warning: could not read %s/review.json: %v\n", folder, readErr)
+					fmt.Fprintf(os.Stderr, "drover: warning: could not read %s/review.json: %v\n", folder, readErr)
 				}
 				continue
 			}
@@ -460,7 +460,7 @@ func findReviewFileByCommentID(commentID string, excludePath string) (string, er
 		if err := json.Unmarshal(data, &cj); err != nil {
 			// Malformed review file; warn and skip so a single corrupt
 			// file doesn't abort the scan or silently hide regressions.
-			fmt.Fprintf(os.Stderr, "crit: warning: malformed review JSON at %s: %v\n", identity, err)
+			fmt.Fprintf(os.Stderr, "drover: warning: malformed review JSON at %s: %v\n", identity, err)
 			return nil //nolint:nilerr // intentional skip on parse failure
 		}
 		if !cjContainsCommentID(&cj, commentID) {
@@ -508,7 +508,7 @@ func findReviewFileByBranch(branch, excludePath string) (string, error) {
 		if err := json.Unmarshal(data, &cj); err != nil {
 			// Malformed review file; skip rather than aborting. Warn once
 			// per malformed file so corruption isn't silently invisible.
-			fmt.Fprintf(os.Stderr, "crit: warning: malformed review JSON at %s: %v\n", identity, err)
+			fmt.Fprintf(os.Stderr, "drover: warning: malformed review JSON at %s: %v\n", identity, err)
 			return nil //nolint:nilerr // intentional skip on parse failure
 		}
 		if cj.Branch != branch {

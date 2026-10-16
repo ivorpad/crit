@@ -23,7 +23,7 @@ let sharingEnabledCache: boolean | undefined
 function sharingEnabled(): boolean {
   if (sharingEnabledCache !== undefined) return sharingEnabledCache
   try {
-    const text = execFileSync("crit", ["config"], { encoding: "utf8", timeout: 2000 })
+    const text = execFileSync("drover", ["config"], { encoding: "utf8", timeout: 2000 })
     const config = JSON.parse(text) as { share_url?: string }
     sharingEnabledCache = typeof config.share_url === "string" && config.share_url.length > 0
   } catch {

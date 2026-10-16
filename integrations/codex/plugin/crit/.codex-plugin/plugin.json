@@ -1,14 +1,14 @@
 {
   "name": "crit",
-  "description": "Review code changes, PRs, commit ranges, and plans with Crit inline comments.",
+  "description": "Review code changes, PRs, commit ranges, and plans with Drover inline comments.",
   "keywords": ["code-review", "diff", "inline-comments", "plan-review"],
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json",
   "interface": {
-    "displayName": "Crit",
+    "displayName": "Drover",
     "shortDescription": "Inline code and plan review for Codex",
-    "longDescription": "Crit opens a local browser review UI for current code changes, explicit files, PRs, commit ranges, and proposed plans, then returns structured review comments to Codex.",
-    "developerName": "Crit",
+    "longDescription": "Drover opens a local browser review UI for current code changes, explicit files, PRs, commit ranges, and proposed plans, then returns structured review comments to Codex.",
+    "developerName": "Drover",
     "category": "Developer Tools",
     "capabilities": ["Code Review", "Plan Review", "Hooks"],
     "defaultPrompt": [

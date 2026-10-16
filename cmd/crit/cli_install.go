@@ -46,7 +46,7 @@ func parseInstallArgs(args []string) (target string, force bool) {
 }
 
 func printInstallUsage() {
-	fmt.Fprintln(os.Stderr, "Usage: crit install [--force|-f] <agent|all|prompts|story-prompts>")
+	fmt.Fprintln(os.Stderr, "Usage: drover install [--force|-f] <agent|all|prompts|story-prompts>")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Options:")
 	fmt.Fprintln(os.Stderr, "  -f, --force  Overwrite existing integration files")
@@ -60,12 +60,12 @@ func printInstallUsage() {
 	fmt.Fprintln(os.Stderr, "  story-prompts")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Install stock finish templates:")
-	fmt.Fprintln(os.Stderr, "  cd ~ && crit install prompts     # ~/.crit/prompts/")
-	fmt.Fprintln(os.Stderr, "  crit install prompts             # .crit/prompts/ in cwd (from repo root)")
+	fmt.Fprintln(os.Stderr, "  cd ~ && drover install prompts     # ~/.crit/prompts/")
+	fmt.Fprintln(os.Stderr, "  drover install prompts             # .crit/prompts/ in cwd (from repo root)")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Install the stock on_story_generate template:")
-	fmt.Fprintln(os.Stderr, "  cd ~ && crit install story-prompts   # ~/.crit/prompts/")
-	fmt.Fprintln(os.Stderr, "  crit install story-prompts           # .crit/prompts/ in cwd (from repo root)")
+	fmt.Fprintln(os.Stderr, "  cd ~ && drover install story-prompts   # ~/.crit/prompts/")
+	fmt.Fprintln(os.Stderr, "  drover install story-prompts           # .crit/prompts/ in cwd (from repo root)")
 }
 
 func runInstallTarget(target string, force bool) error {
@@ -514,7 +514,7 @@ func installIntegration(name string, force bool) error {
 		fmt.Println()
 		fmt.Println("  Note: Hermes only auto-discovers skills from ~/.hermes/skills/.")
 		fmt.Println("  For project-local skills to load, either:")
-		fmt.Println("    a) run `cd ~ && crit install hermes` to install globally, or")
+		fmt.Println("    a) run `cd ~ && drover install hermes` to install globally, or")
 		fmt.Println("    b) add `.hermes/skills` to `external_dirs` under the `skills` section")
 		fmt.Println("       of ~/.hermes/config.yaml (Hermes scans those dirs read-only).")
 	}
@@ -1459,7 +1459,7 @@ func installGeminiSettings(path string, force bool) {
 		"hooks": []interface{}{
 			map[string]interface{}{
 				"type":    "command",
-				"command": "crit plan-hook",
+				"command": "drover plan-hook",
 				"timeout": 345600000,
 			},
 		},

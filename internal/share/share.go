@@ -41,7 +41,7 @@ func checkShareAllowed(critPath string) error {
 		return nil //nolint:nilerr // malformed review file: do not block share
 	}
 	if cj.ReviewType == "live" {
-		return fmt.Errorf("crit share is not supported for live reviews in v1")
+		return fmt.Errorf("drover share is not supported for live reviews in v1")
 	}
 	return nil
 }
@@ -424,7 +424,7 @@ func decodeJSONOrHTMLHint(resp *http.Response, v any) error {
 	trimmed := bytes.TrimLeft(raw, " \t\r\n")
 	if bytes.HasPrefix(trimmed, []byte("<")) {
 		return fmt.Errorf("crit-web returned an HTML page instead of JSON — likely behind an SSO reverse proxy. " +
-			"Set 'proxy_auth': true in your crit config and use the browser UI to share")
+			"Set 'proxy_auth': true in your drover config and use the browser UI to share")
 	}
 	if err := json.Unmarshal(raw, v); err != nil {
 		return fmt.Errorf("decode share response: %w", err)
@@ -1226,7 +1226,7 @@ func checkProxyAuthCLIAllowed(command string) error {
 	}
 	return fmt.Errorf(`%s is unavailable with proxy_auth enabled
 
-Your crit-web instance is behind an SSO reverse proxy. Terminal commands cannot authenticate there — use Crit's browser interface instead
+Your crit-web instance is behind an SSO reverse proxy. Terminal commands cannot authenticate there — use Drover's browser interface instead
 
 proxy_auth is set in ~/.crit.config.json (global config only)`, command)
 }

@@ -368,7 +368,7 @@ func TestBucketsToGHComments_StripsLocalAttachmentRefsByDefault(t *testing.T) {
 	if strings.Contains(out, "](attachments/") {
 		t.Errorf("body still contains local attachment ref: %q", out)
 	}
-	if !strings.Contains(out, "view in Crit") {
+	if !strings.Contains(out, "view in Drover") {
 		t.Errorf("expected placeholder note in body: %q", out)
 	}
 }
@@ -402,7 +402,7 @@ func TestBucketsToGHComments_SwapsLocalAttachmentRefsWhenUpload(t *testing.T) {
 	if strings.Contains(out, "](attachments/") {
 		t.Errorf("body still references local attachments/: %q", out)
 	}
-	if strings.Contains(out, "view in Crit") {
+	if strings.Contains(out, "view in Drover") {
 		t.Errorf("body should not carry strip placeholder when upload swaps URL: %q", out)
 	}
 }

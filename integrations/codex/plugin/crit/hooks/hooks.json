@@ -5,9 +5,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "crit plan-hook --mode codex",
+            "command": "drover plan-hook --mode codex",
             "timeout": 345600,
-            "statusMessage": "Reviewing proposed plan with Crit"
+            "statusMessage": "Reviewing proposed plan with Drover"
           }
         ]
       }

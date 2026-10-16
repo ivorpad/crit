@@ -434,10 +434,10 @@ func ResolveCommentScope(override CommentFocusOverride, outputDir string) (Inher
 		return InheritedScope{}, nil
 	case ScopeOverrideFullStack:
 		return resolveExplicitScope(daemon, outputDir, DiffScopeFullStack, "full_stack",
-			"--scope=full-stack: no active full-stack focus to attach to (start `crit --pr <n> --scope=full-stack` first)")
+			"--scope=full-stack: no active full-stack focus to attach to (start `drover --pr <n> --scope=full-stack` first)")
 	case ScopeOverrideLayer:
 		return resolveExplicitScope(daemon, outputDir, DiffScopeLayer, "layer",
-			"--scope=layer: no active layer focus to attach to (start `crit --pr <n>` first)")
+			"--scope=layer: no active layer focus to attach to (start `drover --pr <n>` first)")
 	case ScopeOverrideUnset:
 		return resolveAutoScope(daemon, outputDir), nil
 	}

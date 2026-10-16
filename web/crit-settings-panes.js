@@ -142,7 +142,7 @@
         }
 
         if (isReservedBinding(binding)) {
-          showError(binding + ' is reserved by Crit.');
+          showError(binding + ' is reserved by Drover.');
           return;
         }
         var conflict = shortcuts.findConflict(id, binding);
@@ -164,7 +164,7 @@
 
     // Version header
     html += '<div class="about-header">';
-    html += '<h2>Crit</h2>';
+    html += '<h2>Drover</h2>';
     var ver = cfg.version || 'dev';
     html += '<div class="about-version">' + escapeHTML(ver) + '</div>';
     html += '</div>';
@@ -402,15 +402,15 @@
 
   function critUpdateInstructions(source) {
     if (source === 'homebrew') {
-      return '<div class="updates-row-note">Update Crit with Homebrew.</div>' + updateCommandHTML('brew upgrade crit', '');
+      return '<div class="updates-row-note">Update upstream Crit with Homebrew.</div>' + updateCommandHTML('brew upgrade crit', '');
     }
     if (source === 'go') {
-      return '<div class="updates-row-note">Update Crit with Go.</div>' + updateCommandHTML('go install github.com/tomasz-tomczyk/crit/cmd/crit@latest', '');
+      return '<div class="updates-row-note">Update upstream Crit with Go.</div>' + updateCommandHTML('go install github.com/tomasz-tomczyk/crit/cmd/crit@latest', '');
     }
     if (source === 'nix') {
-      return '<div class="updates-row-note">Update the Nix profile or flake that provides Crit.</div>';
+      return '<div class="updates-row-note">Update the Nix profile or flake that provides upstream Crit.</div>';
     }
-    return '<div class="updates-row-note">Download the latest binary for your platform from the release notes.</div>';
+    return '<div class="updates-row-note">Drover is built from its fork: merge the upstream Crit release, then run make build.</div>';
   }
 
   function renderUpdatesPane(pane, cfg, hooks) {
@@ -424,10 +424,10 @@
     if (cfg.latest_version && cfg.version && cfg.latest_version !== cfg.version && !cfg.no_update_check) {
       var releaseUrl = 'https://github.com/tomasz-tomczyk/crit/releases/tag/v' + esc(cfg.latest_version);
       var alreadyDismissed = getSetting('updatesDismissed', '') === cfg.latest_version;
-      html += '<div class="updates-section-head"><span class="settings-section-label">Crit</span><span class="updates-section-state">Update available</span></div>';
-      html += '<div class="updates-crit-row updates-crit-row--open"><span class="updates-row-icon updates-row-icon--status updates-row-icon--warning" aria-hidden="true">&#11014;</span><span class="updates-row-name">Crit</span><span class="updates-version">v' + esc(cfg.version) + '</span><span class="updates-status updates-status--stale">v' + esc(cfg.latest_version) + '</span></div>';
+      html += '<div class="updates-section-head"><span class="settings-section-label">Drover</span><span class="updates-section-state">Update available</span></div>';
+      html += '<div class="updates-crit-row updates-crit-row--open"><span class="updates-row-icon updates-row-icon--status updates-row-icon--warning" aria-hidden="true">&#11014;</span><span class="updates-row-name">Drover</span><span class="updates-version">v' + esc(cfg.version) + '</span><span class="updates-status updates-status--stale">v' + esc(cfg.latest_version) + '</span></div>';
       html += '<div class="updates-crit-detail" id="updateCardBody">' + critUpdateInstructions(cfg.installation_source) + '</div>';
-      html += '<div class="config-card-actions"><a class="updates-release-notes" href="' + releaseUrl + '" target="_blank" rel="noopener">Release notes and downloads</a>';
+      html += '<div class="config-card-actions"><a class="updates-release-notes" href="' + releaseUrl + '" target="_blank" rel="noopener">Upstream release notes</a>';
       if (alreadyDismissed) {
         html += '<span class="config-card-dismissed">Dismissed — will remind you on next version</span>';
       } else {
@@ -435,8 +435,8 @@
       }
       html += '</div>';
     } else {
-      html += '<div class="updates-section-head"><span class="settings-section-label">Crit</span><span class="updates-section-state">Current</span></div>';
-      html += '<div class="updates-crit-row"><span class="updates-row-icon updates-row-icon--status updates-row-icon--ok" aria-hidden="true">&#10003;</span><span class="updates-row-name">Crit</span><span class="updates-version">v' + esc(cfg.version || 'dev') + '</span><a class="updates-release-notes updates-release-link" href="https://github.com/tomasz-tomczyk/crit/releases" target="_blank" rel="noopener">Release notes</a><span class="updates-status updates-status--ok">Up to date</span></div>';
+      html += '<div class="updates-section-head"><span class="settings-section-label">Drover</span><span class="updates-section-state">Current</span></div>';
+      html += '<div class="updates-crit-row"><span class="updates-row-icon updates-row-icon--status updates-row-icon--ok" aria-hidden="true">&#10003;</span><span class="updates-row-name">Drover</span><span class="updates-version">v' + esc(cfg.version || 'dev') + '</span><a class="updates-release-notes updates-release-link" href="https://github.com/tomasz-tomczyk/crit/releases" target="_blank" rel="noopener">Upstream release notes</a><span class="updates-status updates-status--ok">Up to date</span></div>';
     }
 
     if (!cfg.no_integration_check) {
@@ -455,7 +455,7 @@
           copyAll.push((parts.length === 2 ? parts[1] : line).replace(/^Run:\s*/i, ''));
         });
       });
-      missing.forEach(function (entry) { if (!entry.muted) copyAll.push('crit install ' + entry.agent); });
+      missing.forEach(function (entry) { if (!entry.muted) copyAll.push('drover install ' + entry.agent); });
       html += '<div class="updates-section-head"><span class="settings-section-label">AI integrations</span>' + (copyAll.length ? '<button type="button" class="updates-copy-all" data-copy-all>Copy all commands</button>' : '') + '</div><div class="updates-list">';
       stale.forEach(function (entry) {
         var si = entry.item;
@@ -477,10 +477,10 @@
       mutedMissing.concat(uninstalled).forEach(function (entry) {
         var agent = entry.agent;
         var name = formatAgentName(agent);
-        var installCommand = 'crit install ' + agent;
+        var installCommand = 'drover install ' + agent;
         var missingStatus = entry.muted ? 'Muted' : 'Not installed';
         html += '<div class="updates-list-item" data-update-status="' + (entry.muted ? 'muted' : 'missing') + '"><button type="button" class="updates-row" data-updates-row aria-expanded="false"><span class="updates-row-icon">' + integrationIconHTML(agent) + '</span><span class="updates-row-name">' + esc(name) + '</span><span class="updates-row-preview">' + esc(installCommand) + '</span><span class="updates-status updates-status--' + (entry.muted ? 'muted' : 'missing') + '">' + missingStatus + '</span></button>';
-        html += '<div class="updates-row-detail" hidden><div class="updates-row-note">' + esc(name) + ' is installed on your system but does not have the Crit integration yet.</div>' + updateCommandHTML(installCommand, '') + '<div class="config-card-actions config-card-actions--end"><button type="button" class="config-card-dismiss" data-dismiss-missing="' + esc(agent) + '">Don\'t show again</button></div></div></div>';
+        html += '<div class="updates-row-detail" hidden><div class="updates-row-note">' + esc(name) + ' is installed on your system but does not have the Drover integration yet.</div>' + updateCommandHTML(installCommand, '') + '<div class="config-card-actions config-card-actions--end"><button type="button" class="config-card-dismiss" data-dismiss-missing="' + esc(agent) + '">Don\'t show again</button></div></div></div>';
       });
       if (!stale.length && !missing.length) html += '<div class="updates-empty">All integrations are up to date.</div>';
       html += '</div>';
@@ -680,7 +680,7 @@
           html += '<span class="config-card-title">Account</span>';
           html += '</div>';
           html += '<div class="config-card-body">Not logged in. Sign in to link reviews to your account and track review history.</div>';
-          html += '<div class="config-card-cmd"><span>$ crit auth login</span><button class="config-card-copy" data-copy="crit auth login">Copy</button></div>';
+          html += '<div class="config-card-cmd"><span>$ drover auth login</span><button class="config-card-copy" data-copy="drover auth login">Copy</button></div>';
           html += '</div>';
         }
       }

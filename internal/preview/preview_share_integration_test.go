@@ -109,7 +109,7 @@ func TestShareSyncPreview(t *testing.T) {
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("crit share --preview failed: %s\n%s", err, out)
+		t.Fatalf("drover share --preview failed: %s\n%s", err, out)
 	}
 	output := strings.TrimSpace(string(out))
 	token := extractToken(t, output)

@@ -503,8 +503,8 @@ func TestInstallIntegration_CodexPluginEndToEnd(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(hookData), "crit plan-hook --mode codex") {
-		t.Fatalf("plugin hook should invoke crit plan-hook --mode codex:\n%s", hookData)
+	if !strings.Contains(string(hookData), "drover plan-hook --mode codex") {
+		t.Fatalf("plugin hook should invoke drover plan-hook --mode codex:\n%s", hookData)
 	}
 
 	marketplacePath := filepath.Join(dir, ".agents/plugins/marketplace.json")

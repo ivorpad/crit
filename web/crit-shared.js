@@ -925,13 +925,13 @@
     'Press <kbd>?</kbd> to see all keyboard shortcuts.',
     'Press <kbd>@</kbd> to reference other files in your comments.',
     'Select text and press <kbd>c</kbd> to comment on your selection.',
-    'Use <kbd>crit pull</kbd> to load existing GitHub PR comments into your local review.',
-    'Use <kbd>crit push</kbd> to post your comments as a GitHub PR review. Add <kbd>--dry-run</kbd> to preview first.',
+    'Use <kbd>drover pull</kbd> to load existing GitHub PR comments into your local review.',
+    'Use <kbd>drover push</kbd> to post your comments as a GitHub PR review. Add <kbd>--dry-run</kbd> to preview first.',
     'Comments persist across rounds until you resolve them.',
-    'Run <kbd>crit</kbd> with a URL to review your local website visually.',
-    'Run <kbd>crit overview.html</kbd> to review an artifact HTML file visually.',
-    'Ask your agent to review your work with Crit and leave comments with it.',
-    'Enjoying Crit? A GitHub star or sharing it with colleagues helps a lot!',
+    'Run <kbd>drover</kbd> with a URL to review your local website visually.',
+    'Run <kbd>drover overview.html</kbd> to review an artifact HTML file visually.',
+    'Ask your agent to review your work with Drover and leave comments with it.',
+    'Drover is built on Crit. A GitHub star for Crit or sharing it with colleagues helps its author a lot!',
     'Thank you for over 1,000 stars on GitHub! ❤️',
     'If you find Crit useful, please consider <a href="https://github.com/sponsors/tomasz-tomczyk" target="_blank" rel="noopener">sponsoring the effort on GitHub</a>.',
     'Reviewing a complex code change? Try out the new Story mode with <kbd>/crit-story</kbd>.',
@@ -1056,7 +1056,7 @@
           sourcesHtml +
           '<pre class="ppt-preview" id="projectPromptPreview" aria-label="Rendered prompt previews"></pre>' +
           '<div class="sd-actions ppt-actions">' +
-            '<button type="button" class="sd-link-btn" id="pptUseDefaultsBtn">Use Crit defaults</button>' +
+            '<button type="button" class="sd-link-btn" id="pptUseDefaultsBtn">Use Drover defaults</button>' +
             '<button type="button" class="sd-link-btn" id="pptTrustAlwaysBtn">Always trust this project</button>' +
             '<button type="button" class="sd-org-btn-share" id="pptTrustUntilChangeBtn">Trust until prompts change</button>' +
           '</div>' +

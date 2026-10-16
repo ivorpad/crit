@@ -172,12 +172,12 @@ var marketplaceUpdateHints = map[string]string{
 func (s staleFile) updateHint() string {
 	switch s.location {
 	case locationProject:
-		return fmt.Sprintf("Run: crit install %s --force", s.agent)
+		return fmt.Sprintf("Run: drover install %s --force", s.agent)
 	case locationHome:
-		return fmt.Sprintf("Run: cd ~ && crit install %s --force", s.agent)
+		return fmt.Sprintf("Run: cd ~ && drover install %s --force", s.agent)
 	case locationMarketplace, locationCache:
 		if s.agent == "codex-plugin" {
-			return "Run: crit install codex-plugin --force"
+			return "Run: drover install codex-plugin --force"
 		}
 		// Find the tool dir from the integration's dest path
 		if files, ok := integrationMap[s.agent]; ok && len(files) > 0 {
@@ -188,7 +188,7 @@ func (s staleFile) updateHint() string {
 		}
 		return "Update the crit plugin in your editor settings"
 	default:
-		return fmt.Sprintf("Run: crit install %s --force", s.agent)
+		return fmt.Sprintf("Run: drover install %s --force", s.agent)
 	}
 }
 
@@ -669,11 +669,11 @@ func printMissingHints(missing []string) int {
 		return 0
 	}
 	if len(missing) == 1 {
-		fmt.Fprintf(os.Stderr, "Tip: %s detected but crit integration not installed.\n", missing[0])
-		fmt.Fprintf(os.Stderr, "     Run: crit install %s\n", missing[0])
+		fmt.Fprintf(os.Stderr, "Tip: %s detected but drover integration not installed.\n", missing[0])
+		fmt.Fprintf(os.Stderr, "     Run: drover install %s\n", missing[0])
 	} else {
-		fmt.Fprintf(os.Stderr, "Tip: detected AI tools without crit integration: %s\n", strings.Join(missing, ", "))
-		fmt.Fprintf(os.Stderr, "     Run: crit install all  (or crit install <agent> for a specific one)\n")
+		fmt.Fprintf(os.Stderr, "Tip: detected AI tools without drover integration: %s\n", strings.Join(missing, ", "))
+		fmt.Fprintf(os.Stderr, "     Run: drover install all  (or drover install <agent> for a specific one)\n")
 	}
 	fmt.Fprintf(os.Stderr, "     Disable: CRIT_NO_INTEGRATION_CHECK=1\n")
 	return len(missing)
@@ -719,7 +719,7 @@ func runCheck() {
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(os.Stderr, "crit %s — checking installed integrations...\n\n", version)
+	fmt.Fprintf(os.Stderr, "drover %s — checking installed integrations...\n\n", version)
 
 	stale := checkInstalledIntegrations(cwd, home)
 	missing := checkMissingIntegrations(cwd, home)

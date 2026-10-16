@@ -30,7 +30,7 @@ func connectOrStartDaemon(key string, args []string, noOpen bool, openCmd string
 	entry, alive := daemon.FindAliveSession(key)
 	if alive {
 		if !quiet {
-			fmt.Fprintf(os.Stderr, "Connected to crit daemon at %s (session %s)\n", entry.BaseURL(), key)
+			fmt.Fprintf(os.Stderr, "Connected to drover daemon at %s (session %s)\n", entry.BaseURL(), key)
 		}
 		if !noOpen && !daemon.DaemonHasBrowser(entry) {
 			go browser.OpenBrowserWithCommand(entry.BaseURL(), openCmd)
@@ -44,7 +44,7 @@ func connectOrStartDaemon(key string, args []string, noOpen bool, openCmd string
 		return daemon.SessionEntry{}, false, err
 	}
 	if !quiet {
-		fmt.Fprintf(os.Stderr, "Started crit daemon at %s (session %s, PID %d)\n", entry.BaseURL(), key, entry.PID)
+		fmt.Fprintf(os.Stderr, "Started drover daemon at %s (session %s, PID %d)\n", entry.BaseURL(), key, entry.PID)
 		HintMissingIntegrations()
 	}
 	return entry, true, nil

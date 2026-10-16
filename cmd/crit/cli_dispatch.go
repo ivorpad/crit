@@ -21,43 +21,43 @@ type commandDescriptor struct {
 // commandRegistry is the single source of truth for command dispatch, help,
 // ordering, and public visibility.
 var commandRegistry = []commandDescriptor{
-	{name: "share", handler: runShare, help: `Usage: crit share [options] <file> [file...]
-       crit share [options] --preview <file.html>
+	{name: "share", handler: runShare, help: `Usage: drover share [options] <file> [file...]
+       drover share [options] --preview <file.html>
 
 Share files to crit-web and print the review URL.
 
 Options:
-  -o, --output <dir>       Crit data root for reviews
+  -o, --output <dir>       Drover data root for reviews
       --share-url <url>    Share service URL
       --org <slug>         Organization slug
       --visibility <level> Review visibility
       --preview <file>     Share a local HTML preview
       --qr                 Print a QR code`},
-	{name: "fetch", handler: runFetch, help: `Usage: crit fetch [--output <dir>]
+	{name: "fetch", handler: runFetch, help: `Usage: drover fetch [--output <dir>]
 
 Fetch comments from a shared crit-web review.`},
-	{name: "unpublish", handler: runUnpublish, help: `Usage: crit unpublish [options] [file...]
+	{name: "unpublish", handler: runUnpublish, help: `Usage: drover unpublish [options] [file...]
 
 Remove a shared review from crit-web.
 
 Options:
-  -o, --output <dir>       Crit data root for reviews
+  -o, --output <dir>       Drover data root for reviews
       --share-url <url>    Share service URL`},
 	{name: "install", handler: runInstall, helpFn: printInstallUsage},
 	{name: "config", handler: runConfig, bareHelp: true, helpFn: config.PrintConfigHelp},
-	{name: "check", handler: func([]string) { runCheck() }, help: `Usage: crit check
+	{name: "check", handler: func([]string) { runCheck() }, help: `Usage: drover check
 
 Check installed integrations for missing or stale configuration.`},
-	{name: "pr", handler: runPR, help: `Usage: crit pr <num|url>
+	{name: "pr", handler: runPR, help: `Usage: drover pr <num|url>
 
 Open a GitHub pull request for review.`},
-	{name: "mr", handler: runMR, help: `Usage: crit mr <iid|url>
+	{name: "mr", handler: runMR, help: `Usage: drover mr <iid|url>
 
 Open a GitLab merge request for review.`},
-	{name: "pull", handler: runPull, help: `Usage: crit pull [--session <id>] [--output <dir>] [number|url]
+	{name: "pull", handler: runPull, help: `Usage: drover pull [--session <id>] [--output <dir>] [number|url]
 
 Fetch PR/MR comments into the local review file.`},
-	{name: "push", handler: runPush, help: `Usage: crit push [options] [number|url]
+	{name: "push", handler: runPush, help: `Usage: drover push [options] [number|url]
 
 Post local comments as a PR/MR review.
 
@@ -66,20 +66,20 @@ Options:
       --dry-run          Preview without posting
   -e, --event <type>     comment, approve, or request-changes
   -m, --message <text>   Review-level message
-  -o, --output <dir>     Crit data root for reviews`},
-	{name: "comment", handler: runComment, help: `Usage: crit comment [options] <body>
-       crit comment [options] <path> <body>
-       crit comment [options] <path>:<line[-end]> <body>
-       crit comment [options] --selector <css> [--route <path>] <body>
-       crit comment [options] --reply-to <id> [--resolve] <body>
-       crit comment [options] --json [--file <path>]
-       crit comment [options] --clear
+  -o, --output <dir>     Drover data root for reviews`},
+	{name: "comment", handler: runComment, help: `Usage: drover comment [options] <body>
+       drover comment [options] <path> <body>
+       drover comment [options] <path>:<line[-end]> <body>
+       drover comment [options] --selector <css> [--route <path>] <body>
+       drover comment [options] --reply-to <id> [--resolve] <body>
+       drover comment [options] --json [--file <path>]
+       drover comment [options] --clear
 
 Add, reply to, bulk import, or clear review comments.
 Live reviews and HTML preview use --selector to pin a DOM element.
 
 Options:
-  -o, --output <dir>     Crit data root for reviews
+  -o, --output <dir>     Drover data root for reviews
       --author <name>    Comment author
       --plan <name>      Target a stored plan review
       --session <id>     Target an active review session (all comment modes)
@@ -91,10 +91,10 @@ Options:
       --json             Read bulk comments as JSON
   -f, --file <path>      Read JSON from a file
       --scope <mode>     Override comment focus scope`},
-	{name: "comments", handler: runComments, help: `Usage: crit comments [--session <id>] [--json] [--all] [review]
+	{name: "comments", handler: runComments, help: `Usage: drover comments [--session <id>] [--json] [--all] [review]
 
 List unresolved comments, with review-level comments first.`},
-	{name: "review", handler: runReview, help: `Usage: crit review [options] [file|dir...]
+	{name: "review", handler: runReview, help: `Usage: drover review [options] [file|dir...]
 
 Open an inline review for git changes, a commit range, a PR/MR, or files.
 
@@ -104,8 +104,8 @@ Options:
       --range <base>..<head>  Review a commit range
       --base-branch <branch>  Override the diff base
       --no-open               Do not open a browser
-  -o, --output <dir>          Crit data root for reviews`},
-	{name: "live", handler: runLive, help: `Usage: crit live [options] <url>
+  -o, --output <dir>          Drover data root for reviews`},
+	{name: "live", handler: runLive, help: `Usage: drover live [options] <url>
 
 Review a running web application in live mode.
 
@@ -121,10 +121,10 @@ Options:
       --share-url <url>    Share service URL
       --no-open            Do not open a browser
   -q, --quiet              On success, suppress connect/start status, tips, and session summary`},
-	{name: "herdr", handler: runHerdr, help: `Usage: crit herdr [options]
-       crit herdr --print | --json [--wake] [--timeout <dur>]
+	{name: "herdr", handler: runHerdr, help: `Usage: drover herdr [options]
+       drover herdr --print | --json [--wake] [--timeout <dur>]
 
-Open the herdr control center: crit's review page with one file per agent pane
+Open the herdr control center: drover's review page with one file per agent pane
 on every herdr machine (herdr's saved SSH profiles plus this Mac), grouped by
 machine, refreshed every 15 seconds. Each machine is read through its WorkDone
 gateway. Nothing is sent to any pane.
@@ -137,7 +137,7 @@ Options:
   -p, --port <port>     Port to listen on
       --no-open         Do not open a browser
   -q, --quiet           Suppress status lines`},
-	{name: "preview", handler: runPreview, help: `Usage: crit preview [options] <file.html>
+	{name: "preview", handler: runPreview, help: `Usage: drover preview [options] <file.html>
 
 Review a local HTML file in preview mode.
 
@@ -150,15 +150,15 @@ Options:
       --share-url <url>   Share service URL
       --no-open           Do not open a browser
   -q, --quiet             On success, suppress connect/start status, tips, and session summary`},
-	{name: "plan", handler: runPlan, help: `Usage: crit plan [--name <slug>] [options] <file>
-       echo "content" | crit plan [--name <slug>] [options]
+	{name: "plan", handler: runPlan, help: `Usage: drover plan [--name <slug>] [options] <file>
+       echo "content" | drover plan [--name <slug>] [options]
 
-Create or continue a plan-file review. If --name is omitted, crit derives it
+Create or continue a plan-file review. If --name is omitted, drover derives it
 from the plan content.
 
-With --no-wait, crit saves the plan as its next version and exits without
+With --no-wait, drover saves the plan as its next version and exits without
 starting a review (no version is added when the content is unchanged). It
-prints the slug, for use with crit comment --plan <slug>.
+prints the slug, for use with drover comment --plan <slug>.
 
 Options:
       --host <host>       Host to listen on
@@ -171,7 +171,7 @@ Options:
       --no-wait           Save the version and exit; do not start a review
   -q, --quiet             On success, suppress connect/start status, tips, and session summary`},
 	{name: "story", handler: runStory, helpFn: printStoryUsage, bareHelp: true},
-	{name: "auth", handler: runAuth, help: `Usage: crit auth <login|logout|whoami|status>
+	{name: "auth", handler: runAuth, help: `Usage: drover auth <login|logout|whoami|status>
 
 Manage crit-web authentication.
 
@@ -180,7 +180,7 @@ Commands:
   logout    Log out and revoke the saved token
 	  whoami    Show the selected user
 	  status    List configured targets and identities`, subcommands: []commandDescriptor{
-		{name: "login", help: `Usage: crit auth login [--force] [--share-url <url>] [--set-default]
+		{name: "login", help: `Usage: drover auth login [--force] [--share-url <url>] [--set-default]
 
 Log in to crit-web with the device authorization flow.
 
@@ -188,24 +188,24 @@ Options:
       --force         Reauthenticate even when already logged in
       --share-url     Add or update this target
       --set-default   Make this the sole default target`},
-		{name: "logout", help: `Usage: crit auth logout [--share-url <url>]
+		{name: "logout", help: `Usage: drover auth logout [--share-url <url>]
 
 Revoke the current token and remove saved credentials.`},
-		{name: "whoami", help: `Usage: crit auth whoami
+		{name: "whoami", help: `Usage: drover auth whoami
 
 Show the currently authenticated crit-web user.`},
-		{name: "status", help: `Usage: crit auth status [--share-url <url>]
+		{name: "status", help: `Usage: drover auth status [--share-url <url>]
 
 List configured share targets and their authentication state.`},
 	}},
-	{name: "stop", handler: runStop, help: `Usage: crit stop [--all] [file...]
+	{name: "stop", handler: runStop, help: `Usage: drover stop [--all] [file...]
 
 Stop the review daemon for the current session. Specify files to target an
 exact file-mode session, or use --all to stop every daemon.`},
-	{name: "status", handler: runStatus, help: `Usage: crit status [--json]
+	{name: "status", handler: runStatus, help: `Usage: drover status [--json]
 
 Show active session IDs and review paths, daemon status, and comment counts.`},
-	{name: "resume", handler: runResume, help: `Usage: crit resume [--list | <id>] [review options]
+	{name: "resume", handler: runResume, help: `Usage: drover resume [--list | <id>] [review options]
 
 Pick a stored review to reopen. Without arguments this shows an interactive
 list of every review in ~/.crit/reviews, newest first, and reconnects to the
@@ -217,17 +217,17 @@ Options:
 
 Any other option is passed through to the review, so flags like --no-open work.
 Reviews stored outside ~/.crit/reviews are not listed: reopen a plan with
-crit plan --name <slug>, and an --output review with crit --session <id>.`},
-	{name: "stats", handler: runStats, help: `Usage: crit stats [--json]
+drover plan --name <slug>, and an --output review with drover --session <id>.`},
+	{name: "stats", handler: runStats, help: `Usage: drover stats [--json]
 
 Show lifetime review statistics.`},
-	{name: "cleanup", handler: runCleanup, help: `Usage: crit cleanup [--days N] [--force]
+	{name: "cleanup", handler: runCleanup, help: `Usage: drover cleanup [--days N] [--force]
 
 Delete stale review files. The default age is seven days.`},
-	{name: "plan-hook", handler: runPlanHookCommand, help: `Usage: crit plan-hook [--mode claude|codex]
+	{name: "plan-hook", handler: runPlanHookCommand, help: `Usage: drover plan-hook [--mode claude|codex]
 
 Run the internal plan hook.`, hidden: true},
-	{name: "_serve", handler: runServe, help: `Usage: crit _serve [options]
+	{name: "_serve", handler: runServe, help: `Usage: drover _serve [options]
 
 Run the internal foreground review server.`, hidden: true},
 }
@@ -315,53 +315,53 @@ func printCommandHelp(command commandDescriptor) {
 }
 
 func printHelp() {
-	fmt.Fprintf(os.Stderr, `crit — inline code review for AI agent workflows
+	fmt.Fprintf(os.Stderr, `drover — inline code review for AI agent workflows
 
 Getting started:
-  crit install <agent>                       Set up crit for your AI coding tool
-  crit                                       Review your current changes (auto-detects git)
+  drover install <agent>                       Set up drover for your AI coding tool
+  drover                                       Review your current changes (auto-detects git)
 
 Commands:
   %s
 
 Review:
-  crit                                       Auto-detect changed files via git
-  crit <file|dir> [...]                      Review specific files or directories
-  crit live <url>                            Review a running web app in live mode
-  crit preview <file.html>                   Review a local HTML file in preview mode
-  crit --pr <num|url>                        Review a GitHub pull request
-  crit --mr <iid|url>                        Review a GitLab merge request
-  crit --range <base>..<head>                Review a commit range
-  crit plan --name <slug> <file>             Review a plan file
-  crit story                                 Generate and review a story-mode diff
-  crit --session <id>                        Reconnect to an existing review session
-  crit resume [--list | <id>]               Pick a stored review to reopen
+  drover                                       Auto-detect changed files via git
+  drover <file|dir> [...]                      Review specific files or directories
+  drover live <url>                            Review a running web app in live mode
+  drover preview <file.html>                   Review a local HTML file in preview mode
+  drover --pr <num|url>                        Review a GitHub pull request
+  drover --mr <iid|url>                        Review a GitLab merge request
+  drover --range <base>..<head>                Review a commit range
+  drover plan --name <slug> <file>             Review a plan file
+  drover story                                 Generate and review a story-mode diff
+  drover --session <id>                        Reconnect to an existing review session
+  drover resume [--list | <id>]               Pick a stored review to reopen
 
 Comments:
-  crit comment <path>:<line[-end]> <body>    Add a comment (headless, no server needed)
-  crit comment --reply-to <id> <body>        Reply to a comment
-  crit comment --json                        Bulk add comments from JSON on stdin
-  crit comment --clear                       Remove all comments
-  crit comments [--session <id>] [--json] [--all] [review]    List unresolved comments (review-level first)
+  drover comment <path>:<line[-end]> <body>    Add a comment (headless, no server needed)
+  drover comment --reply-to <id> <body>        Reply to a comment
+  drover comment --json                        Bulk add comments from JSON on stdin
+  drover comment --clear                       Remove all comments
+  drover comments [--session <id>] [--json] [--all] [review]    List unresolved comments (review-level first)
 
 Sharing:
-  crit share <file> [file...]                Share files to crit-web, print URL
-  crit fetch [--output <dir>]                Fetch comments from crit-web
-  crit unpublish [file...]                   Remove a shared review from crit-web
+  drover share <file> [file...]                Share files to crit-web, print URL
+  drover fetch [--output <dir>]                Fetch comments from crit-web
+  drover unpublish [file...]                   Remove a shared review from crit-web
 
 Remote review sync (provider auto-detected, or set "forge" in config):
-  crit pull [--session <id>] [number|url]    Fetch PR/MR comments into the review file
-  crit push [--session <id>] [--dry-run] [number|url]  Post review comments to a PR/MR
+  drover pull [--session <id>] [number|url]    Fetch PR/MR comments into the review file
+  drover push [--session <id>] [--dry-run] [number|url]  Post review comments to a PR/MR
 
 Setup & management:
-  crit install <agent>                       Install integration for an AI coding tool
-  crit check                                 Check integrations (staleness + missing)
-  crit status [--json]                       Print session info
-  crit stats [--json]                        Show lifetime review statistics
-  crit stop [--all]                          Stop the daemon
-  crit cleanup [--days N] [--force]          Delete stale review files (default: 7 days)
-  crit config [--generate]                   Show resolved configuration
-  crit auth login|logout|whoami              Manage crit-web authentication
+  drover install <agent>                       Install integration for an AI coding tool
+  drover check                                 Check integrations (staleness + missing)
+  drover status [--json]                       Print session info
+  drover stats [--json]                        Show lifetime review statistics
+  drover stop [--all]                          Stop the daemon
+  drover cleanup [--days N] [--force]          Delete stale review files (default: 7 days)
+  drover config [--generate]                   Show resolved configuration
+  drover auth login|logout|whoami              Manage crit-web authentication
 
   Agents: %s, all
 
@@ -370,8 +370,8 @@ Options:
       --host <host>           Listen host (default: 127.0.0.1)
       --public-url <url>      Advertised base URL (e.g. https://machine.ts.net via tailscale serve)
       --allow-unauthenticated-network
-                              Allow non-loopback --host or --public-url (trusted network only; Crit has no network auth)
-  -o, --output <dir>          Crit data root for reviews (default: ~/.crit)
+                              Allow non-loopback --host or --public-url (trusted network only; Drover has no network auth)
+  -o, --output <dir>          Drover data root for reviews (default: ~/.crit)
       --no-open               Don't auto-open browser
       --no-ignore             Disable all file ignore patterns
   -q, --quiet                 On success, suppress connect/start status, tips, and session summary
@@ -381,7 +381,7 @@ Options:
       --session <id>          Reconnect to an existing review session (from stderr or next_command)
       --forge <provider>      Select pull/push provider: auto, github, or gitlab
       --remote                Read --pr/--mr files via that change request's forge API
-      --qr                    Print QR code of share URL (with crit share)
+      --qr                    Print QR code of share URL (with drover share)
   -v, --version               Print version
 
 Environment:
@@ -397,7 +397,7 @@ Environment:
 
 Configuration:
   Global: ~/.crit.config.json   Project: .crit.config.json (in repo root)
-  Run 'crit config' to see all keys and resolved values.
+  Run 'drover config' to see all keys and resolved values.
 
 Learn more: https://crit.md
 `, strings.Join(visibleCommandNames(), ", "), strings.Join(availableIntegrations(), ", "))
@@ -445,7 +445,7 @@ func runPlanHookCommand(args []string) {
 }
 
 func printVersion() {
-	line := "crit " + version
+	line := "drover " + version
 	var details []string
 	if date != "unknown" {
 		details = append(details, date)

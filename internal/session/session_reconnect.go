@@ -25,18 +25,18 @@ var (
 // session. Works from any cwd; use for file, git, live, and preview modes.
 func ReconnectCommand(sessionKey string) string {
 	if sessionKey == "" {
-		return "crit"
+		return "drover"
 	}
-	return "crit --session " + sessionKey
+	return "drover --session " + sessionKey
 }
 
 // PlanReconnectCommand returns the CLI command to submit a revised plan and
 // start the next review round. Plan content must be piped or passed as a file.
 func PlanReconnectCommand(slug string) string {
 	if slug == "" {
-		return "crit plan"
+		return "drover plan"
 	}
-	return "crit plan --name " + slug
+	return "drover plan --name " + slug
 }
 
 // NextRoundCommand returns the command agents should run after addressing feedback.
@@ -51,7 +51,7 @@ func NextRoundCommand(sess *Session) string {
 		}
 	}
 	if sess == nil {
-		return "crit"
+		return "drover"
 	}
 	return ReconnectCommand(sess.SessionKey)
 }
@@ -167,18 +167,18 @@ func migrateLegacyOutputReconnect(sessionKey, reviewDir string) []string {
 	}
 	dest := filepath.Join(root, "reviews", sessionKey)
 	if _, err := os.Stat(dest); err == nil {
-		fmt.Fprintf(os.Stderr, "crit: warning: legacy review at %s ignored; %s already exists\n", reviewDir, dest)
+		fmt.Fprintf(os.Stderr, "drover: warning: legacy review at %s ignored; %s already exists\n", reviewDir, dest)
 		return []string{"--output", root}
 	}
 	if err := migrateMkdirAll(filepath.Dir(dest), 0o755); err != nil {
-		fmt.Fprintf(os.Stderr, "crit: warning: could not migrate legacy review %s: %v\n", reviewDir, err)
+		fmt.Fprintf(os.Stderr, "drover: warning: could not migrate legacy review %s: %v\n", reviewDir, err)
 		return nil
 	}
 	if err := migrateRename(reviewDir, dest); err != nil {
-		fmt.Fprintf(os.Stderr, "crit: warning: could not migrate legacy review %s → %s: %v\n", reviewDir, dest, err)
+		fmt.Fprintf(os.Stderr, "drover: warning: could not migrate legacy review %s → %s: %v\n", reviewDir, dest, err)
 		return nil
 	}
-	fmt.Fprintf(os.Stderr, "crit: migrated legacy review %s → %s\n", reviewDir, dest)
+	fmt.Fprintf(os.Stderr, "drover: migrated legacy review %s → %s\n", reviewDir, dest)
 	return []string{"--output", root}
 }
 
@@ -231,7 +231,7 @@ func reconnectDeadSession(key string, stale daemon.SessionEntry, quiet bool) (da
 		return daemon.SessionEntry{}, err
 	}
 	if !quiet {
-		fmt.Fprintf(os.Stderr, "Restarted crit daemon at %s (session %s, PID %d)\n", entry.BaseURL(), key, entry.PID)
+		fmt.Fprintf(os.Stderr, "Restarted drover daemon at %s (session %s, PID %d)\n", entry.BaseURL(), key, entry.PID)
 		HintMissingIntegrations()
 	}
 	return entry, nil

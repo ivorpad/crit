@@ -273,7 +273,7 @@ func TestRunCommentJSONLineRejectedOnPreview(t *testing.T) {
 		t.Fatal(err)
 	}
 	err := RunComment([]string{"--json", "--file", jsonPath, "--output", dir})
-	if err == nil || !strings.Contains(err.Error(), "a line comment (crit comment <path>:<line> <body>) is not supported for preview reviews") || !strings.Contains(err.Error(), `"selector"`) {
+	if err == nil || !strings.Contains(err.Error(), "a line comment (drover comment <path>:<line> <body>) is not supported for preview reviews") || !strings.Contains(err.Error(), `"selector"`) {
 		t.Fatalf("error = %v", err)
 	}
 }

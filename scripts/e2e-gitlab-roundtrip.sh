@@ -25,5 +25,5 @@ if ! "${auth_status[@]}" >/dev/null 2>&1; then
 fi
 
 cd "$CRIT_DIR"
-export CRIT_BINARY="$CRIT_DIR/crit"
+export CRIT_BINARY="$CRIT_DIR/drover"
 exec go test -tags e2e_gitlab -count=1 -timeout 20m -run TestGitLabRoundtrip "$@" ./internal/session

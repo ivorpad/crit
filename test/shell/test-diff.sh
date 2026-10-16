@@ -25,12 +25,12 @@ ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$ROOT"
 
 PORT="${1:-3001}"
-BINARY="./crit"
+BINARY="./drover"
 FILE="test/shell/test-plan-copy.md"
 
 if [ ! -f "$BINARY" ]; then
   echo "Binary not found — building..."
-  go build -o crit ./cmd/crit
+  go build -o drover ./cmd/crit
 fi
 
 # Kill any stale processes on test ports

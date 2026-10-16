@@ -53,7 +53,7 @@ func parsePullFlags(args []string) (pullFlags, error) {
 }
 
 func usagePullError() error {
-	fmt.Fprintln(os.Stderr, "Usage: crit pull [--session <id>] [--output <dir>] [mr-iid|url]")
+	fmt.Fprintln(os.Stderr, "Usage: drover pull [--session <id>] [--output <dir>] [mr-iid|url]")
 	return clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 }
 
@@ -130,7 +130,7 @@ func runPull(ctx context.Context, request forge.PullRequest) (forge.PullResult, 
 	if err != nil {
 		return forge.PullResult{}, err
 	}
-	if err := share.CheckGitHubSyncAllowed(cj, "crit pull"); err != nil {
+	if err := share.CheckGitHubSyncAllowed(cj, "drover pull"); err != nil {
 		return forge.PullResult{}, err
 	}
 
@@ -145,7 +145,7 @@ func runPull(ctx context.Context, request forge.PullRequest) (forge.PullResult, 
 		fmt.Printf("No new inline comments found on MR !%d\n", id.Number)
 	} else {
 		fmt.Printf("Pulled %d comments from MR !%d into %s\n", imported, id.Number, critPath)
-		fmt.Println("Run 'crit' to view them in the browser.")
+		fmt.Println("Run 'drover' to view them in the browser.")
 	}
 	return forge.PullResult{Imported: imported, Updated: updated}, nil
 }

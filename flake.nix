@@ -12,8 +12,8 @@
       packages = forAllSystems (system:
         let
           pkgs = nixpkgs.legacyPackages.${system};
-          crit = pkgs.buildGo126Module {
-            pname = "crit";
+          drover = pkgs.buildGo126Module {
+            pname = "drover";
             inherit version;
             src = self;
             subPackages = [ "cmd/crit" ];
@@ -22,22 +22,26 @@
             # /build TMPDIR cleanup races with the debounced review file writer.
             doCheck = false;
             ldflags = [ "-s" "-w" "-X main.version=${version}" ];
+            # The package is cmd/crit; the command is drover.
+            postInstall = ''
+              mv $out/bin/crit $out/bin/drover
+            '';
             meta = with nixpkgs.lib; {
               description = "Browser-based markdown review tool with inline commenting";
               homepage = "https://github.com/tomasz-tomczyk/crit";
               license = licenses.mit;
-              mainProgram = "crit";
+              mainProgram = "drover";
             };
           };
         in {
-          inherit crit;
-          default = crit;
+          inherit drover;
+          default = drover;
         });
 
       apps = forAllSystems (system: {
         default = {
           type = "app";
-          program = "${packages.${system}.default}/bin/crit";
+          program = "${packages.${system}.default}/bin/drover";
         };
       });
 

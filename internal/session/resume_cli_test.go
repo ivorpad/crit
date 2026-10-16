@@ -318,7 +318,7 @@ func TestPrintResumableReviews(t *testing.T) {
 	})
 
 	text := out.String()
-	for _, want := range []string{"aaaaaaaaaaaa", "feature", "2 open comments", "directory is gone", "crit resume <id>"} {
+	for _, want := range []string{"aaaaaaaaaaaa", "feature", "2 open comments", "directory is gone", "drover resume <id>"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("output missing %q:\n%s", want, text)
 		}

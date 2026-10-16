@@ -60,7 +60,7 @@ func RunResume(args []string) error {
 		return err
 	}
 	if len(reviews) == 0 {
-		fmt.Println("No reviews to resume. Run crit in a repository to start one.")
+		fmt.Println("No reviews to resume. Run drover in a repository to start one.")
 		return nil
 	}
 	if listOnly {
@@ -69,7 +69,7 @@ func RunResume(args []string) error {
 	}
 	if !canShowPicker() {
 		printResumableReviews(os.Stderr, reviews)
-		return clicmd.ExitError{Code: 1, Err: errors.New("crit resume needs a terminal to show the picker; pass a session ID or use --list")}
+		return clicmd.ExitError{Code: 1, Err: errors.New("drover resume needs a terminal to show the picker; pass a session ID or use --list")}
 	}
 
 	// The picker draws on stderr so stdout stays clean for the review output
@@ -93,7 +93,7 @@ func parseResumeArgs(args []string) (listOnly bool, id string, passthrough []str
 			listOnly = true
 		case daemon.ValidSessionKey(arg):
 			if id != "" {
-				return false, "", nil, clicmd.Usage("crit resume accepts at most one session ID")
+				return false, "", nil, clicmd.Usage("drover resume accepts at most one session ID")
 			}
 			id = arg
 		default:
@@ -101,7 +101,7 @@ func parseResumeArgs(args []string) (listOnly bool, id string, passthrough []str
 		}
 	}
 	if listOnly && id != "" {
-		return false, "", nil, clicmd.Usage("crit resume --list does not take a session ID")
+		return false, "", nil, clicmd.Usage("drover resume --list does not take a session ID")
 	}
 	return listOnly, id, passthrough, nil
 }
@@ -255,7 +255,7 @@ func printResumableReviews(w io.Writer, reviews []resumableReview) {
 		}
 		fmt.Fprintf(w, "    %s\n", detail)
 	}
-	fmt.Fprintln(w, "\nResume one with: crit resume <id>")
+	fmt.Fprintln(w, "\nResume one with: drover resume <id>")
 }
 
 // displayPath shortens a home-relative path to ~/… and names the directory a

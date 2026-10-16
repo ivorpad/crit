@@ -36,7 +36,7 @@ func TestDaemonLifecycle(t *testing.T) {
 
 	// Build crit binary
 	dir := t.TempDir()
-	binaryName := "crit"
+	binaryName := "drover"
 	if runtime.GOOS == "windows" {
 		binaryName = "crit.exe"
 	}

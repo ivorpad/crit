@@ -764,7 +764,7 @@
               'after that will be attributed to you and listed in your dashboard.</p>' +
             '<div class="share-dialog-cmd">' +
               '<span class="share-dialog-cmd-prompt" aria-hidden="true">$</span>' +
-              '<span class="share-dialog-cmd-text">crit auth login</span>' +
+              '<span class="share-dialog-cmd-text">drover auth login</span>' +
               '<button class="share-dialog-cmd-copy" id="modalCopyCmd" aria-label="Copy command">' +
                 ICON_CLIPBOARD +
               '</button>' +
@@ -881,7 +881,7 @@
       const copyCmdBtn = overlay.querySelector('#modalCopyCmd');
       if (copyCmdBtn) {
         copyCmdBtn.addEventListener('click', function() {
-          navigator.clipboard.writeText('crit auth login').catch(function() { /* best-effort */ });
+          navigator.clipboard.writeText('drover auth login').catch(function() { /* best-effort */ });
           this.innerHTML = ICON_CHECK_SMALL;
           this.setAttribute('aria-label', 'Copied');
           const btn = this;

@@ -1,11 +1,11 @@
 ---
 name: crit-story
-description: "Author a crit story and continue the interactive review loop only when the user explicitly invokes /crit-story or directly asks you to generate a crit story. Do not infer this skill from generic review, PR, or diff-review requests."
-allowed-tools: Bash(crit:*), Bash(crit story:*), Bash(crit comment:*), Read, Edit
+description: "Author a drover story and continue the interactive review loop only when the user explicitly invokes /crit-story or directly asks you to generate a drover story. Do not infer this skill from generic review, PR, or diff-review requests."
+allowed-tools: Bash(drover:*), Bash(drover story:*), Bash(drover comment:*), Read, Edit
 argument-hint: ""
 ---
 
-# Author a crit story with `crit story`
+# Author a drover story with `drover story`
 
 This skill authors a story-mode overview, then enters the same interactive
 review cycle as `/crit` (wait → address comments → next round). Invoke it
@@ -13,13 +13,13 @@ only when the user explicitly asks for story generation; do not infer it from
 generic review, PR, or diff-review requests.
 
 Primary path: author in-session with `--guide` / `--prep` / `--story-file`
-(do **not** run bare `crit story`, which spends `agent_cmd` tokens), then run
-bare `crit` to listen for Finish Review.
+(do **not** run bare `drover story`, which spends `agent_cmd` tokens), then run
+bare `drover` to listen for Finish Review.
 
 ## Step 1: Fetch the guide
 
 ```bash
-crit story --guide
+drover story --guide
 ```
 
 This prints the resolved authoring guide (the user's customized version if
@@ -31,7 +31,7 @@ it is the source of truth, not this file.
 ## Step 2: Write the prep file
 
 ```bash
-crit story --prep /tmp/crit-story-prep.txt
+drover story --prep /tmp/crit-story-prep.txt
 ```
 
 This writes the full, untrimmed diff (commit messages + every hunk with its
@@ -44,47 +44,47 @@ Following the guide from Step 1, cluster hunks by theme (not by file) and
 write a JSON object with **only** `prologue`, `chapters`, and `support` to a
 temp file, e.g. `/tmp/crit-story.json`. Do not include `version`,
 `generated_at`, `agent`, `base_sha`, `head_sha`, `scope_fingerprint`, or
-`coverage` — crit fills those in.
+`coverage` — drover fills those in.
 
 ## Step 4: Ingest
 
 ```bash
-crit story --story-file /tmp/crit-story.json
+drover story --story-file /tmp/crit-story.json
 ```
 
-Exit 0 means the story was saved (crit opens the browser to show it). **Then continue to Step 5** — do not stop after ingest. Exit 1
+Exit 0 means the story was saved (drover opens the browser to show it). **Then continue to Step 5** — do not stop after ingest. Exit 1
 means it was rejected — the coverage report (missing/duplicated hunks) is
 printed to stdout as JSON on every attempt, success or failure. If rejected:
 
 - `duplicated` non-empty: a hunk is claimed by two chapters (or a chapter and
   support). Decide where it belongs and re-ingest.
-- `missing` non-empty with `auto_repaired: true` on exit 0: crit already
+- `missing` non-empty with `auto_repaired: true` on exit 0: drover already
   back-filled the omissions into `support[]`. Optionally re-author to place
   them deliberately.
-- A drift error ("diff changed since prep"): re-run `crit story --prep` and
+- A drift error ("diff changed since prep"): re-run `drover story --prep` and
   re-author from the fresh prep file.
 
 ## Step 5: Reconnect and wait until Finish Review
 
 **CRITICAL — you MUST run this step after a successful ingest. Do NOT skip it. Do NOT proceed without it.**
 
-Story ingest opens the review UI and exits — it does **not** wait for the human. Run `crit` **in the background** using `run_in_background: true`:
+Story ingest opens the review UI and exits — it does **not** wait for the human. Run `drover` **in the background** using `run_in_background: true`:
 
 ```bash
 crit
 ```
 
-Pass `timeout: 86400000` (24 hours) with `run_in_background: true` on every blocking `crit` call. Without it, Claude Code stops background commands after 30 minutes. Claude Code may lower the value to its own limit (2 hours unless the user sets `BASH_MAX_TIMEOUT_MS`).
+Pass `timeout: 86400000` (24 hours) with `run_in_background: true` on every blocking `drover` call. Without it, Claude Code stops background commands after 30 minutes. Claude Code may lower the value to its own limit (2 hours unless the user sets `BASH_MAX_TIMEOUT_MS`).
 
-`crit` reconnects to the story session's daemon (already started by ingest) and blocks until the user clicks "Finish Review".
+`drover` reconnects to the story session's daemon (already started by ingest) and blocks until the user clicks "Finish Review".
 
 If ingest printed a review URL, relay it verbatim:
 
-> **"Crit is open at http://localhost:<port>. Leave inline comments on the diff, then click Finish Review."**
+> **"Drover is open at http://localhost:<port>. Leave inline comments on the diff, then click Finish Review."**
 
-**Do NOT proceed until `crit` completes.** Do NOT ask the user to type anything. Do NOT read the review file early. Wait for the background task to finish — that is how you know the human is done reviewing.
+**Do NOT proceed until `drover` completes.** Do NOT ask the user to type anything. Do NOT read the review file early. Wait for the background task to finish — that is how you know the human is done reviewing.
 
-<important if="Claude Code stopped `crit` because it reached its background time limit">
+<important if="Claude Code stopped `drover` because it reached its background time limit">
 Tell the user that Claude Code stopped waiting after its background time limit (2 hours by default), and that the review is still open in the browser with their comments.
 
 Offer to raise the limit to 24 hours by adding this to `~/.claude/settings.json` (it takes effect after Claude Code restarts):
@@ -93,12 +93,12 @@ Offer to raise the limit to 24 hours by adding this to `~/.claude/settings.json`
 "env": { "BASH_MAX_TIMEOUT_MS": "86400000" }
 ```
 
-If the user agrees, merge it into the existing file; do not overwrite other settings. Then, if the user wants you to keep waiting, run the same `crit` command again as in Step 5.
+If the user agrees, merge it into the existing file; do not overwrite other settings. Then, if the user wants you to keep waiting, run the same `drover` command again as in Step 5.
 </important>
 
 ## Step 6: Read the review output
 
-When `crit` completes, read **stdout** and follow its instructions. Check **stderr** for `approved: true` or `approved: false`.
+When `drover` completes, read **stdout** and follow its instructions. Check **stderr** for `approved: true` or `approved: false`.
 
 If the finish prompt says the review is approved / `"approved": true`, tell the user no changes were requested and stop.
 
@@ -108,7 +108,7 @@ If the finish prompt says the review is approved / `"approved": true`, tell the 
 - `drifted: true`: original content was removed or heavily rewritten — line numbers are approximate at best
 </important>
 
-**Fallback** (mid-round re-entry or headless workflows): `crit comments` / `crit comments --json`.
+**Fallback** (mid-round re-entry or headless workflows): `drover comments` / `drover comments --json`.
 
 ## Step 7: Address each review comment
 
@@ -119,7 +119,7 @@ For each unresolved comment:
 1. Understand what the comment asks for
 2. If it contains a suggestion block, apply that specific change
 3. Revise the referenced source file using Edit
-4. Reply with what you did: `crit comment --reply-to <id> --author 'Claude Code' '<what you did>'` (reply bodies support markdown)
+4. Reply with what you did: `drover comment --reply-to <id> --author 'Claude Code' '<what you did>'` (reply bodies support markdown)
 5. **Do not pass `--resolve`.** Resolving is the reviewer's call. Only add `--resolve` if the user explicitly asks.
 
 <important if="you are replying to multiple comments at once">
@@ -129,13 +129,13 @@ Use `--json` for a single bulk call instead of one invocation per comment:
 echo '[
   {"reply_to": "c_a1b2c3", "body": "Fixed"},
   {"reply_to": "c_d4e5f6", "body": "Refactored as suggested"}
-]' | crit comment --json --author 'Claude Code'
+]' | drover comment --json --author 'Claude Code'
 ```
 
 For long or multi-line bodies, write the JSON to a file and pass `--file`. Use `--file`, not a `<` redirect.
 
 ```bash
-crit comment --json --file /tmp/replies.json --author 'Claude Code'
+drover comment --json --file /tmp/replies.json --author 'Claude Code'
 ```
 </important>
 
@@ -145,11 +145,11 @@ crit comment --json --file /tmp/replies.json --author 'Claude Code'
 
 The finish prompt on stdout includes the command to run again — use it to start a new round.
 
-On subsequent calls, `crit` automatically signals round-complete first, then blocks until the next "Finish Review" click.
+On subsequent calls, `drover` automatically signals round-complete first, then blocks until the next "Finish Review" click.
 
-Tell the user only: **"Replied in Crit. Review the changes in your browser and click Finish Review when ready."** Do not repeat your replies or list the comments in chat. The reviewer reads them in Crit.
+Tell the user only: **"Replied in Drover. Review the changes in your browser and click Finish Review when ready."** Do not repeat your replies or list the comments in chat. The reviewer reads them in Drover.
 
-**Do NOT proceed until `crit` completes.** When it does, return to Step 6. If the user finishes with zero comments, the review is approved — stop the loop and proceed.
+**Do NOT proceed until `drover` completes.** When it does, return to Step 6. If the user finishes with zero comments, the review is approved — stop the loop and proceed.
 
 ## What this skill does NOT do
 
@@ -157,6 +157,6 @@ Tell the user only: **"Replied in Crit. Review the changes in your browser and c
   humans leave comments in the browser after ingest.
 - It does not edit or regenerate the saved story JSON during the review loop
   unless the user explicitly asks.
-- It does not run bare `crit story` (LLM via `agent_cmd`) unless the user
+- It does not run bare `drover story` (LLM via `agent_cmd`) unless the user
   explicitly asks for that path.
-- It does not call `crit push` or `crit share` unless the user asks to share.
+- It does not call `drover push` or `drover share` unless the user asks to share.

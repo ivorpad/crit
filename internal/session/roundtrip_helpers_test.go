@@ -114,7 +114,7 @@ func (e *roundtripEnv) runCrit(args ...string) string {
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
-		e.t.Fatalf("crit %v failed: %v\noutput:\n%s",
+		e.t.Fatalf("drover %v failed: %v\noutput:\n%s",
 			args, err, out.String())
 	}
 	return out.String()
@@ -132,7 +132,7 @@ func (e *roundtripEnv) runCritExpectExit(args ...string) (string, int) {
 	if exitErr, ok := err.(*exec.ExitError); ok {
 		code = exitErr.ExitCode()
 	} else if err != nil {
-		e.t.Fatalf("crit %v: %v", args, err)
+		e.t.Fatalf("drover %v: %v", args, err)
 	}
 	return out.String(), code
 }

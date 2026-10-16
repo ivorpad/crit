@@ -73,7 +73,7 @@ func TestShareSyncPreviewOriginalPath_CLI(t *testing.T) {
 			cmd.Env = append(os.Environ(), "HOME="+t.TempDir())
 			out, err := cmd.CombinedOutput()
 			if err != nil {
-				t.Fatalf("crit share --preview failed: %s\n%s", err, out)
+				t.Fatalf("drover share --preview failed: %s\n%s", err, out)
 			}
 			token := extractToken(t, strings.TrimSpace(string(out)))
 			t.Logf("  → Review: %s", extractURL(t, string(out)))

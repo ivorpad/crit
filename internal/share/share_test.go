@@ -62,11 +62,11 @@ func TestCheckProxyAuthCLIAllowed_Blocked(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(homeDir, ".crit.config.json"), []byte(`{"proxy_auth":true}`), 0644); err != nil {
 		t.Fatal(err)
 	}
-	err := checkProxyAuthCLIAllowed("crit share")
+	err := checkProxyAuthCLIAllowed("drover share")
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	for _, want := range []string{"proxy_auth", "Crit's browser interface"} {
+	for _, want := range []string{"proxy_auth", "Drover's browser interface"} {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error %q missing %q", err.Error(), want)
 		}
@@ -76,7 +76,7 @@ func TestCheckProxyAuthCLIAllowed_Blocked(t *testing.T) {
 func TestCheckProxyAuthCLIAllowed_Allowed(t *testing.T) {
 	homeDir := t.TempDir()
 	testutil.SetHome(t, homeDir)
-	if err := checkProxyAuthCLIAllowed("crit share"); err != nil {
+	if err := checkProxyAuthCLIAllowed("drover share"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
@@ -2094,7 +2094,7 @@ func TestMergeWebComments_AppliesReplyUpdates(t *testing.T) {
 	}
 	data, _ := json.MarshalIndent(cj, "", "  ")
 	if err := os.WriteFile(session.MustMkdirAll(review.ReviewPathsFor(critPath).Review), data, 0o644); err != nil {
-		t.Fatalf("write crit json: %v", err)
+		t.Fatalf("write drover json: %v", err)
 	}
 
 	updates := map[string][]WebReply{

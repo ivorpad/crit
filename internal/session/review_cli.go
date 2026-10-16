@@ -49,7 +49,7 @@ func RunReview(args []string) error {
 		entry, alive = daemon.FindAliveSession(key)
 		if alive {
 			if !sc.Quiet {
-				fmt.Fprintf(os.Stderr, "Connected to crit daemon at %s (session %s)\n", entry.BaseURL(), key)
+				fmt.Fprintf(os.Stderr, "Connected to drover daemon at %s (session %s)\n", entry.BaseURL(), key)
 			}
 			if !sc.NoOpen && !daemon.DaemonHasBrowser(entry) {
 				go browser.OpenBrowserWithCommand(entry.BaseURL(), sc.OpenCmd)
@@ -71,7 +71,7 @@ func RunReview(args []string) error {
 		entry, alive = daemon.FindAliveSession(key)
 		if alive {
 			if !sc.Quiet {
-				fmt.Fprintf(os.Stderr, "Connected to crit daemon at %s (session %s)\n", entry.BaseURL(), key)
+				fmt.Fprintf(os.Stderr, "Connected to drover daemon at %s (session %s)\n", entry.BaseURL(), key)
 			}
 			if !sc.NoOpen && !daemon.DaemonHasBrowser(entry) {
 				go browser.OpenBrowserWithCommand(entry.BaseURL(), sc.OpenCmd)
@@ -88,10 +88,10 @@ func RunReview(args []string) error {
 				return err
 			}
 			if !sc.Quiet {
-				fmt.Fprintf(os.Stderr, "Started crit daemon at %s (session %s, PID %d)\n", entry.BaseURL(), key, entry.PID)
+				fmt.Fprintf(os.Stderr, "Started drover daemon at %s (session %s, PID %d)\n", entry.BaseURL(), key, entry.PID)
 				if dirs := dirArgs(sc.Files); len(dirs) > 0 {
 					fmt.Fprintf(os.Stderr, "\nNote: scanning %s — file paths are intended for reviewing a small set of\n"+
-						"documents or plans. To review code changes, run `crit` with no arguments\n"+
+						"documents or plans. To review code changes, run `drover` with no arguments\n"+
 						"on a feature branch.\n\n", strings.Join(dirs, ", "))
 				}
 				if !sc.NoIntegrationCheck {

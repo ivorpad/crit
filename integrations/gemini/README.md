@@ -1,26 +1,26 @@
-# Crit - Gemini CLI Integration
+# Drover - Gemini CLI Integration
 
-Drop-in configuration files that teach Gemini CLI to use Crit for reviewing plans and code changes.
+Drop-in configuration files that teach Gemini CLI to use Drover for reviewing plans and code changes.
 
 ## What's included
 
 | File | Purpose |
 |------|---------|
-| `skills/crit-cli/SKILL.md` | CLI reference skill - `crit comment`, `crit pull/push`, `crit share`, review file format |
+| `skills/crit-cli/SKILL.md` | CLI reference skill - `drover comment`, `drover pull/push`, `drover share`, review file format |
 | `commands/crit.toml` | `/crit` slash command that runs the interactive review loop |
-| `hooks/settings-snippet.json` | Hook that intercepts plan mode exit and runs `crit plan-hook` for inline plan review |
+| `hooks/settings-snippet.json` | Hook that intercepts plan mode exit and runs `drover plan-hook` for inline plan review |
 | `hooks/policy.toml` | Auto-allows `exit_plan_mode` without confirmation (browser UI is the sole gate) |
 
 ## Install
 
 ```bash
-crit install gemini
+drover install gemini
 ```
 
 This installs the skill, command, and policy to your project directory and merges the hook into `.gemini/settings.json`. For a global install (available across all projects):
 
 ```bash
-cd ~ && crit install gemini
+cd ~ && drover install gemini
 ```
 
 ## Manual setup
@@ -51,7 +51,7 @@ If you prefer to install manually:
 
 Once installed, use `/crit` in Gemini CLI to start a review loop. The agent will:
 
-1. Run `crit` to open your browser for inline commenting
+1. Run `drover` to open your browser for inline commenting
 2. Wait for you to click "Finish Review"
 3. Read your comments and address each one
 4. Loop until you approve with no remaining comments

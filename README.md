@@ -1,4 +1,12 @@
-# Crit
+# drover
+
+drover is our fork of [crit](https://github.com/tomasz-tomczyk/crit). On top of crit it adds the herdr control center: `drover herdr` opens one page, `/herdr`, for every agent pane on every herdr machine, with each pane's transcript, comments that go back to that pane, and pictures and live components (`preview` fences) drawn inside the answers.
+
+Only the command and the UI are renamed. Reviews still live in `~/.crit`, config in `.crit.config.json`, the `CRIT_*` variables and the Go module path keep their names, so upstream crit fixes still merge. `crit` on PATH (Homebrew) is upstream crit, not this tool. Build with `make build`, which writes `./drover`.
+
+The rest of this file is upstream crit's README.
+
+## Upstream crit
 
 [![CI](https://github.com/tomasz-tomczyk/crit/actions/workflows/test.yml/badge.svg)](https://github.com/tomasz-tomczyk/crit/actions/workflows/test.yml)
 [![codecov](https://codecov.io/gh/tomasz-tomczyk/crit/graph/badge.svg)](https://codecov.io/gh/tomasz-tomczyk/crit)

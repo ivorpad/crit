@@ -905,7 +905,7 @@ func TestHintMissingIntegrationsFor_PrintsWhenNoneInstalled(t *testing.T) {
 
 	// No installed agents and gemini detected, so the hint names gemini.
 	out := captureStderr(t, func() { hintMissingIntegrationsFor(projectDir, homeDir) })
-	if !strings.Contains(out, "gemini detected") || !strings.Contains(out, "crit install gemini") {
+	if !strings.Contains(out, "gemini detected") || !strings.Contains(out, "drover install gemini") {
 		t.Errorf("expected gemini install hint, got:\n%s", out)
 	}
 }

@@ -76,7 +76,7 @@ func parsePushFlags(args []string) (pushFlags, error) {
 }
 
 func usagePushError() error {
-	fmt.Fprintln(os.Stderr, "Usage: crit push [--session <id>] [--dry-run] [--event <type>] [--message <msg>] [--output <dir>] [mr-iid|url]")
+	fmt.Fprintln(os.Stderr, "Usage: drover push [--session <id>] [--dry-run] [--event <type>] [--message <msg>] [--output <dir>] [mr-iid|url]")
 	return clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 }
 
@@ -146,7 +146,7 @@ func runPush(ctx context.Context, request forge.PushRequest) (forge.PushResult, 
 	if err != nil {
 		return forge.PushResult{}, err
 	}
-	if err := share.CheckGitHubSyncAllowed(cj, "crit push"); err != nil {
+	if err := share.CheckGitHubSyncAllowed(cj, "drover push"); err != nil {
 		return forge.PushResult{}, err
 	}
 	if cj.ActiveDiffScope == string(session.DiffScopeFullStack) {
@@ -170,7 +170,7 @@ func runPush(ctx context.Context, request forge.PushRequest) (forge.PushResult, 
 	needsBulkPublish := len(candidates) > 0 || ownedDraftCount > 0 || flags.message != "" || flags.event != "comment"
 	if needsBulkPublish {
 		if draft := firstUnownedDraft(existingDrafts); draft != nil {
-			return forge.PushResult{}, fmt.Errorf("GitLab has an unrelated unpublished draft note (%d); publish or discard it before Crit submits this review", draft.ID)
+			return forge.PushResult{}, fmt.Errorf("GitLab has an unrelated unpublished draft note (%d); publish or discard it before Drover submits this review", draft.ID)
 		}
 	}
 
@@ -281,7 +281,7 @@ func loadPushReview(sessionID, outputDir string) (string, session.CritJSON, erro
 	data, err := session.ReadFileShared(session.ReviewPathsFor(critPath).Review)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", session.CritJSON{}, fmt.Errorf("no review file found. Run a crit review first")
+			return "", session.CritJSON{}, fmt.Errorf("no review file found. Run a drover review first")
 		}
 		return "", session.CritJSON{}, err
 	}

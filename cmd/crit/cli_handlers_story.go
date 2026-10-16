@@ -78,20 +78,20 @@ var storyBoolFlags = map[string]func(*storyFlags){
 }
 
 func printStoryUsage() {
-	fmt.Fprintln(os.Stderr, `Usage: crit story [options]
+	fmt.Fprintln(os.Stderr, `Usage: drover story [options]
 
 Generate or load a story-mode chapter view for the current diff.
 
 Examples:
-  crit story                                  Generate a story with agent_cmd and open it
-  crit story --refresh                        Regenerate an existing story
-  crit story --range main..HEAD               Generate for a commit range
-  crit story --pr 123                         Generate for a GitHub PR
-  crit story --mr 123                         Generate for a GitLab MR
-  crit story --prep /tmp/story-prep.txt       Write the full prep file for manual authoring
-  crit story --guide                          Print the story authoring guide and JSON schema
-  crit story --story-file /tmp/story.json     Ingest a pre-authored story JSON
-  crit story --skip-llm                       Create a stub support-only story
+  drover story                                  Generate a story with agent_cmd and open it
+  drover story --refresh                        Regenerate an existing story
+  drover story --range main..HEAD               Generate for a commit range
+  drover story --pr 123                         Generate for a GitHub PR
+  drover story --mr 123                         Generate for a GitLab MR
+  drover story --prep /tmp/story-prep.txt       Write the full prep file for manual authoring
+  drover story --guide                          Print the story authoring guide and JSON schema
+  drover story --story-file /tmp/story.json     Ingest a pre-authored story JSON
+  drover story --skip-llm                       Create a stub support-only story
 
 Story options:
       --story-file <path|->  Ingest story JSON from a file or stdin
@@ -108,7 +108,7 @@ Diff scope options:
       --mr <iid|url>         Generate for a GitLab merge request
       --range <base>..<head> Generate for a commit range
       --base-branch <branch> Override auto-detected base branch
-      --output, -o <dir>     Crit data root for reviews (default: ~/.crit)
+      --output, -o <dir>     Drover data root for reviews (default: ~/.crit)
       --scope <mode>         PR diff scope: layer or full-stack
       --vcs <name>           VCS backend: git, sl, or jj
 
@@ -421,7 +421,7 @@ func resolveStoryGuide(scope session.StoryScope, critPath, prepPath, sessionKey 
 		fmt.Fprintf(os.Stderr, "Warning: evaluating project prompt trust: %v\n", err)
 	}
 	if trust.Untrusted {
-		return "", clicmd.ExitError{Code: 1, Err: errors.New("project prompts are not trusted yet; run crit and choose a trust option, or use --story-file/--skip-llm")}
+		return "", clicmd.ExitError{Code: 1, Err: errors.New("project prompts are not trusted yet; run drover and choose a trust option, or use --story-file/--skip-llm")}
 	}
 
 	diffScopeKind := "workingTree"
@@ -451,7 +451,7 @@ func resolveStoryGuide(scope session.StoryScope, critPath, prepPath, sessionKey 
 	}
 	ctx.MRURL = scope.MRURL
 	if ctx.PrepPath == "" {
-		ctx.PrepPath = "<run `crit story --prep <path>` first, then pass that path here>"
+		ctx.PrepPath = "<run `drover story --prep <path>` first, then pass that path here>"
 	}
 
 	result, err := prompt.RenderHook(globalPrompts, projectPrompts, projectDir, homeDir, trust.UseProject, prompt.HookStoryGenerate, ctx.TemplateData())
@@ -861,7 +861,7 @@ func spawnStoryDaemonAndOpen(f storyFlags, key, cwd string) {
 		fmt.Fprintf(os.Stderr, "note: could not start the review daemon: %v\n", err)
 		return
 	}
-	fmt.Fprintf(os.Stderr, "Started crit daemon at %s (session %s, PID %d)\n", entry.BaseURL(), key, entry.PID)
+	fmt.Fprintf(os.Stderr, "Started drover daemon at %s (session %s, PID %d)\n", entry.BaseURL(), key, entry.PID)
 	if !storyNoOpen(f, cwd) && !storyDaemonHasBrowser(entry) {
 		openBrowser(entry.BaseURL()+storyURLFragment, config.LoadConfig(cwd).OpenCmd)
 	}

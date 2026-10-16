@@ -144,7 +144,7 @@ const swShim = `<script>
 (function () {
   if (typeof navigator === "undefined" || !navigator.serviceWorker) return;
   navigator.serviceWorker.register = function () {
-    return Promise.reject(new Error("crit: service workers disabled"));
+    return Promise.reject(new Error("drover: service workers disabled"));
   };
   if (typeof navigator.serviceWorker.getRegistrations === "function") {
     navigator.serviceWorker.getRegistrations()

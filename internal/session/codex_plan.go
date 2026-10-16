@@ -43,7 +43,7 @@ func extractProposedPlanFromCodexTranscript(path, turnID string) (string, bool) 
 
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "crit plan-hook --mode codex: could not read transcript %s: %v\n", path, err)
+		fmt.Fprintf(os.Stderr, "drover plan-hook --mode codex: could not read transcript %s: %v\n", path, err)
 		return "", false
 	}
 	defer file.Close()
@@ -95,7 +95,7 @@ func extractProposedPlanFromCodexTranscript(path, turnID string) (string, bool) 
 		latestAssistantMessage = combined.String()
 	}
 	if err := scanner.Err(); err != nil {
-		fmt.Fprintf(os.Stderr, "crit plan-hook --mode codex: could not scan transcript %s: %v\n", path, err)
+		fmt.Fprintf(os.Stderr, "drover plan-hook --mode codex: could not scan transcript %s: %v\n", path, err)
 	}
 	return extractProposedPlan(latestAssistantMessage)
 }

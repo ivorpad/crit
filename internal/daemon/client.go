@@ -38,7 +38,7 @@ func RunReviewClient(entry SessionEntry, sessionKey string, quiet bool) (approve
 
 	resp, err := client.Post(entry.ConnURL()+"/api/review-cycle", "application/json", nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: could not reach crit daemon on port %d: %v\n", entry.Port, err)
+		fmt.Fprintf(os.Stderr, "Error: could not reach drover daemon on port %d: %v\n", entry.Port, err)
 		os.Exit(1)
 	}
 
@@ -82,35 +82,35 @@ func RunReviewClientRaw(entry SessionEntry, sessionKey, planHook string) (approv
 
 	statusCode, body, err := waitForDaemonReady(client, entry.Host, entry.Port, sessionKey, entry.StartedAt)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "crit plan-hook: %v\n", err)
+		fmt.Fprintf(os.Stderr, "drover plan-hook: %v\n", err)
 		var initErr *daemonInitializationError
 		if errors.As(err, &initErr) {
-			return false, "crit daemon failed to initialize: " + initErr.Error()
+			return false, "drover daemon failed to initialize: " + initErr.Error()
 		}
-		return false, "crit daemon was unreachable; plan was not reviewed."
+		return false, "drover daemon was unreachable; plan was not reviewed."
 	}
 	if statusCode == http.StatusInternalServerError {
 		message := daemonInitError(body)
-		fmt.Fprintf(os.Stderr, "crit plan-hook: %s\n", message)
-		return false, "crit daemon failed to initialize: " + message
+		fmt.Fprintf(os.Stderr, "drover plan-hook: %s\n", message)
+		return false, "drover daemon failed to initialize: " + message
 	}
 
 	resp, err := client.Post(entry.ConnURL()+"/api/review-cycle?plan_hook="+url.QueryEscape(planHook), "application/json", nil)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "crit plan-hook: could not reach daemon: %v\n", err)
-		return false, "crit daemon became unreachable before review was finished."
+		fmt.Fprintf(os.Stderr, "drover plan-hook: could not reach daemon: %v\n", err)
+		return false, "drover daemon became unreachable before review was finished."
 	}
 	defer resp.Body.Close()
 
 	body, err = io.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "crit plan-hook: could not read daemon response: %v\n", err)
-		return false, "crit daemon response could not be read."
+		fmt.Fprintf(os.Stderr, "drover plan-hook: could not read daemon response: %v\n", err)
+		return false, "drover daemon response could not be read."
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusServiceUnavailable {
-		fmt.Fprintf(os.Stderr, "crit plan-hook: daemon returned %d\n", resp.StatusCode)
-		return false, "crit daemon returned an unexpected status."
+		fmt.Fprintf(os.Stderr, "drover plan-hook: daemon returned %d\n", resp.StatusCode)
+		return false, "drover daemon returned an unexpected status."
 	}
 
 	var result struct {
@@ -118,8 +118,8 @@ func RunReviewClientRaw(entry SessionEntry, sessionKey, planHook string) (approv
 		Prompt   string `json:"prompt"`
 	}
 	if err := json.Unmarshal(body, &result); err != nil {
-		fmt.Fprintf(os.Stderr, "crit plan-hook: malformed daemon response: %v\n", err)
-		return false, "crit daemon returned a malformed response."
+		fmt.Fprintf(os.Stderr, "drover plan-hook: malformed daemon response: %v\n", err)
+		return false, "drover daemon returned a malformed response."
 	}
 	return result.Approved, result.Prompt
 }

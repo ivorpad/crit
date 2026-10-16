@@ -805,8 +805,8 @@ func TestFinish_IncludesStructuredComments(t *testing.T) {
 		t.Error("finish response should not include legacy copy_prompt field")
 	}
 	nextCmd, _ := resp["next_command"].(string)
-	if nextCmd != "crit --session abcd1234ef01" {
-		t.Errorf("next_command = %q, want crit --session abcd1234ef01", nextCmd)
+	if nextCmd != "drover --session abcd1234ef01" {
+		t.Errorf("next_command = %q, want drover --session abcd1234ef01", nextCmd)
 	}
 }
 
@@ -829,8 +829,8 @@ func TestFinish_PromptApproved(t *testing.T) {
 	if strings.Contains(prompt, "Next review round") {
 		t.Errorf("approved prompt should not mention next review round, got: %s", prompt)
 	}
-	if strings.Contains(prompt, "crit comments") {
-		t.Errorf("approved prompt should not mention crit comments, got: %s", prompt)
+	if strings.Contains(prompt, "drover comments") {
+		t.Errorf("approved prompt should not mention drover comments, got: %s", prompt)
 	}
 }
 
@@ -848,7 +848,7 @@ func TestFinish_PromptIncludesFileArgs(t *testing.T) {
 		t.Fatal(err)
 	}
 	prompt, _ := resp["prompt"].(string)
-	if !strings.Contains(prompt, "crit --session abcd1234ef01") {
+	if !strings.Contains(prompt, "drover --session abcd1234ef01") {
 		t.Errorf("expected prompt to contain session reconnect command, got: %s", prompt)
 	}
 	if !strings.Contains(prompt, "When you're done, run:") {
@@ -872,7 +872,7 @@ func TestFinish_PromptBareGitMode(t *testing.T) {
 		t.Fatal(err)
 	}
 	prompt, _ := resp["prompt"].(string)
-	if !strings.Contains(prompt, "When you're done, run:") || !strings.Contains(prompt, "crit") {
+	if !strings.Contains(prompt, "When you're done, run:") || !strings.Contains(prompt, "drover") {
 		t.Errorf("expected prompt to include bare git reconnect, got: %s", prompt)
 	}
 }
@@ -974,8 +974,8 @@ func TestReviewCycle_NextCommand(t *testing.T) {
 		sessionKey string
 		want       string
 	}{
-		{"with session key", "839f3b4cd5d6", "crit --session 839f3b4cd5d6"},
-		{"empty session key falls back", "", "crit"},
+		{"with session key", "839f3b4cd5d6", "drover --session 839f3b4cd5d6"},
+		{"empty session key falls back", "", "drover"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -3687,14 +3687,14 @@ func TestFinish_PlanModeNextCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	nextCmd, _ := resp["next_command"].(string)
-	if nextCmd != "crit plan --name my-feature" {
-		t.Errorf("next_command = %q, want crit plan --name my-feature", nextCmd)
+	if nextCmd != "drover plan --name my-feature" {
+		t.Errorf("next_command = %q, want drover plan --name my-feature", nextCmd)
 	}
 	prompt, _ := resp["prompt"].(string)
-	if !strings.Contains(prompt, "crit plan --name my-feature") {
+	if !strings.Contains(prompt, "drover plan --name my-feature") {
 		t.Errorf("prompt should include plan reconnect, got: %s", prompt)
 	}
-	if strings.Contains(prompt, "crit --session") {
+	if strings.Contains(prompt, "drover --session") {
 		t.Errorf("prompt should not use --session for plan mode, got: %s", prompt)
 	}
 }
@@ -4313,8 +4313,8 @@ func TestHandleFinish_PlanMode(t *testing.T) {
 	var resp map[string]any
 	json.Unmarshal(w.Body.Bytes(), &resp)
 	prompt, _ := resp["prompt"].(string)
-	if !strings.Contains(prompt, "crit comment --plan") {
-		t.Errorf("plan mode finish should mention crit comment --plan, got: %s", prompt)
+	if !strings.Contains(prompt, "drover comment --plan") {
+		t.Errorf("plan mode finish should mention drover comment --plan, got: %s", prompt)
 	}
 }
 
@@ -5965,9 +5965,9 @@ func TestReviewCycle_PlanHookNextRound(t *testing.T) {
 		want     string
 		notWant  string
 	}{
-		{"manual crit plan", "", "crit plan --name my-feature", "crit plan --name my-feature", "exit plan mode"},
-		{"plan mode hook", "?plan_hook=plan_mode", "", "exit plan mode again", "crit plan --name"},
-		{"codex hook", "?plan_hook=codex", "", "end your turn with the revised plan", "crit plan --name"},
+		{"manual drover plan", "", "drover plan --name my-feature", "drover plan --name my-feature", "exit plan mode"},
+		{"plan mode hook", "?plan_hook=plan_mode", "", "exit plan mode again", "drover plan --name"},
+		{"codex hook", "?plan_hook=codex", "", "end your turn with the revised plan", "drover plan --name"},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -6005,7 +6005,7 @@ func TestReviewCycle_PlanHookNextRound(t *testing.T) {
 				if strings.Contains(prompt, tc.notWant) {
 					t.Errorf("%s prompt should not contain %q:\n%s", who, tc.notWant, prompt)
 				}
-				if !strings.Contains(prompt, "crit comment --plan my-feature --reply-to") {
+				if !strings.Contains(prompt, "drover comment --plan my-feature --reply-to") {
 					t.Errorf("%s prompt should keep the reply instruction:\n%s", who, prompt)
 				}
 			}

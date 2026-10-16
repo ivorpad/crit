@@ -31,7 +31,7 @@ func RunConfig(args []string) error {
 // registry wires it as the command's helpFn, so `crit config --help`,
 // `crit config help`, and `crit help config` all reach this one copy.
 func PrintConfigHelp() {
-	fmt.Fprint(os.Stderr, `Usage: crit config [--generate|-g|--migrate]
+	fmt.Fprint(os.Stderr, `Usage: drover config [--generate|-g|--migrate]
 
 Show the configuration merged from ~/.crit.config.json and the project
 .crit.config.json as JSON, or print a template with every key and its default
@@ -43,7 +43,7 @@ share_targets while preserving unknown configuration keys.
 
 Keys worth knowing:
   output <dir>
-      Crit data root for reviews. Reviews live in <dir>/reviews/<key>/, keyed
+      Drover data root for reviews. Reviews live in <dir>/reviews/<key>/, keyed
       per working directory and branch, the same layout as the default
       ~/.crit.
 
@@ -66,9 +66,9 @@ Keys worth knowing:
 
   herdr_instabox_boxes {"<herdr label>": "<box>"}
       instabox box names for herdr machines whose SSH target does not say it
-      (workdone-ib5 is inferred as ib5). Used by 'crit herdr --wake'.
+      (workdone-ib5 is inferred as ib5). Used by 'drover herdr --wake'.
       Global-only.
 
-Run 'crit config --generate' for the full key list with default values.
+Run 'drover config --generate' for the full key list with default values.
 `)
 }

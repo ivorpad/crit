@@ -74,14 +74,14 @@ jobs:
 
       - name: Generate checksums
         working-directory: dist
-        run: sha256sum crit-* > checksums.txt
+        run: sha256sum drover-* > checksums.txt
 
       - name: Create release
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
           files: |
-            dist/crit-*
+            dist/drover-*
             dist/checksums.txt
 
       - name: Update Homebrew formula
@@ -91,10 +91,10 @@ jobs:
         run: |
           VERSION="${TAG#v}"
 
-          SHA_DARWIN_ARM64=$(sha256sum dist/crit-darwin-arm64 | cut -d' ' -f1)
-          SHA_DARWIN_AMD64=$(sha256sum dist/crit-darwin-amd64 | cut -d' ' -f1)
-          SHA_LINUX_AMD64=$(sha256sum dist/crit-linux-amd64 | cut -d' ' -f1)
-          SHA_LINUX_ARM64=$(sha256sum dist/crit-linux-arm64 | cut -d' ' -f1)
+          SHA_DARWIN_ARM64=$(sha256sum dist/drover-darwin-arm64 | cut -d' ' -f1)
+          SHA_DARWIN_AMD64=$(sha256sum dist/drover-darwin-amd64 | cut -d' ' -f1)
+          SHA_LINUX_AMD64=$(sha256sum dist/drover-linux-amd64 | cut -d' ' -f1)
+          SHA_LINUX_ARM64=$(sha256sum dist/drover-linux-arm64 | cut -d' ' -f1)
 
           BASE_URL="https://github.com/tomasz-tomczyk/crit/releases/download/${TAG}"
 
@@ -110,33 +110,33 @@ jobs:
 
             on_macos do
               on_arm do
-                url "${BASE_URL}/crit-darwin-arm64"
+                url "${BASE_URL}/drover-darwin-arm64"
                 sha256 "${SHA_DARWIN_ARM64}"
               end
               on_intel do
-                url "${BASE_URL}/crit-darwin-amd64"
+                url "${BASE_URL}/drover-darwin-amd64"
                 sha256 "${SHA_DARWIN_AMD64}"
               end
             end
 
             on_linux do
               on_arm do
-                url "${BASE_URL}/crit-linux-arm64"
+                url "${BASE_URL}/drover-linux-arm64"
                 sha256 "${SHA_LINUX_ARM64}"
               end
               on_intel do
-                url "${BASE_URL}/crit-linux-amd64"
+                url "${BASE_URL}/drover-linux-amd64"
                 sha256 "${SHA_LINUX_AMD64}"
               end
             end
 
             def install
-              binary = Dir["crit-*"].first || "crit"
-              bin.install binary => "crit"
+              binary = Dir["drover-*"].first || "drover"
+              bin.install binary => "drover"
             end
 
             test do
-              assert_match "${VERSION}", shell_output("#{bin}/crit --version").strip
+              assert_match "${VERSION}", shell_output("#{bin}/drover --version").strip
             end
           end
           FORMULA

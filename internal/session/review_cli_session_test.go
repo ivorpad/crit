@@ -47,7 +47,7 @@ func TestRunReview_SessionByID_ConnectsToAliveDaemon(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(map[string]any{
 				"approved":     false,
-				"next_command": "crit --session " + key,
+				"next_command": "drover --session " + key,
 			})
 		default:
 			http.NotFound(w, r)
@@ -75,7 +75,7 @@ func TestRunReview_SessionByID_ConnectsToAliveDaemon(t *testing.T) {
 			t.Errorf("RunReview: %v", err)
 		}
 	})
-	if !strings.Contains(stderr, "Connected to crit daemon") {
+	if !strings.Contains(stderr, "Connected to drover daemon") {
 		t.Fatalf("stderr = %q, want connected message", stderr)
 	}
 	if !strings.Contains(stderr, "session "+key) {
@@ -135,7 +135,7 @@ func TestRunReview_DefaultKey_ConnectsToAliveDaemon(t *testing.T) {
 			t.Errorf("RunReview: %v", err)
 		}
 	})
-	if !strings.Contains(stderr, "Connected to crit daemon") {
+	if !strings.Contains(stderr, "Connected to drover daemon") {
 		t.Fatalf("stderr = %q, want connected message", stderr)
 	}
 	if !strings.Contains(stderr, "session "+key) {
@@ -199,7 +199,7 @@ func TestRunReview_DefaultKey_StartsNewDaemon(t *testing.T) {
 			t.Errorf("RunReview: %v", err)
 		}
 	})
-	if !strings.Contains(stderr, "Started crit daemon") {
+	if !strings.Contains(stderr, "Started drover daemon") {
 		t.Fatalf("stderr = %q, want start message", stderr)
 	}
 	if !strings.Contains(stderr, "Note: scanning") {

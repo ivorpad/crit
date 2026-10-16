@@ -29,11 +29,11 @@ if ! gh auth status >/dev/null 2>&1; then
   echo "✗ gh not authenticated" >&2; exit 1
 fi
 
-echo "→ Building crit..."
+echo "→ Building drover..."
 make -C "$CRIT_DIR" build -j
 
 export CRIT_ROUNDTRIP_REPO
-export CRIT_BINARY="$CRIT_DIR/crit"
+export CRIT_BINARY="$CRIT_DIR/drover"
 
 cd "$CRIT_DIR"
 exec go test -tags e2e_github -count=1 -timeout 20m -run TestRoundtrip "$@" ./...

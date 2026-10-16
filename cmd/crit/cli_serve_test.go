@@ -32,7 +32,7 @@ func TestPreflightCheck_CleanRepo(t *testing.T) {
 	if !strings.Contains(msg, "No changed files found.") {
 		t.Errorf("missing headline; got:\n%s", msg)
 	}
-	if !strings.Contains(msg, "crit <file") {
+	if !strings.Contains(msg, "drover <file") {
 		t.Errorf("missing file-args hint; got:\n%s", msg)
 	}
 	if !strings.Contains(msg, "review changed files") {
@@ -88,7 +88,7 @@ func TestPreflightCheck_NotARepo(t *testing.T) {
 	if !strings.Contains(msg, "Not in a version-controlled repository") {
 		t.Errorf("missing headline; got:\n%s", msg)
 	}
-	if !strings.Contains(msg, "crit <file") {
+	if !strings.Contains(msg, "drover <file") {
 		t.Errorf("missing file-args hint; got:\n%s", msg)
 	}
 	for _, banned := range []string{"daemon", "port", "connection", "127.0.0.1"} {

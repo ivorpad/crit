@@ -261,14 +261,14 @@ test('renderUpdatesPane: groups Crit releases and integration work', () => {
     stale_integrations: [{ agent: 'claude-code', hash: 'new-hash', hint: 'Run: crit install claude-code' }],
     missing_integrations: ['cursor'],
   }, {});
-  assert.match(pane.innerHTML, /Release notes and downloads/);
+  assert.match(pane.innerHTML, /Upstream release notes/);
   assert.match(pane.innerHTML, /class="updates-release-notes"/);
   assert.match(pane.innerHTML, /brew upgrade crit/);
   assert.match(pane.innerHTML, /v1\.0\.0/);
   assert.match(pane.innerHTML, /Claude Code/);
   assert.match(pane.innerHTML, /crit install claude-code/);
   assert.match(pane.innerHTML, /Cursor/);
-  assert.match(pane.innerHTML, /crit install cursor/);
+  assert.match(pane.innerHTML, /drover install cursor/);
   assert.match(pane.innerHTML, /updates-command-copy/);
   assert.match(pane.innerHTML, /images\/integrations\/claude-code-dark\.svg/);
   assert.match(pane.innerHTML, />Stale</);
@@ -294,7 +294,7 @@ test('renderUpdatesPane: current Crit still shows its version and release notes'
   const pane = makePane();
   sp.renderUpdatesPane(pane, { version: '0.20.2' }, {});
   assert.match(pane.innerHTML, /v0\.20\.2/);
-  assert.match(pane.innerHTML, /Release notes/);
+  assert.match(pane.innerHTML, /Upstream release notes/);
   assert.match(pane.innerHTML, /Up to date/);
 });
 

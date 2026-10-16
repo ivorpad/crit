@@ -74,11 +74,11 @@ func parsePushFlags(args []string) (pushFlags, error) {
 
 func setPushSpec(f *pushFlags, arg string) error {
 	if f.spec != "" {
-		fmt.Fprintf(os.Stderr, "Usage: crit push [--session <id>] [--dry-run] [--event <type>] [--message <msg>] [--output <dir>] [number|url]\n")
+		fmt.Fprintf(os.Stderr, "Usage: drover push [--session <id>] [--dry-run] [--event <type>] [--message <msg>] [--output <dir>] [number|url]\n")
 		return clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 	}
 	if _, err := ParsePRSpec(arg); err != nil {
-		fmt.Fprintf(os.Stderr, "Usage: crit push [--session <id>] [--dry-run] [--event <type>] [--message <msg>] [--output <dir>] [number|url]\n")
+		fmt.Fprintf(os.Stderr, "Usage: drover push [--session <id>] [--dry-run] [--event <type>] [--message <msg>] [--output <dir>] [number|url]\n")
 		return clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 	}
 	f.spec = arg
@@ -219,7 +219,7 @@ func loadPushReview(f pushFlags, id forge.ChangeID) (string, session.CritJSON, e
 	}
 
 	if !cwdFileExists {
-		return "", session.CritJSON{}, fmt.Errorf("no review file found. Run a crit review first")
+		return "", session.CritJSON{}, fmt.Errorf("no review file found. Run a drover review first")
 	}
 	return critPath, cj, nil
 }
@@ -230,7 +230,7 @@ func runPushDryRun(ctx pushContext, b PushBuckets) {
 	fmt.Println(SummarizeBuckets(ctx.prNumber, b))
 	fmt.Println()
 	fmt.Print(DetailedDryRun(b))
-	fmt.Printf("Use `crit push --pr %d` to confirm.\n", ctx.prNumber)
+	fmt.Printf("Use `drover push --pr %d` to confirm.\n", ctx.prNumber)
 }
 
 // runPushLive performs the actual push: writes the orphan export (if any
@@ -284,7 +284,7 @@ func RunPushLive(ctx pushContext, b PushBuckets) int { //nolint:gocyclo // CLI p
 		k := posted + postedReplies + patched + deleted
 		n := postable + totalReplies + totalEdits + totalDeletes
 		fmt.Fprintf(os.Stderr,
-			"Pushed %d of %d comments before auth failed. Run 'gh auth refresh' then re-run 'crit push' to post the rest.\n",
+			"Pushed %d of %d comments before auth failed. Run 'gh auth refresh' then re-run 'drover push' to post the rest.\n",
 			k, n)
 		return 1
 	}
@@ -472,7 +472,7 @@ func RunPush(args []string) error {
 		return err
 	}
 
-	if err := share.CheckGitHubSyncAllowed(ctx.cj, "crit push"); err != nil {
+	if err := share.CheckGitHubSyncAllowed(ctx.cj, "drover push"); err != nil {
 		return err
 	}
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-const defaultTitle = "Crit"
+const defaultTitle = "Drover"
 
 type commandSpec struct {
 	name string
@@ -68,7 +68,7 @@ func desktopCommandSpecs(goos, title, body, openURL string, hasCommand func(stri
 		if hasCommand("notify-send") {
 			specs = append(specs, commandSpec{
 				name: "notify-send",
-				args: []string{"--app-name=crit", title, body},
+				args: []string{"--app-name=drover", title, body},
 			})
 		}
 		if hasCommand("zenity") {
@@ -112,7 +112,7 @@ func windowsToastScript(title, body string) string {
 			`$text.Item(0).AppendChild($template.CreateTextNode('%s')) > $null; `+
 			`$text.Item(1).AppendChild($template.CreateTextNode('%s')) > $null; `+
 			`$toast = [Windows.UI.Notifications.ToastNotification]::new($template); `+
-			`[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('crit').Show($toast)`,
+			`[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('drover').Show($toast)`,
 		esc(title), esc(body),
 	)
 }

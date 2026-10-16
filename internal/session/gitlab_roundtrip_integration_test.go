@@ -97,14 +97,14 @@ func newGitLabRoundtripEnv(t *testing.T) *gitLabRoundtripEnv {
 	mustGitLabAPI(t, host, projectPath+"/repository/commits", "POST", map[string]any{
 		"branch":         branch,
 		"start_branch":   projectInfo.DefaultBranch,
-		"commit_message": "crit GitLab roundtrip fixture",
+		"commit_message": "drover GitLab roundtrip fixture",
 		"actions": []map[string]any{{
 			"action": "create", "file_path": "crit_gitlab_roundtrip.go", "content": fileBody,
 		}},
 	})
 	mrOut := mustGitLabAPI(t, host, projectPath+"/merge_requests", "POST", map[string]any{
 		"source_branch": branch, "target_branch": projectInfo.DefaultBranch,
-		"title": "Crit GitLab roundtrip " + branch, "remove_source_branch": true,
+		"title": "Drover GitLab roundtrip " + branch, "remove_source_branch": true,
 	})
 	var mr gitLabRoundtripMR
 	if err := json.Unmarshal(mrOut, &mr); err != nil || mr.IID <= 0 {
@@ -149,7 +149,7 @@ func (e *gitLabRoundtripEnv) runCrit(args ...string) string {
 	cmd.Stdout = &out
 	cmd.Stderr = &out
 	if err := cmd.Run(); err != nil {
-		e.t.Fatalf("crit %v failed: %v\noutput:\n%s", args, err, out.String())
+		e.t.Fatalf("drover %v failed: %v\noutput:\n%s", args, err, out.String())
 	}
 	return out.String()
 }
@@ -201,7 +201,7 @@ func (e *gitLabRoundtripEnv) discussions() []gitLabRoundtripDiscussion {
 
 func TestGitLabRoundtrip_FullCommentLifecycle(t *testing.T) {
 	e := newGitLabRoundtripEnv(t)
-	e.runCrit("comment", "--output", e.outputDir, "--author", "Crit E2E", "crit_gitlab_roundtrip.go:3", "initial GitLab comment")
+	e.runCrit("comment", "--output", e.outputDir, "--author", "Drover E2E", "crit_gitlab_roundtrip.go:3", "initial GitLab comment")
 
 	firstOut := e.runCrit("push", "--forge", "gitlab", "--output", e.outputDir, fmt.Sprint(e.mrIID))
 	if !strings.Contains(firstOut, "Posted 1 comments") {
@@ -218,7 +218,7 @@ func TestGitLabRoundtrip_FullCommentLifecycle(t *testing.T) {
 		file.Comments[0].Body = "edited GitLab comment"
 		cj.Files["crit_gitlab_roundtrip.go"] = file
 	})
-	e.runCrit("comment", "--output", e.outputDir, "--reply-to", comment.ID, "--resolve", "--author", "Crit E2E", "GitLab reply")
+	e.runCrit("comment", "--output", e.outputDir, "--reply-to", comment.ID, "--resolve", "--author", "Drover E2E", "GitLab reply")
 	secondOut := e.runCrit("push", "--forge", "gitlab", "--output", e.outputDir, fmt.Sprint(e.mrIID))
 	for _, want := range []string{"1 replies", "edited 1", "resolved 1"} {
 		if !strings.Contains(secondOut, want) {

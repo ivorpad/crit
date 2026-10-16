@@ -74,7 +74,7 @@ func RunChange(kind Kind, args []string) error {
 			noun = "mr"
 			identifier = "iid"
 		}
-		return fmt.Errorf("usage: crit %s <%s|url>", noun, identifier)
+		return fmt.Errorf("usage: drover %s <%s|url>", noun, identifier)
 	}
 	if ReviewFn == nil {
 		return fmt.Errorf("forge review command is not wired")
@@ -159,7 +159,7 @@ func parsePullRequest(args []string) (PullRequest, error) {
 			request.SessionID = id
 		default:
 			if request.ChangeSpec != "" {
-				return request, fmt.Errorf("usage: crit pull [--forge <provider>] [--session <id>] [--output <dir>] [number|url]")
+				return request, fmt.Errorf("usage: drover pull [--forge <provider>] [--session <id>] [--output <dir>] [number|url]")
 			}
 			request.ChangeSpec = args[i]
 		}
@@ -203,7 +203,7 @@ func parsePushRequest(args []string) (PushRequest, error) {
 			request.Event = strings.ToLower(val)
 		default:
 			if request.ChangeSpec != "" {
-				return request, fmt.Errorf("usage: crit push [--forge <provider>] [--session <id>] [--dry-run] [--event <type>] [--message <msg>] [--output <dir>] [number|url]")
+				return request, fmt.Errorf("usage: drover push [--forge <provider>] [--session <id>] [--dry-run] [--event <type>] [--message <msg>] [--output <dir>] [number|url]")
 			}
 			request.ChangeSpec = args[i]
 		}

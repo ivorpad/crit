@@ -190,7 +190,7 @@ func TestStoryHelpMentionsStoryCommands(t *testing.T) {
 	out := stderr.String()
 	// This was the original core-help coverage; it intentionally samples the
 	// story-specific options rather than trying to duplicate every help line.
-	for _, want := range []string{"Usage: crit story", "--story-file", "--prep", "--guide", "--skip-llm", "--refresh", "--clear", "--no-spend"} {
+	for _, want := range []string{"Usage: drover story", "--story-file", "--prep", "--guide", "--skip-llm", "--refresh", "--clear", "--no-spend"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("story help missing %q:\n%s", want, out)
 		}

@@ -1,69 +1,69 @@
 ---
 name: crit
-description: "Review code changes, a plan, a live page (running dev server), or a local HTML file with Crit inline comments and structured human feedback. Use only when the user explicitly invokes /crit or directly asks to use Crit; a generic review request does not count."
-allowed-tools: Bash(crit:*), Bash(command ls:*), Read, Edit, Glob
+description: "Review code changes, a plan, a live page (running dev server), or a local HTML file with Drover inline comments and structured human feedback. Use only when the user explicitly invokes /crit or directly asks to use Drover; a generic review request does not count."
+allowed-tools: Bash(drover:*), Bash(command ls:*), Read, Edit, Glob
 argument-hint: "[file|url]"
 ---
 
 # Review with Crit
 
 This is the interactive, human-in-the-browser review cycle. Run it only after
-the user explicitly invokes `/crit` or directly asks to use Crit. A generic
+the user explicitly invokes `/crit` or directly asks to use Drover. A generic
 request to review code, a plan, a diff, a PR, or a page does not count.
 
-Review and revise code changes, plans, live pages (running dev servers, staging URLs), or local HTML files using `crit` for inline comment review.
+Review and revise code changes, plans, live pages (running dev servers, staging URLs), or local HTML files using `drover` for inline comment review.
 
-## Step 1: Pass arguments to `crit`
+## Step 1: Pass arguments to `drover`
 
 The CLI auto-detects the review mode from its arguments. **Do not ask the user which mode to use.** Pass `$ARGUMENTS` through:
 
 ```
-crit $ARGUMENTS               # file, dir, URL, .html — CLI auto-detects mode
-crit --pr <num|url>            # GitHub PR (range mode)
-crit --mr <iid|url>            # GitLab MR (range mode)
-crit --range <base>..<head>    # commit range (range mode)
-crit                           # no args → branch diff
+drover $ARGUMENTS               # file, dir, URL, .html — CLI auto-detects mode
+drover --pr <num|url>            # GitHub PR (range mode)
+drover --mr <iid|url>            # GitLab MR (range mode)
+drover --range <base>..<head>    # commit range (range mode)
+drover                           # no args → branch diff
 ```
 If no arguments, check conversation context:
 
-1. A plan file was written earlier in this conversation → `crit <plan-file>`
-2. Otherwise → bare `crit` (branch diff)
+1. A plan file was written earlier in this conversation → `drover <plan-file>`
+2. Otherwise → bare `drover` (branch diff)
 
 <important if="the user wants to open the review from another device — e.g. a phone over Tailscale">
-Keep crit on loopback and reverse-proxy in. Same Step 1 args still apply (file, bare `crit`, etc.):
+Keep drover on loopback and reverse-proxy in. Same Step 1 args still apply (file, bare `drover`, etc.):
 
 ```bash
-crit --public-url "https://<machine>.ts.net" --allow-unauthenticated-network --no-open [args…]
+drover --public-url "https://<machine>.ts.net" --allow-unauthenticated-network --no-open [args…]
 # then: tailscale serve --bg --https=443 http://127.0.0.1:<port>
 ```
 
-- `--public-url` only changes the URL crit prints — it does **not** expose the server.
-- `--allow-unauthenticated-network` is required with `--public-url` (even on loopback) and with any non-loopback `--host`. Crit has no auth: anyone who can reach the URL can read the repo and post comments that may trigger agents. Confirm the user wants that blast radius.
-- **Do not bind `--host` to a Tailscale/LAN IP** — proxy with `tailscale serve` (or an SSH tunnel). Get `<port>` from crit's startup output, or fix it with `-p`. Relay the URL crit prints (the public one), not localhost.
+- `--public-url` only changes the URL drover prints — it does **not** expose the server.
+- `--allow-unauthenticated-network` is required with `--public-url` (even on loopback) and with any non-loopback `--host`. Drover has no auth: anyone who can reach the URL can read the repo and post comments that may trigger agents. Confirm the user wants that blast radius.
+- **Do not bind `--host` to a Tailscale/LAN IP** — proxy with `tailscale serve` (or an SSH tunnel). Get `<port>` from drover's startup output, or fix it with `-p`. Relay the URL drover prints (the public one), not localhost.
 </important>
 
-## Step 2: Launch crit and block until review completes
+## Step 2: Launch drover and block until review completes
 
 **CRITICAL — you MUST run this step. Do NOT skip it. Do NOT proceed without it.**
 
-Run `crit` **in the background** using `run_in_background: true`:
+Run `drover` **in the background** using `run_in_background: true`:
 
 ```bash
-crit <plan-file>   # specific file
-crit               # git mode
+drover <plan-file>   # specific file
+drover               # git mode
 ```
 
-Pass `timeout: 86400000` (24 hours) with `run_in_background: true` on every blocking `crit` call. Without it, Claude Code stops background commands after 30 minutes. Claude Code may lower the value to its own limit (2 hours unless the user sets `BASH_MAX_TIMEOUT_MS`).
+Pass `timeout: 86400000` (24 hours) with `run_in_background: true` on every blocking `drover` call. Without it, Claude Code stops background commands after 30 minutes. Claude Code may lower the value to its own limit (2 hours unless the user sets `BASH_MAX_TIMEOUT_MS`).
 
-If a crit server is already running from earlier in this conversation, `crit` automatically connects to it. Starting from scratch, it spawns the daemon, opens the browser, and blocks until the user clicks "Finish Review".
+If a drover server is already running from earlier in this conversation, `drover` automatically connects to it. Starting from scratch, it spawns the daemon, opens the browser, and blocks until the user clicks "Finish Review".
 
-`crit` prints the review URL on startup (e.g. `Started crit daemon at http://localhost:<port>`). Relay it verbatim:
+`drover` prints the review URL on startup (e.g. `Started drover daemon at http://localhost:<port>`). Relay it verbatim:
 
-> **"Crit is open at http://localhost:<port>. Leave inline comments, then click Finish Review."**
+> **"Drover is open at http://localhost:<port>. Leave inline comments, then click Finish Review."**
 
-**Do NOT proceed until `crit` completes.** Do NOT ask the user to type anything. Do NOT read the review file early. Wait for the background task to finish — that is how you know the human is done reviewing.
+**Do NOT proceed until `drover` completes.** Do NOT ask the user to type anything. Do NOT read the review file early. Wait for the background task to finish — that is how you know the human is done reviewing.
 
-<important if="Claude Code stopped `crit` because it reached its background time limit">
+<important if="Claude Code stopped `drover` because it reached its background time limit">
 Tell the user that Claude Code stopped waiting after its background time limit (2 hours by default), and that the review is still open in the browser with their comments.
 
 Offer to raise the limit to 24 hours by adding this to `~/.claude/settings.json` (it takes effect after Claude Code restarts):
@@ -72,12 +72,12 @@ Offer to raise the limit to 24 hours by adding this to `~/.claude/settings.json`
 "env": { "BASH_MAX_TIMEOUT_MS": "86400000" }
 ```
 
-If the user agrees, merge it into the existing file; do not overwrite other settings. Then, if the user wants you to keep waiting, run the same `crit` command again as in Step 2.
+If the user agrees, merge it into the existing file; do not overwrite other settings. Then, if the user wants you to keep waiting, run the same `drover` command again as in Step 2.
 </important>
 
 ## Step 3: Read the review output
 
-When `crit` completes, read **stdout** and follow its instructions. Check **stderr** for `approved: true` or `approved: false`.
+When `drover` completes, read **stdout** and follow its instructions. Check **stderr** for `approved: true` or `approved: false`.
 
 <important if="a comment has a quote, anchor, or drifted field">
 - `quote`: the specific text the reviewer selected — focus your changes on the quoted text rather than the entire line range
@@ -85,7 +85,7 @@ When `crit` completes, read **stdout** and follow its instructions. Check **stde
 - `drifted: true`: original content was removed or heavily rewritten — line numbers are approximate at best
 </important>
 
-**Fallback** (mid-round re-entry, plan hooks, or headless workflows): `crit comments` / `crit comments --json`. Use `crit comments --plan <slug>` for plan-mode reviews.
+**Fallback** (mid-round re-entry, plan hooks, or headless workflows): `drover comments` / `drover comments --json`. Use `drover comments --plan <slug>` for plan-mode reviews.
 
 ## Step 4: Address each review comment
 
@@ -94,10 +94,10 @@ For each unresolved comment:
 1. Understand what the comment asks for
 2. If it contains a suggestion block, apply that specific change
 3. Revise the referenced file (plan or code file from the diff) using Edit
-4. Reply with what you did: `crit comment --reply-to <id> --author 'Claude Code' '<what you did>'` (reply bodies support markdown)
+4. Reply with what you did: `drover comment --reply-to <id> --author 'Claude Code' '<what you did>'` (reply bodies support markdown)
 5. **Do not pass `--resolve`.** Resolving is the reviewer's call. Only add `--resolve` if the user explicitly asks.
 
-Editing the plan file triggers Crit's live reload — the user sees changes in the browser immediately.
+Editing the plan file triggers Drover's live reload — the user sees changes in the browser immediately.
 
 <important if="you are replying to multiple comments at once">
 Use `--json` for a single bulk call instead of one invocation per comment:
@@ -106,13 +106,13 @@ Use `--json` for a single bulk call instead of one invocation per comment:
 echo '[
   {"reply_to": "c_a1b2c3", "body": "Fixed"},
   {"reply_to": "c_d4e5f6", "body": "Refactored as suggested"}
-]' | crit comment --json --author 'Claude Code'
+]' | drover comment --json --author 'Claude Code'
 ```
 
 For long or multi-line bodies, write the JSON to a file and pass `--file`. Use `--file`, not a `<` redirect.
 
 ```bash
-crit comment --json --file /tmp/replies.json --author 'Claude Code'
+drover comment --json --file /tmp/replies.json --author 'Claude Code'
 ```
 </important>
 
@@ -122,18 +122,18 @@ crit comment --json --file /tmp/replies.json --author 'Claude Code'
 
 The finish prompt on stdout includes the command to run again — use it to start a new round.
 
-On subsequent calls, `crit` automatically signals round-complete first, then blocks until the next "Finish Review" click.
+On subsequent calls, `drover` automatically signals round-complete first, then blocks until the next "Finish Review" click.
 
 Run it in the background with `timeout: 86400000`, as in Step 2.
 
-Tell the user only: **"Replied in Crit. Review the changes in your browser and click Finish Review when ready."** Do not repeat your replies or list the comments in chat. The reviewer reads them in Crit.
+Tell the user only: **"Replied in Drover. Review the changes in your browser and click Finish Review when ready."** Do not repeat your replies or list the comments in chat. The reviewer reads them in Drover.
 
-**Do NOT proceed until `crit` completes.** When it does, return to Step 3. If the user finishes with zero comments, the review is approved — stop the loop and proceed.
+**Do NOT proceed until `drover` completes.** When it does, return to Step 3. If the user finishes with zero comments, the review is approved — stop the loop and proceed.
 
 <important if="the user asks for a URL, a shareable link, or a QR code for the review">
 
 ```bash
-crit share <file>
+drover share <file>
 ```
 
 **Always relay the full output to the user** — copy the URL (and QR code if `--qr` was used) directly into your response. Don't make them dig through tool output.
@@ -141,7 +141,7 @@ crit share <file>
 To remove a shared review:
 
 ```bash
-crit unpublish [file...]
+drover unpublish [file...]
 ```
 </important>
 
@@ -149,6 +149,6 @@ crit unpublish [file...]
 Only use `--qr` in real terminal environments with monospace rendering. Skip it in mobile apps (Claude Code mobile) or web chat UIs — Unicode block characters won't render.
 
 ```bash
-crit share --qr <file>
+drover share --qr <file>
 ```
 </important>

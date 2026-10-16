@@ -69,6 +69,17 @@ body {
 .header-logo .header-logo-dot {
   fill: var(--crit-logo-dot);
 }
+/* The name as text ("drover."), sized to the 16px row the old glyph logo had. */
+.header-logo-text {
+  display: inline-block;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 16px;
+  letter-spacing: -0.03em;
+}
+.header-logo-text .header-logo-dot {
+  color: var(--crit-logo-dot);
+}
 
 /* Compare rail — wraps base picker, arrow, branch chip, stack chip, resume pill.
    In working-tree mode the rail reads "base ← head" (compare-bar idiom).

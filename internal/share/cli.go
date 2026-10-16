@@ -156,7 +156,7 @@ func runSharePreview(sf shareFlags) error {
 		return clicmd.Usage("Error: sharing is disabled; configure a share target or pass --share-url")
 	}
 	if target.ProxyAuth {
-		return proxyAuthCLIError("crit share")
+		return proxyAuthCLIError("drover share")
 	}
 	url, err := postPreviewShare(sf.preview, target.URL, target.Auth.Token, sf.org, sf.visibility)
 	if err != nil {
@@ -168,15 +168,15 @@ func runSharePreview(sf shareFlags) error {
 }
 
 func shareUsageError() error {
-	fmt.Fprintln(os.Stderr, "Usage: crit share [--session <id>] [--output <dir>] [--share-url <url>] [--org <slug>] [--visibility <level>] [--qr] <file> [file...]")
+	fmt.Fprintln(os.Stderr, "Usage: drover share [--session <id>] [--output <dir>] [--share-url <url>] [--org <slug>] [--visibility <level>] [--qr] <file> [file...]")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Shares files to crit-web and prints the review URL.")
 	fmt.Fprintln(os.Stderr, "Comments from the review file are included automatically.")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Examples:")
-	fmt.Fprintln(os.Stderr, "  crit share plan.md")
-	fmt.Fprintln(os.Stderr, "  crit share plan.md src/main.go")
-	fmt.Fprintln(os.Stderr, "  crit share --qr plan.md")
+	fmt.Fprintln(os.Stderr, "  drover share plan.md")
+	fmt.Fprintln(os.Stderr, "  drover share plan.md src/main.go")
+	fmt.Fprintln(os.Stderr, "  drover share --qr plan.md")
 	return clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 }
 
@@ -230,7 +230,7 @@ func noteStoryNotShared(critPath string) {
 
 func handleShareAuthError(targetURL string) {
 	auth.ClearTargetAuth(targetURL)
-	fmt.Fprintln(os.Stderr, "Auth token rejected by server; cleared local credentials. Run 'crit auth login' to re-authenticate.")
+	fmt.Fprintln(os.Stderr, "Auth token rejected by server; cleared local credentials. Run 'drover auth login' to re-authenticate.")
 }
 
 func runShareExisting(existingCfg session.CritJSON, critPath string, files []ShareFile, sharePaths []string, svcURL, authToken, fallbackAuthor, org, visibility string, showQR bool) error {
@@ -366,7 +366,7 @@ func RunShare(args []string) error { //nolint:gocyclo // CLI dispatcher
 		return err
 	}
 	if target.ProxyAuth {
-		return proxyAuthCLIError("crit share")
+		return proxyAuthCLIError("drover share")
 	}
 	sf.svcURL = target.URL
 	auth.LazyBackfillTargetAuth(target.URL)
@@ -475,7 +475,7 @@ func resolveOperationTarget(cfg config.Config, explicit string, explicitSet bool
 }
 
 func proxyAuthCLIError(command string) error {
-	return fmt.Errorf("%s is unavailable for a target with proxy_auth enabled; use Crit's browser interface", command)
+	return fmt.Errorf("%s is unavailable for a target with proxy_auth enabled; use Drover's browser interface", command)
 }
 
 func runShareUnderLock(critPath string, files []ShareFile, sharePaths []string, svcURL, authToken, author, org, visibility string, showQR bool) error {
@@ -506,10 +506,10 @@ func parseFetchOutputDir(args []string) (outputDir, sessionID string, err error)
 			i++
 			sessionID = args[i]
 		default:
-			fmt.Fprintln(os.Stderr, "Usage: crit fetch [--session <id>] [--output <dir>]")
+			fmt.Fprintln(os.Stderr, "Usage: drover fetch [--session <id>] [--output <dir>]")
 			fmt.Fprintln(os.Stderr, "")
 			fmt.Fprintln(os.Stderr, "Fetches comments added on crit-web into the review file.")
-			fmt.Fprintln(os.Stderr, "Requires a prior `crit share` so a share URL is recorded.")
+			fmt.Fprintln(os.Stderr, "Requires a prior `drover share` so a share URL is recorded.")
 			return "", "", clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 		}
 	}
@@ -543,7 +543,7 @@ func printFetchedComments(webComments []WebComment) {
 
 // RunFetch pulls remote comments from crit-web into the review file.
 func RunFetch(args []string) error {
-	if err := checkProxyAuthCLIAllowed("crit fetch"); err != nil {
+	if err := checkProxyAuthCLIAllowed("drover fetch"); err != nil {
 		return err
 	}
 	critPath, err := resolveFetchReviewPath(args)
@@ -559,14 +559,14 @@ func RunFetch(args []string) error {
 func runFetchUnderLock(critPath string) error {
 	data, readErr := session.ReadFileShared(session.ReviewPathsFor(critPath).Review)
 	if readErr != nil {
-		return clicmd.Usage("Error: no review file found. Run `crit share` first.")
+		return clicmd.Usage("Error: no review file found. Run `drover share` first.")
 	}
 	var cj session.CritJSON
 	if err := json.Unmarshal(data, &cj); err != nil {
 		return fmt.Errorf("invalid review file: %w", err)
 	}
 	if cj.ShareURL == "" {
-		return clicmd.Usage("Error: no share URL in review file. Run `crit share` first.")
+		return clicmd.Usage("Error: no share URL in review file. Run `drover share` first.")
 	}
 
 	target, err := resolveOperationTarget(LoadShareConfig(), "", false, cj, true)
@@ -574,7 +574,7 @@ func runFetchUnderLock(critPath string) error {
 		return err
 	}
 	if target.ProxyAuth {
-		return proxyAuthCLIError("crit fetch")
+		return proxyAuthCLIError("drover fetch")
 	}
 	authToken := target.Auth.Token
 	fetched, err := fetchWebCommentsForReview(cj.ShareURL, target.URL, cj, authToken)
@@ -658,7 +658,7 @@ func applyUnpublishConfigDefaults(f *unpublishFlags, cfg config.Config) {
 
 // RunUnpublish removes a shared review from crit-web.
 func RunUnpublish(args []string) error {
-	if err := checkProxyAuthCLIAllowed("crit unpublish"); err != nil {
+	if err := checkProxyAuthCLIAllowed("drover unpublish"); err != nil {
 		return err
 	}
 	f, err := parseUnpublishFlags(args)
@@ -690,7 +690,7 @@ func RunUnpublish(args []string) error {
 		return err
 	}
 	if target.ProxyAuth {
-		return proxyAuthCLIError("crit unpublish")
+		return proxyAuthCLIError("drover unpublish")
 	}
 	f.svcURL = target.URL
 	unpubAuthToken := target.Auth.Token

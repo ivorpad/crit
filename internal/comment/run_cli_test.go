@@ -212,9 +212,9 @@ func TestRunCommentRejectsLiveReviewByForm(t *testing.T) {
 		args []string
 		want string
 	}{
-		{"line", []string{"file.go:1", "body"}, "a line comment (crit comment <path>:<line> <body>) is not supported for live reviews"},
-		{"file", []string{"file.go", "body"}, "a file comment (crit comment <path> <body>) is not supported for live reviews"},
-		{"review", []string{"overall"}, "a review-level comment (crit comment <body>) is not supported for live reviews"},
+		{"line", []string{"file.go:1", "body"}, "a line comment (drover comment <path>:<line> <body>) is not supported for live reviews"},
+		{"file", []string{"file.go", "body"}, "a file comment (drover comment <path> <body>) is not supported for live reviews"},
+		{"review", []string{"overall"}, "a review-level comment (drover comment <body>) is not supported for live reviews"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -260,14 +260,14 @@ func TestRunComment_PlanAndOutputConflict(t *testing.T) {
 }
 
 func TestRunComment_JSONAndReplyToConflict(t *testing.T) {
-	err := RunComment([]string{"--json", "--reply-to", "c_6ab5c4", "--author", "Cursor", "Added crit install prompts"})
+	err := RunComment([]string{"--json", "--reply-to", "c_6ab5c4", "--author", "Cursor", "Added drover install prompts"})
 	if err == nil {
 		t.Fatal("expected error")
 	}
 	if !strings.Contains(err.Error(), "--json and --reply-to cannot be used together") {
 		t.Errorf("got %v", err)
 	}
-	if !strings.Contains(err.Error(), "crit comment --reply-to <id>") {
+	if !strings.Contains(err.Error(), "drover comment --reply-to <id>") {
 		t.Errorf("expected reply usage hint, got %v", err)
 	}
 }

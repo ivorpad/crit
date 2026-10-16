@@ -34,7 +34,7 @@ func TestClientExitsOnFinish(t *testing.T) {
 	}
 
 	binDir := t.TempDir()
-	binaryName := "crit"
+	binaryName := "drover"
 	if runtime.GOOS == "windows" {
 		binaryName = "crit.exe"
 	}
@@ -44,10 +44,10 @@ func TestClientExitsOnFinish(t *testing.T) {
 	build := exec.Command("go", "build", "-o", binary, "./cmd/crit")
 	build.Dir = moduleRoot
 	if out, err := build.CombinedOutput(); err != nil {
-		t.Fatalf("build crit: %v\n%s", err, out)
+		t.Fatalf("build drover: %v\n%s", err, out)
 	}
 	if err := os.Chmod(binary, 0o755); err != nil {
-		t.Fatalf("chmod crit: %v", err)
+		t.Fatalf("chmod drover: %v", err)
 	}
 
 	// Repo with a tracked file change so git mode has something to review.
@@ -95,7 +95,7 @@ func TestClientExitsOnFinish(t *testing.T) {
 	t.Cleanup(group.Close)
 
 	if err := group.StartInGroup(cmd); err != nil {
-		t.Fatalf("start crit: %v", err)
+		t.Fatalf("start drover: %v", err)
 	}
 
 	// `crit` spawns a daemon, registers a session file, then connects to it.

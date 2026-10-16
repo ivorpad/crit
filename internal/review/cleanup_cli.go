@@ -33,7 +33,7 @@ func RunCleanup(args []string) error {
 		case "--force":
 			force = true
 		default:
-			fmt.Fprintf(os.Stderr, "Usage: crit cleanup [--days N] [--force]\n")
+			fmt.Fprintf(os.Stderr, "Usage: drover cleanup [--days N] [--force]\n")
 			return clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 		}
 	}

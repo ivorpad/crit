@@ -57,7 +57,7 @@ func Plural(n int) string {
 func MustGetwd() (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
-		return "", ExitError{Code: 1, Err: fmt.Errorf("crit: unable to determine current working directory: %w", err)}
+		return "", ExitError{Code: 1, Err: fmt.Errorf("drover: unable to determine current working directory: %w", err)}
 	}
 	return wd, nil
 }

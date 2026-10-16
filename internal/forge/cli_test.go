@@ -244,7 +244,7 @@ func TestRunChangeAndSelectionErrors(t *testing.T) {
 	if err := RunChange(GitLab, []string{"7"}); err == nil || !strings.Contains(err.Error(), "not wired") {
 		t.Fatalf("unwired review error = %v", err)
 	}
-	if err := RunChange(GitHub, nil); err == nil || !strings.Contains(err.Error(), "usage: crit pr") {
+	if err := RunChange(GitHub, nil); err == nil || !strings.Contains(err.Error(), "usage: drover pr") {
 		t.Fatalf("invalid PR args error = %v", err)
 	}
 	SelectProviderFn = nil

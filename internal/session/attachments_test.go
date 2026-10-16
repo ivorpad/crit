@@ -298,7 +298,7 @@ func TestStripAttachmentReferences(t *testing.T) {
 		if strings.Contains(out, "attachments/") {
 			t.Errorf("attachment refs survived: %q", out)
 		}
-		if !strings.Contains(out, "view in Crit") {
+		if !strings.Contains(out, "view in Drover") {
 			t.Errorf("placeholder not appended: %q", out)
 		}
 	})

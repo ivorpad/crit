@@ -1,4 +1,6 @@
-# Crit — Development Guide
+# Drover — Development Guide
+
+Drover is Ivor's fork of crit. The command and what the UI shows say `drover`; the Go module path, `cmd/crit`, package names, `~/.crit` data, `.crit.config.json`, `CRIT_*` variables and crit-web keep the crit name on purpose.
 
 Single-binary Go CLI that opens a browser-based UI for reviewing code changes and markdown files with GitHub PR-style inline commenting. Multi-file review with git diff rendering and structured review file output for AI coding agents.
 
@@ -52,14 +54,14 @@ Do not commit plan files to the repo — keep them as untracked local files (or 
 <important if="you need to build, test, lint, or run crit">
 
 ```bash
-go build -o crit ./cmd/crit                           # Build
+go build -o drover ./cmd/crit                           # Build
 go test ./...                                         # Run all tests
 gofmt -l .                                            # Check formatting (should be clean)
 golangci-lint run ./...                               # Lint (should be clean)
 make build-all                                        # Cross-compile to dist/
-./crit                                                # Git mode (auto-detect changed files)
-./crit test-plan.md                                   # Review specific file(s)
-./crit --no-open --port 3000 test-plan.md             # Headless on fixed port
+./drover                                              # Git mode (auto-detect changed files)
+./drover test-plan.md                                 # Review specific file(s)
+./drover --no-open --port 3000 test-plan.md           # Headless on fixed port
 ```
 </important>
 
@@ -68,35 +70,35 @@ make build-all                                        # Cross-compile to dist/
 Subcommands are dispatched via `commandDispatch` in `main.go`. Anything not in the table falls through to `runReview`.
 
 ```
-crit                          # Review git changes (starts daemon, blocks for feedback)
-crit <file|dir> [...]         # Review specific files or directories (falls through to runReview)
-crit review [...]             # Explicit review invocation (same as default)
-crit live <url>               # Review a running web app in live mode (also: crit <url>)
-crit preview <file.html>      # Review a local HTML file in preview mode (also: crit <file.html>)
-crit herdr [--print|--json]   # herdr control center: one review file per agent pane on every herdr machine (read-only)
-crit stop [--all]             # Stop daemon for current directory; --all stops every daemon
-crit status [--json]          # Show review file path, daemon status, comment stats
-crit resume [--list | <id>]   # Pick a stored review to reopen (interactive list of ~/.crit/reviews)
-crit cleanup [--days N] [--force]  # Delete stale review files from ~/.crit/reviews/
-crit pull [pr-number]         # Fetch GitHub PR comments into the review file
-crit push [--dry-run] [--event <type>] [-m <msg>] [pr]  # Post review comments as a GitHub PR review
-crit pr <num|url>             # Thin shim — forwards to `crit review --pr <n>`
-crit fetch ...                # Fetch remote artefacts (see runFetch)
-crit comment <path>:<line[-end]> <body>         # Add a comment (no server needed)
-crit comment --selector <css> [--route <path>] <body>  # Pin a DOM element (live or HTML preview)
-crit comment --reply-to <id> [--resolve] <body> # Reply to a comment
-crit comment --json [--file <path>] [--author <name>]  # Bulk add comments from JSON (stdin or --file; - = stdin)
-crit share <file> [file...]   # Share files to crit-web, print URL
-crit unpublish                # Remove shared review from crit-web
-crit config [--generate]      # Print resolved config (or starter template)
-crit install <agent>          # Install integration config for an AI tool
-crit auth ...                 # Auth flow for hosted crit-web (login/logout)
-crit plan [...]               # Plan-file workflow
-crit plan-hook [--mode claude|codex]  # Internal hook used by agent plan flows
-crit check                    # Self-check (env, git, gh availability)
-crit _serve                   # Internal: foreground server (used by daemon spawn)
-crit --version | -v           # Version
-crit help | --help | -h       # Show help
+drover                          # Review git changes (starts daemon, blocks for feedback)
+drover <file|dir> [...]         # Review specific files or directories (falls through to runReview)
+drover review [...]             # Explicit review invocation (same as default)
+drover live <url>               # Review a running web app in live mode (also: drover <url>)
+drover preview <file.html>      # Review a local HTML file in preview mode (also: drover <file.html>)
+drover herdr [--print|--json]   # herdr control center: one review file per agent pane on every herdr machine (read-only)
+drover stop [--all]             # Stop daemon for current directory; --all stops every daemon
+drover status [--json]          # Show review file path, daemon status, comment stats
+drover resume [--list | <id>]   # Pick a stored review to reopen (interactive list of ~/.crit/reviews)
+drover cleanup [--days N] [--force]  # Delete stale review files from ~/.crit/reviews/
+drover pull [pr-number]         # Fetch GitHub PR comments into the review file
+drover push [--dry-run] [--event <type>] [-m <msg>] [pr]  # Post review comments as a GitHub PR review
+drover pr <num|url>             # Thin shim — forwards to `drover review --pr <n>`
+drover fetch ...                # Fetch remote artefacts (see runFetch)
+drover comment <path>:<line[-end]> <body>         # Add a comment (no server needed)
+drover comment --selector <css> [--route <path>] <body>  # Pin a DOM element (live or HTML preview)
+drover comment --reply-to <id> [--resolve] <body> # Reply to a comment
+drover comment --json [--file <path>] [--author <name>]  # Bulk add comments from JSON (stdin or --file; - = stdin)
+drover share <file> [file...]   # Share files to crit-web, print URL
+drover unpublish                # Remove shared review from crit-web
+drover config [--generate]      # Print resolved config (or starter template)
+drover install <agent>          # Install integration config for an AI tool
+drover auth ...                 # Auth flow for hosted crit-web (login/logout)
+drover plan [...]               # Plan-file workflow
+drover plan-hook [--mode claude|codex]  # Internal hook used by agent plan flows
+drover check                    # Self-check (env, git, gh availability)
+drover _serve                   # Internal: foreground server (used by daemon spawn)
+drover --version | -v           # Version
+drover help | --help | -h       # Show help
 ```
 </important>
 

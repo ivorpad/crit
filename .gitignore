@@ -1,6 +1,8 @@
 # Compiled binary
 /crit
+/drover
 /crit.exe
+/drover.exe
 *.test
 
 # Review session files (generated at runtime)

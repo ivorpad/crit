@@ -65,7 +65,7 @@ func renameLegacyJSONFolder(legacyFolder, identity string) error {
 	if err := os.Rename(legacyFolder, identity); err != nil {
 		return fmt.Errorf("renaming legacy .json folder: %w", err)
 	}
-	fmt.Fprintf(os.Stderr, "crit: renamed legacy .json review folder to %s\n", identity)
+	fmt.Fprintf(os.Stderr, "drover: renamed legacy .json review folder to %s\n", identity)
 	return nil
 }
 
@@ -103,7 +103,7 @@ func migrateFlatToFolder(flatPath, identity string) error {
 	flatSidecar := flatPath + ".snapshots.json"
 	if _, err := os.Stat(flatSidecar); err == nil {
 		if err := os.Rename(flatSidecar, filepath.Join(tmp, "snapshots.json")); err != nil {
-			fmt.Fprintf(os.Stderr, "crit: warning: could not move snapshot sidecar during migration: %v\n", err)
+			fmt.Fprintf(os.Stderr, "drover: warning: could not move snapshot sidecar during migration: %v\n", err)
 		}
 	}
 
@@ -111,6 +111,6 @@ func migrateFlatToFolder(flatPath, identity string) error {
 		return fmt.Errorf("finalizing folder migration: %w", err)
 	}
 
-	fmt.Fprintf(os.Stderr, "crit: migrated review storage to folder format: %s\n", identity)
+	fmt.Fprintf(os.Stderr, "drover: migrated review storage to folder format: %s\n", identity)
 	return nil
 }

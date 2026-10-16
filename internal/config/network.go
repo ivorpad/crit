@@ -59,9 +59,9 @@ func ErrUnauthenticatedNetwork(host, publicURL string) error {
 	}
 	return fmt.Errorf(
 		"refusing unauthenticated network exposure (%s).\n\n"+
-			"  Crit has no network authentication. Anyone who can reach the port can\n"+
+			"  Drover has no network authentication. Anyone who can reach the port can\n"+
 			"  read review/repo files and write comments (including agent-triggering ones).\n\n"+
-			"  Prefer keeping the listen host on loopback and reaching Crit via:\n"+
+			"  Prefer keeping the listen host on loopback and reaching Drover via:\n"+
 			"    • SSH local forward:  ssh -L 8080:127.0.0.1:8080 …\n"+
 			"    • Tailscale Serve / a reverse proxy to 127.0.0.1\n"+
 			"    • Docker:  -p 127.0.0.1:8080:8080\n\n"+

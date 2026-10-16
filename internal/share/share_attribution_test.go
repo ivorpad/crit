@@ -126,7 +126,7 @@ func TestShareAuthAttributesUserIdentity(t *testing.T) {
 	cmd.Env = append(os.Environ(), "CRIT_AUTH_TOKEN="+authToken)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("crit share failed: %s\n%s", err, out)
+		t.Fatalf("drover share failed: %s\n%s", err, out)
 	}
 	output := strings.TrimSpace(string(out))
 	logReview(t, output)
@@ -230,7 +230,7 @@ func TestAuthSessionReLoginEndToEnd(t *testing.T) {
 	// HOME pointing at the test home so the binary picks up B's persisted session.
 	output, err := runCritShareEnv(t, binary, baseURL, dir, []string{"HOME=" + home}, "plan.md")
 	if err != nil {
-		t.Fatalf("crit share failed: %v\n%s", err, output)
+		t.Fatalf("drover share failed: %v\n%s", err, output)
 	}
 	logReview(t, output)
 	reviewToken := extractToken(t, output)
@@ -344,7 +344,7 @@ func TestShareAttrBackwardsCompatNoUserID(t *testing.T) {
 						"id": "c1",
 						"start_line": 3,
 						"end_line": 3,
-						"body": "from old crit",
+						"body": "from old drover",
 						"scope": "line",
 						"created_at": "2026-01-01T00:00:00Z",
 						"updated_at": "2026-01-01T00:00:00Z"
@@ -521,7 +521,7 @@ func TestShareAttrLoginMidFlow(t *testing.T) {
 
 	output, err := runCritShareEnv(t, binary, baseURL, dir, []string{"CRIT_AUTH_TOKEN=" + authToken}, "plan.md")
 	if err != nil {
-		t.Fatalf("crit share failed: %v\n%s", err, output)
+		t.Fatalf("drover share failed: %v\n%s", err, output)
 	}
 	logReview(t, output)
 	token := extractToken(t, output)
@@ -1072,7 +1072,7 @@ func TestShareAttr401ClearsCachedIdentity(t *testing.T) {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		// We don't require non-zero exit — the share may continue anonymously.
 		// The invariant is: cached credentials must be cleared.
-		t.Logf("crit share exit: %v\noutput: %s", err, out)
+		t.Logf("drover share exit: %v\noutput: %s", err, out)
 	}
 
 	data, err := os.ReadFile(filepath.Join(homeDir, ".crit.config.json"))
@@ -1138,7 +1138,7 @@ func TestShareAttrCachedIdentityFromConfigOnly(t *testing.T) {
 	cmd.Env = append(envWithout("CRIT_AUTH_TOKEN=", "HOME="), "HOME="+homeDir)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("crit share failed: %v\n%s", err, out)
+		t.Fatalf("drover share failed: %v\n%s", err, out)
 	}
 	output := strings.TrimSpace(string(out))
 	logReview(t, output)

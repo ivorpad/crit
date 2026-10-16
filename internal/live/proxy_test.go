@@ -806,7 +806,7 @@ func TestSWShim_StructureAndBalance(t *testing.T) {
 	for _, want := range []string{
 		"navigator.serviceWorker",
 		"navigator.serviceWorker.register",
-		"crit: service workers disabled",
+		"drover: service workers disabled",
 		"getRegistrations",
 		"unregister",
 	} {
@@ -832,11 +832,11 @@ func TestProxyModifyResponse_SWShimInjectedInHTMLHead(t *testing.T) {
 	body, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	bs := string(body)
-	if !strings.Contains(bs, "crit: service workers disabled") {
+	if !strings.Contains(bs, "drover: service workers disabled") {
 		t.Errorf("SW shim not injected: %s", bs)
 	}
 	headIdx := strings.Index(bs, "<head")
-	shimIdx := strings.Index(bs, "crit: service workers disabled")
+	shimIdx := strings.Index(bs, "drover: service workers disabled")
 	firstScriptInBody := strings.Index(bs, "<body")
 	if headIdx < 0 || shimIdx < headIdx {
 		t.Errorf("shim not after <head>: head=%d shim=%d", headIdx, shimIdx)
@@ -1002,7 +1002,7 @@ func TestProxyModifyResponse_HeadInsideHTMLComment(t *testing.T) {
 	resp.Body.Close()
 	bs := string(body)
 	commentEnd := strings.Index(bs, "-->")
-	shim := strings.Index(bs, "crit: service workers disabled")
+	shim := strings.Index(bs, "drover: service workers disabled")
 	title := strings.Index(bs, "<title>x</title>")
 	if commentEnd < 0 || shim < 0 || title < 0 {
 		t.Fatalf("missing markers: comment=%d shim=%d title=%d body=%s", commentEnd, shim, title, bs)

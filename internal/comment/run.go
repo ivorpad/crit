@@ -94,7 +94,7 @@ func RunComment(args []string) error { //nolint:gocyclo // CLI dispatcher
 
 func resolveCommentFlags(f *commentFlags) error {
 	if f.json && f.replyTo != "" {
-		return fmt.Errorf("--json and --reply-to cannot be used together; for a single reply use: crit comment --reply-to <id> [--author <name>] <body>")
+		return fmt.Errorf("--json and --reply-to cannot be used together; for a single reply use: drover comment --reply-to <id> [--author <name>] <body>")
 	}
 	if f.selector != "" && f.json {
 		return fmt.Errorf("--selector and --json cannot be used together; put \"selector\" on each JSON entry")
@@ -247,7 +247,7 @@ func runCommentJSONScoped(f commentFlags, scope session.InheritedScope) error {
 
 func runCommentReply(f commentFlags) error {
 	if len(f.args) < 1 {
-		return clicmd.Usage("Usage: crit comment --reply-to <comment-id> [--resolve] <body>")
+		return clicmd.Usage("Usage: drover comment --reply-to <comment-id> [--resolve] <body>")
 	}
 	replyBody := strings.Join(f.args, " ")
 	if err := addReplyToCritJSONAtPathWithRedirect(f.replyTo, replyBody, f.author, f.userID, f.resolve, f.reviewPath, f.path, f.sessionID == ""); err != nil {
@@ -283,29 +283,29 @@ func runSelectorComment(f commentFlags) error {
 }
 
 func commentUsageError() error {
-	fmt.Fprintln(os.Stderr, "Usage: crit comment [--session <id>] [--output <dir>] [--author <name>] <body>     Review-level comment")
-	fmt.Fprintln(os.Stderr, "       crit comment [--session <id>] [--output <dir>] [--author <name>] <path> <body>             File-level comment")
-	fmt.Fprintln(os.Stderr, "       crit comment [--session <id>] [--output <dir>] [--author <name>] <path>:<line[-end]> <body> Line-level comment")
-	fmt.Fprintln(os.Stderr, "       crit comment [--session <id>] [--author <name>] --selector <css> [--route <path>] <body>")
+	fmt.Fprintln(os.Stderr, "Usage: drover comment [--session <id>] [--output <dir>] [--author <name>] <body>     Review-level comment")
+	fmt.Fprintln(os.Stderr, "       drover comment [--session <id>] [--output <dir>] [--author <name>] <path> <body>             File-level comment")
+	fmt.Fprintln(os.Stderr, "       drover comment [--session <id>] [--output <dir>] [--author <name>] <path>:<line[-end]> <body> Line-level comment")
+	fmt.Fprintln(os.Stderr, "       drover comment [--session <id>] [--author <name>] --selector <css> [--route <path>] <body>")
 	fmt.Fprintln(os.Stderr, "                                                                  Live or preview pin")
-	fmt.Fprintln(os.Stderr, "       crit comment [--session <id>] --reply-to <id> [--resolve] [--author <name>] <body>")
-	fmt.Fprintln(os.Stderr, "       crit comment [--session <id>] --json [--file <path>] [--author <name>] [--output <dir>]")
+	fmt.Fprintln(os.Stderr, "       drover comment [--session <id>] --reply-to <id> [--resolve] [--author <name>] <body>")
+	fmt.Fprintln(os.Stderr, "       drover comment [--session <id>] --json [--file <path>] [--author <name>] [--output <dir>]")
 	fmt.Fprintln(os.Stderr, "                                                                  Bulk add comments from JSON (stdin by default; --file <path> or --file - for stdin)")
-	fmt.Fprintln(os.Stderr, "       crit comment [--output <dir>] --clear")
+	fmt.Fprintln(os.Stderr, "       drover comment [--output <dir>] --clear")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Examples:")
-	fmt.Fprintln(os.Stderr, "  crit comment --author 'Claude' 'Overall this looks good'")
-	fmt.Fprintln(os.Stderr, "  crit comment --author 'Claude' src/auth.go 'Restructure this file'")
-	fmt.Fprintln(os.Stderr, "  crit comment --author 'Claude' main.go:42 'Fix this bug'")
-	fmt.Fprintln(os.Stderr, "  crit comment --session 839f3b4cd5d6 --author 'Claude' main.go:42 'Fix this bug'")
-	fmt.Fprintln(os.Stderr, "  crit comment --author 'Claude' src/auth.go:10-25 'This block needs refactoring'")
-	fmt.Fprintln(os.Stderr, "  crit comment --selector 'h1' 'Heading is vague'")
-	fmt.Fprintln(os.Stderr, "  crit comment --selector '#save' --route /settings 'Save stays disabled'")
-	fmt.Fprintln(os.Stderr, "  crit comment --reply-to c_a3f8b2 --resolve --author 'Claude' 'Split into two functions'")
-	fmt.Fprintln(os.Stderr, "  crit comment --output .crit main.go:42 'Fix this bug'")
-	fmt.Fprintln(os.Stderr, "  echo '[{\"file\":\"main.go\",\"line\":42,\"body\":\"Fix this\"}]' | crit comment --json --author 'Claude'")
-	fmt.Fprintln(os.Stderr, "  echo '[{\"body\":\"Overall feedback\"}]' | crit comment --session 839f3b4cd5d6 --json --author 'Claude'")
-	fmt.Fprintln(os.Stderr, "  crit comment --json --file comments.json --author 'Claude'")
+	fmt.Fprintln(os.Stderr, "  drover comment --author 'Claude' 'Overall this looks good'")
+	fmt.Fprintln(os.Stderr, "  drover comment --author 'Claude' src/auth.go 'Restructure this file'")
+	fmt.Fprintln(os.Stderr, "  drover comment --author 'Claude' main.go:42 'Fix this bug'")
+	fmt.Fprintln(os.Stderr, "  drover comment --session 839f3b4cd5d6 --author 'Claude' main.go:42 'Fix this bug'")
+	fmt.Fprintln(os.Stderr, "  drover comment --author 'Claude' src/auth.go:10-25 'This block needs refactoring'")
+	fmt.Fprintln(os.Stderr, "  drover comment --selector 'h1' 'Heading is vague'")
+	fmt.Fprintln(os.Stderr, "  drover comment --selector '#save' --route /settings 'Save stays disabled'")
+	fmt.Fprintln(os.Stderr, "  drover comment --reply-to c_a3f8b2 --resolve --author 'Claude' 'Split into two functions'")
+	fmt.Fprintln(os.Stderr, "  drover comment --output .crit main.go:42 'Fix this bug'")
+	fmt.Fprintln(os.Stderr, "  echo '[{\"file\":\"main.go\",\"line\":42,\"body\":\"Fix this\"}]' | drover comment --json --author 'Claude'")
+	fmt.Fprintln(os.Stderr, "  echo '[{\"body\":\"Overall feedback\"}]' | drover comment --session 839f3b4cd5d6 --json --author 'Claude'")
+	fmt.Fprintln(os.Stderr, "  drover comment --json --file comments.json --author 'Claude'")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Tips:")
 	fmt.Fprintln(os.Stderr, "  Use --author to identify who left the comment (recommended for AI agents)")

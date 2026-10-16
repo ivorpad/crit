@@ -28,7 +28,7 @@ func TestPrintConfigHelp(t *testing.T) {
 	}
 	got := string(out)
 	for _, want := range []string{
-		"crit config",
+		"drover config",
 		"output <dir>",
 		"plan_approve_mode",
 		"notify_on_round_ready",

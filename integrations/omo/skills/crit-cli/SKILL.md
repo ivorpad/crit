@@ -1,25 +1,25 @@
 ---
 name: crit-cli
-description: Use when an agent needs to author or reply to crit inline comments programmatically (including multi-agent workflows commenting on shared code/plans/docs/proposals), publish or unpublish a crit review with crit share, sync a crit review to or from a GitHub PR or GitLab MR, or read/interpret a crit review JSON file. Covers crit comment, crit share, crit unpublish, crit pull, crit push, review file format, and resolution workflow. Not for invoking an interactive review loop — that's the `crit` skill.
+description: Use when an agent needs to author or reply to drover inline comments programmatically (including multi-agent workflows commenting on shared code/plans/docs/proposals), publish or unpublish a drover review with drover share, sync a drover review to or from a GitHub PR or GitLab MR, or read/interpret a drover review JSON file. Covers drover comment, drover share, drover unpublish, drover pull, drover push, review file format, and resolution workflow. Not for invoking an interactive review loop — that's the `crit` skill.
 user-invocable: false
 ---
 
-# Crit CLI reference
+# Drover CLI reference
 
 Use this skill for headless operations, not to start an interactive review.
 Comments have three scopes: `line` and `file` comments live under
 `files.<path>.comments`; `review` comments live in `review_comments`.
-The review file path is shown by `crit status`.
+The review file path is shown by `drover status`.
 
 ## Read comments and select a session
 
 ```bash
-crit comments
-crit comments --json
-crit comments --all
-crit comments --plan <slug>
-crit comments [path]
-crit status --json
+drover comments
+drover comments --json
+drover comments --all
+drover comments --plan <slug>
+drover comments [path]
+drover status --json
 ```
 
 Default comment output includes unresolved review-level and file comments.
@@ -28,7 +28,7 @@ before acting. `quote` narrows the requested change, `anchor` locates content
 after edits, and `drifted: true` means line numbers may be approximate.
 
 When multiple sessions match, headless commands refuse to guess. Use the
-`sessions` from `crit status --json` to select `--session <id>` for
+`sessions` from `drover status --json` to select `--session <id>` for
 `comment`, `comments`, `share`, `pull`, or `push`.
 
 ## Review JSON
@@ -72,11 +72,11 @@ File comments use `scope: "file"` and `start_line: 0`.
 ## Author and reply
 
 ```bash
-crit comment --author 'OMO' '<review-level body>'
-crit comment --author 'OMO' <path> '<file-level body>'
-crit comment --author 'OMO' <path>:<line> '<body>'
-crit comment --author 'OMO' <path>:<start>-<end> '<body>'
-crit comment --reply-to <id> --author 'OMO' '<what changed>'
+drover comment --author 'OMO' '<review-level body>'
+drover comment --author 'OMO' <path> '<file-level body>'
+drover comment --author 'OMO' <path>:<line> '<body>'
+drover comment --author 'OMO' <path>:<start>-<end> '<body>'
+drover comment --reply-to <id> --author 'OMO' '<what changed>'
 ```
 
 Always pass `--author 'OMO'`. Single-quote bodies to protect backticks and
@@ -90,7 +90,7 @@ Plan-mode reviews live under `~/.crit/plans/<slug>/`. Always use
 `--plan <slug>` when replying; the slug is in the feedback prompt.
 
 ```bash
-crit comment --plan <slug> --reply-to <id> --author 'OMO' '<what changed>'
+drover comment --plan <slug> --reply-to <id> --author 'OMO' '<what changed>'
 ```
 
 If an ID occurs in multiple files, disambiguate with `--path <path>` or the
@@ -110,7 +110,7 @@ For three or more comments, write a JSON array using the file-edit tool:
 ```
 
 ```bash
-crit comment --json --file /tmp/crit-comments.json --author 'OMO'
+drover comment --json --file /tmp/crit-comments.json --author 'OMO'
 ```
 
 Bulk writes are atomic. `--file -` reads stdin. Each entry requires `body`.
@@ -124,12 +124,12 @@ path without a line means file; file/path plus line means line.
 ## Forge sync
 
 ```bash
-crit pull [number-or-url]
-crit push --dry-run [number-or-url]
-crit push --event comment [-m '<body>'] [number-or-url]
-crit push --event approve [number-or-url]
-crit push --event request-changes [number-or-url]
-crit pull --forge gitlab <iid>
+drover pull [number-or-url]
+drover push --dry-run [number-or-url]
+drover push --event comment [-m '<body>'] [number-or-url]
+drover push --event approve [number-or-url]
+drover push --event request-changes [number-or-url]
+drover pull --forge gitlab <iid>
 ```
 
 Use authenticated `gh` for GitHub or `glab` for GitLab. The current branch
@@ -138,10 +138,10 @@ can supply the PR/MR number. Only post reviews when the user asks.
 ## Sharing
 
 ```bash
-crit share <file> [file...]
-crit share --share-url <url> <file>
-crit share --org <slug> --visibility unlisted <file>
-crit unpublish [file...]
+drover share <file> [file...]
+drover share --share-url <url> <file>
+drover share --org <slug> --visibility unlisted <file>
+drover unpublish [file...]
 ```
 
 Only share or unpublish when requested. Relay the complete printed URL.

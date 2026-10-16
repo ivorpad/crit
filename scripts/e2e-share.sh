@@ -43,7 +43,7 @@ cleanup() {
 trap cleanup EXIT
 
 # 1. Build crit
-echo "→ Building crit..."
+echo "→ Building drover..."
 make -C "$CRIT_DIR" build -j
 
 # 2. Start crit-web (unless --skip-web)
@@ -87,8 +87,8 @@ fi
 # 3. Serve-only mode: keep running for manual testing
 if [ "$SERVE_ONLY" = true ]; then
   echo "✓ crit-web running at $WEB_URL (Ctrl+C to stop)"
-  echo "  crit binary: $CRIT_DIR/crit"
-  echo "  Usage: CRIT_SHARE_URL=$WEB_URL CRIT_AUTH_TOKEN='' $CRIT_DIR/crit share -o /tmp/test plan.md"
+  echo "  drover binary: $CRIT_DIR/drover"
+  echo "  Usage: CRIT_SHARE_URL=$WEB_URL CRIT_AUTH_TOKEN='' $CRIT_DIR/drover share -o /tmp/test plan.md"
   wait "$WEB_PID"
   exit 0
 fi
@@ -98,7 +98,7 @@ echo "→ Running share integration tests..."
 cd "$CRIT_DIR"
 CRIT_SHARE_URL="$WEB_URL" \
 CRIT_WEB_URL="$WEB_URL" \
-CRIT_BINARY="$CRIT_DIR/crit" \
+CRIT_BINARY="$CRIT_DIR/drover" \
 CRIT_AUTH_TOKEN="" \
   go test -tags integration -run TestShareSync -v -count=1 "${GO_TEST_ARGS[@]}" ./...
 

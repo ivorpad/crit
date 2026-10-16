@@ -47,7 +47,7 @@ func checkCommentCLIAllowed(critPath, form string) error {
 		return nil //nolint:nilerr // malformed review file: do not block CLI
 	}
 	if cj.ReviewType == "live" || cj.ReviewType == "preview" {
-		return fmt.Errorf("%s is not supported for %s reviews; use: crit comment --selector <css> [--route <path>] <body>", form, cj.ReviewType)
+		return fmt.Errorf("%s is not supported for %s reviews; use: drover comment --selector <css> [--route <path>] <body>", form, cj.ReviewType)
 	}
 	return nil
 }
@@ -55,9 +55,9 @@ func checkCommentCLIAllowed(critPath, form string) error {
 // Comment forms named in the live/preview rejection, so the error matches
 // what the user ran.
 const (
-	formReviewComment = "a review-level comment (crit comment <body>)"
-	formFileComment   = "a file comment (crit comment <path> <body>)"
-	formLineComment   = "a line comment (crit comment <path>:<line> <body>)"
+	formReviewComment = "a review-level comment (drover comment <body>)"
+	formFileComment   = "a file comment (drover comment <path> <body>)"
+	formLineComment   = "a line comment (drover comment <path>:<line> <body>)"
 )
 
 // commentFormFor names the comment form args would create. args has at

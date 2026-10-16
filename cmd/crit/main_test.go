@@ -51,8 +51,8 @@ func TestPrintHelpMentionsSession(t *testing.T) {
 	if !strings.Contains(out, "CRIT_ALLOW_UNAUTHENTICATED_NETWORK") {
 		t.Fatalf("help missing CRIT_ALLOW_UNAUTHENTICATED_NETWORK:\n%s", out)
 	}
-	if !strings.Contains(out, "crit story") {
-		t.Fatalf("help missing crit story:\n%s", out)
+	if !strings.Contains(out, "drover story") {
+		t.Fatalf("help missing drover story:\n%s", out)
 	}
 }
 
@@ -75,7 +75,7 @@ func TestHelperProcess_Help(t *testing.T) {
 		return
 	}
 	arg := os.Getenv("GO_TEST_HELP_ARG")
-	os.Args = []string{"crit", arg}
+	os.Args = []string{"drover", arg}
 	var stderr strings.Builder
 	old := os.Stderr
 	r, w, _ := os.Pipe()

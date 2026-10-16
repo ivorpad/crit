@@ -1,8 +1,8 @@
-# Author a crit story
+# Author a drover story
 
 You are writing a **story** for a code review: an editorial grouping of the
 diff's changed hunks into logical chapters (themes), with a short prologue
-and a one-line summary per chapter. When present, crit's reviewer re-organizes
+and a one-line summary per chapter. When present, drover's reviewer re-organizes
 the file/diff view around your chapters instead of a flat file-by-file list.
 
 ## Principles
@@ -15,7 +15,7 @@ the file/diff view around your chapters instead of a flat file-by-file list.
    chapter per file — cross-file grouping is expected and encouraged.
 3. **Coverage is mandatory.** Every hunk of every changed file must appear in
    exactly one chapter, or in `support[]`. You do not need to compute this
-   yourself — crit validates and back-fills after you submit — but incomplete
+   yourself — drover validates and back-fills after you submit — but incomplete
    placement produces a worse story, so aim for full coverage.
 4. **`support[]` is for noise.** Lockfiles, generated code, large data dumps,
    dependency bumps, and other mechanical hunks that don't deserve editorial
@@ -89,8 +89,8 @@ Additional context for this review:
    `order` field. Put chapters in the order you want them read.
 5. Emit **only** `prologue`, `chapters`, and `support` as raw JSON — nothing
    else. Do not emit `version`, `generated_at`, `agent`, `base_sha`,
-   `head_sha`, `scope_fingerprint`, or `coverage` — crit fills all of those
-   in after ingest. If you omit `support`, crit will back-fill any hunks you
+   `head_sha`, `scope_fingerprint`, or `coverage` — drover fills all of those
+   in after ingest. If you omit `support`, drover will back-fill any hunks you
    missed into it automatically (and report that back-fill to you).
 6. Output **raw JSON only** — no prose, no markdown code fences, no
    commentary before or after. The output must be valid JSON on its own.
@@ -103,7 +103,7 @@ Additional context for this review:
 
 ## What you do NOT do
 
-- Do not call `crit comment`, `crit push`, or `crit share` — those are
+- Do not call `drover comment`, `drover push`, or `drover share` — those are
   separate flows outside this task.
 - Do not produce review-level human comments.
 - Do not run this as part of a normal `/crit` review loop — a story is only

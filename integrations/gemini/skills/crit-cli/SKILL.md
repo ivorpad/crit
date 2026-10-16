@@ -1,13 +1,13 @@
 ---
 name: crit-cli
-description: Use when an agent needs to author or reply to crit inline comments programmatically (including multi-agent workflows commenting on shared code/plans/docs/proposals), publish or unpublish a crit review with crit share, sync a crit review to or from a GitHub PR or GitLab MR, or read/interpret a crit review JSON file. Covers crit comment, crit share, crit unpublish, crit pull, crit push, review file format, and resolution workflow. Not for invoking an interactive review loop — that's the `/crit` command.
+description: Use when an agent needs to author or reply to drover inline comments programmatically (including multi-agent workflows commenting on shared code/plans/docs/proposals), publish or unpublish a drover review with drover share, sync a drover review to or from a GitHub PR or GitLab MR, or read/interpret a drover review JSON file. Covers drover comment, drover share, drover unpublish, drover pull, drover push, review file format, and resolution workflow. Not for invoking an interactive review loop — that's the `/crit` command.
 user-invocable: false
 agent: all
 ---
 
-# Crit CLI Reference
+# Drover CLI Reference
 
-> If a plan was just written and the user said `/crit` or `crit`, invoke the `/crit` command — do not use this reference skill. This skill covers CLI operations like `crit comment`, `crit pull/push`, and `crit share`.
+> If a plan was just written and the user said `/crit` or `drover`, invoke the `/crit` command — do not use this reference skill. This skill covers CLI operations like `drover comment`, `drover pull/push`, and `drover share`.
 
 Comments have three scopes:
 
@@ -15,35 +15,35 @@ Comments have three scopes:
 - **File comments** (`scope: "file"`) — about a file overall, stored in `files.<path>.comments` with `start_line: 0`
 - **Review comments** (`scope: "review"`) — general feedback, stored in the top-level `review_comments` array
 
-The review file path is shown by `crit status`.
+The review file path is shown by `drover status`.
 
 ## Reading comments
 
-When `crit` completes a review round, read **stdout** and follow its instructions. Unresolved comments are often embedded in that prompt as JSON. Check **stderr** for `approved: true` or `approved: false`.
+When `drover` completes a review round, read **stdout** and follow its instructions. Unresolved comments are often embedded in that prompt as JSON. Check **stderr** for `approved: true` or `approved: false`.
 
 When you need to read comments separately:
 
 ```bash
-crit comments            # human-readable, unresolved only (default)
-crit comments --json     # flat JSON for agents
-crit comments --all      # include resolved comments
-crit comments --plan <slug>   # plan reviews
-crit comments [path]     # explicit review.json or .crit directory
+drover comments            # human-readable, unresolved only (default)
+drover comments --json     # flat JSON for agents
+drover comments --all      # include resolved comments
+drover comments --plan <slug>   # plan reviews
+drover comments [path]     # explicit review.json or .crit directory
 ```
 
-Review-level comments are listed first — easy to miss in raw `review.json`. Uses the same review resolution as `crit comment` (`--output`, `--plan`, daemon session).
+Review-level comments are listed first — easy to miss in raw `review.json`. Uses the same review resolution as `drover comment` (`--output`, `--plan`, daemon session).
 
 ## Multiple active sessions
 
-When more than one review session matches the current directory and branch, headless commands (`crit comment`, `crit comments`, `crit share`, `crit push`, `crit pull`) refuse to guess. Run `crit status` (or `crit status --json`) to list every active session, then target the intended review with `--session <id>`:
+When more than one review session matches the current directory and branch, headless commands (`drover comment`, `drover comments`, `drover share`, `drover push`, `drover pull`) refuse to guess. Run `drover status` (or `drover status --json`) to list every active session, then target the intended review with `--session <id>`:
 
 ```bash
-crit comment --session <id> --author <name> <path>:<line> <body>
-crit comment --session <id> --json --file comments.json --author <name>
-crit comments --session <id>
-crit share --session <id> <file>
-crit push --session <id>
-crit pull --session <id>
+drover comment --session <id> --author <name> <path>:<line> <body>
+drover comment --session <id> --json --file comments.json --author <name>
+drover comments --session <id>
+drover share --session <id> <file>
+drover push --session <id>
+drover pull --session <id>
 ```
 
 The JSON status output exposes the candidates in `sessions`.
@@ -96,25 +96,25 @@ Field rules:
 - Unresolved comments may have `replies` — read them before acting.
 </important>
 
-<important if="you are authoring or replying to comments via crit comment">
+<important if="you are authoring or replying to comments via drover comment">
 
 ```bash
 # Review-level (general feedback)
-crit comment --author 'Gemini' '<body>'
+drover comment --author 'Gemini' '<body>'
 
 # File-level (whole file, no line numbers)
-crit comment --author 'Gemini' <path> '<body>'
+drover comment --author 'Gemini' <path> '<body>'
 
 # Line (single line or range)
-crit comment --author 'Gemini' <path>:<line> '<body>'
-crit comment --author 'Gemini' <path>:<start>-<end> '<body>'
+drover comment --author 'Gemini' <path>:<line> '<body>'
+drover comment --author 'Gemini' <path>:<start>-<end> '<body>'
 
 # DOM pin (live review or HTML preview). File:line is rejected there.
-crit comment --author 'Gemini' --selector '<css>' '<body>'
-crit comment --author 'Gemini' --selector '<css>' --route <path> '<body>'
+drover comment --author 'Gemini' --selector '<css>' '<body>'
+drover comment --author 'Gemini' --selector '<css>' --route <path> '<body>'
 
 # Reply to an existing comment
-crit comment --reply-to <id> --author 'Gemini' '<body>'
+drover comment --reply-to <id> --author 'Gemini' '<body>'
 ```
 
 Hard rules:
@@ -139,14 +139,14 @@ echo '[
   {"file": "src/auth.go", "line": "50-55", "body": "Extract to helper"},
   {"reply_to": "c_a1b2c3", "body": "Fixed — added null check"},
   {"reply_to": "r_f1e2d3", "body": "Done"}
-]' | crit comment --json --author 'Gemini'
+]' | drover comment --json --author 'Gemini'
 ```
 
-**Prefer `--file <path>` for any multi-paragraph body.** Shell-quoted JSON breaks the moment a `"body"` string contains a raw newline. Use `write_file` to author the JSON to a temp file, then point crit at it:
+**Prefer `--file <path>` for any multi-paragraph body.** Shell-quoted JSON breaks the moment a `"body"` string contains a raw newline. Use `write_file` to author the JSON to a temp file, then point drover at it:
 
 ```bash
 # After write_file /tmp/replies.json:
-crit comment --json --file /tmp/replies.json --author 'Gemini'
+drover comment --json --file /tmp/replies.json --author 'Gemini'
 ```
 
 `--file -` reads stdin (same as omitting the flag).
@@ -169,30 +169,30 @@ Per-entry schema:
 Scope inference (when `scope` omitted): has `reply_to` → reply; no `file`/`path` and no `line` → review-level; `path` but no `line` → file-level; `file`/`path` + `line` → line.
 </important>
 
-<important if="crit comment errored with 'comment found in multiple files'">
+<important if="drover comment errored with 'comment found in multiple files'">
 Comment IDs are unique per session, but the same ID can collide across files. Disambiguate with `--path`:
 
 ```bash
-crit comment --reply-to c_a1b2c3 --path src/auth.go --author 'Gemini' 'Fixed the null check'
+drover comment --reply-to c_a1b2c3 --path src/auth.go --author 'Gemini' 'Fixed the null check'
 ```
 
 In `--json` mode, set the `file` field on the entry. Review-level IDs (`r_…`) are globally unique and never need this.
 </important>
 
 <important if="you are responding to plan-mode comments (review file under ~/.crit/plans/)">
-Plan reviews (via `crit plan` or the `exit_plan_mode` hook) store the review file in `~/.crit/plans/<slug>/`. **Always pass `--plan <slug>`** — without it, `crit comment` looks in the project root and won't find the comments. The slug is shown in the review feedback prompt.
+Plan reviews (via `drover plan` or the `exit_plan_mode` hook) store the review file in `~/.crit/plans/<slug>/`. **Always pass `--plan <slug>`** — without it, `drover comment` looks in the project root and won't find the comments. The slug is shown in the review feedback prompt.
 
 ```bash
-crit comment --plan my-plan-2026-03-23 --reply-to c_a1b2c3 --author 'Gemini' 'Updated the plan'
+drover comment --plan my-plan-2026-03-23 --reply-to c_a1b2c3 --author 'Gemini' 'Updated the plan'
 ```
 </important>
 
 <important if="you are syncing with a GitHub PR or GitLab MR (pull or push)">
 
 ```bash
-crit pull [number|url]                                   # Fetch PR/MR review comments into the review file
-crit push [--dry-run] [--event <type>] [-m <msg>] [n]    # Post review comments to a PR/MR
-crit pull --forge gitlab 42                              # Force GitLab when auto-detect is ambiguous
+drover pull [number|url]                                   # Fetch PR/MR review comments into the review file
+drover push [--dry-run] [--event <type>] [-m <msg>] [n]    # Post review comments to a PR/MR
+drover pull --forge gitlab 42                              # Force GitLab when auto-detect is ambiguous
 ```
 
 Requires `gh` (GitHub) or `glab` (GitLab) installed and authenticated. Change number is auto-detected from the current branch when possible. Set `"forge"` / `"gitlab_url"` in config for self-managed hosts, or pass `--forge`.
@@ -203,13 +203,13 @@ Requires `gh` (GitHub) or `glab` (GitLab) installed and authenticated. Change nu
 <important if="the user asked to share, get a URL, get a QR code, or unpublish a review">
 
 ```bash
-crit share <file> [file...]                          # Upload and print URL
-crit share --share-url <url> <file>                  # Target a specific Crit deployment
-crit share --qr <file>                               # Also print QR code (terminal only)
-crit share --org <slug> <file>                       # Share under an organization
-crit share --org <slug> --visibility unlisted <file> # Org share with explicit visibility
-crit unpublish [file...]                              # Remove shared review
-crit unpublish --share-url <url> [file...]            # Unpublish from a specific deployment
+drover share <file> [file...]                          # Upload and print URL
+drover share --share-url <url> <file>                  # Target a specific Drover deployment
+drover share --qr <file>                               # Also print QR code (terminal only)
+drover share --org <slug> <file>                       # Share under an organization
+drover share --org <slug> --visibility unlisted <file> # Org share with explicit visibility
+drover unpublish [file...]                              # Remove shared review
+drover unpublish --share-url <url> [file...]            # Unpublish from a specific deployment
 ```
 
 - **No server needed** — reads files directly from disk. If a review file exists, comments for the shared files are included automatically.

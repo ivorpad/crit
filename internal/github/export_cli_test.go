@@ -101,7 +101,7 @@ func TestRunPushDryRun(t *testing.T) {
 	out := captureStdout(t, func() {
 		runPushDryRun(pushContext{prNumber: 7}, sampleBuckets())
 	})
-	for _, want := range []string{"Push plan for PR #7", "Postable (1)", "crit push --pr 7"} {
+	for _, want := range []string{"Push plan for PR #7", "Postable (1)", "drover push --pr 7"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("runPushDryRun output missing %q:\n%s", want, out)
 		}

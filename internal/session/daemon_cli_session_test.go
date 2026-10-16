@@ -70,7 +70,7 @@ func TestConnectOrStartDaemon_StartsDaemon(t *testing.T) {
 			t.Fatalf("port = %d", entry.Port)
 		}
 	})
-	if !strings.Contains(stderr, "Started crit daemon") {
+	if !strings.Contains(stderr, "Started drover daemon") {
 		t.Fatalf("stderr = %q", stderr)
 	}
 	if !strings.Contains(stderr, "session "+key) {

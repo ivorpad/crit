@@ -185,14 +185,14 @@ func critBinary(t *testing.T) string {
 		t.Fatal(err)
 	}
 	for _, p := range []string{
-		filepath.Join(wd, "..", "..", "crit"),
-		filepath.Join(wd, "crit"),
+		filepath.Join(wd, "..", "..", "drover"),
+		filepath.Join(wd, "drover"),
 	} {
 		if _, err := os.Stat(p); err == nil {
 			return p
 		}
 	}
-	return filepath.Join(wd, "..", "..", "crit")
+	return filepath.Join(wd, "..", "..", "drover")
 }
 
 // TestShareSyncIntegration exercises the full share -> review -> re-share loop.
@@ -229,7 +229,7 @@ func TestShareSyncIntegration(t *testing.T) {
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("crit share failed: %s\n%s", err, out)
+		t.Fatalf("drover share failed: %s\n%s", err, out)
 	}
 
 	// Output may include warnings or the one-time login tip around the URL.
@@ -264,7 +264,7 @@ func TestShareSyncIntegration(t *testing.T) {
 	cmd2.Dir = dir
 	out2, err := cmd2.CombinedOutput()
 	if err != nil {
-		t.Fatalf("second crit share failed: %s\n%s", err, out2)
+		t.Fatalf("second drover share failed: %s\n%s", err, out2)
 	}
 	output2 := string(out2)
 	t.Logf("Second share output: %s", output2)
@@ -522,7 +522,7 @@ func critShareCmd(t *testing.T, binary, baseURL, dir string, files ...string) st
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("crit share failed: %s\n%s", err, out)
+		t.Fatalf("drover share failed: %s\n%s", err, out)
 	}
 	return strings.TrimSpace(string(out))
 }
@@ -534,7 +534,7 @@ func critUnpublishCmd(t *testing.T, binary, baseURL, dir string) string {
 	cmd.Dir = dir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("crit unpublish failed: %s\n%s", err, out)
+		t.Fatalf("drover unpublish failed: %s\n%s", err, out)
 	}
 	return strings.TrimSpace(string(out))
 }
@@ -631,7 +631,7 @@ func TestShareSyncPreviewPreservesOriginalPath(t *testing.T) {
 	output, err := runCritCmd(t, binary, dir,
 		"share", "--share-url", baseURL, "--preview", originalPath)
 	if err != nil {
-		t.Fatalf("crit share --preview failed: %s\n%s", err, output)
+		t.Fatalf("drover share --preview failed: %s\n%s", err, output)
 	}
 	logReview(t, output)
 	token := extractToken(t, output)
@@ -2186,7 +2186,7 @@ func critShareCmdWithEnv(t *testing.T, binary, baseURL, dir string, extraArgs, e
 	}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("crit share failed: %s\n%s", err, out)
+		t.Fatalf("drover share failed: %s\n%s", err, out)
 	}
 	return strings.TrimSpace(string(out))
 }
@@ -2284,7 +2284,7 @@ func TestShareReceiver_ProxyAuthEnabledBlocksShareCLI(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected non-zero exit, got success. output: %s", out)
 	}
-	for _, want := range []string{"proxy_auth", "Crit's browser interface"} {
+	for _, want := range []string{"proxy_auth", "Drover's browser interface"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("expected output to mention %q, got: %s", want, out)
 		}
@@ -2408,7 +2408,7 @@ func TestShareSyncPreviewOrgVisibility(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	output := strings.TrimSpace(string(out))
 	if err != nil {
-		t.Fatalf("crit share --preview failed: %s\n%s", err, output)
+		t.Fatalf("drover share --preview failed: %s\n%s", err, output)
 	}
 	logReview(t, output)
 	token := extractToken(t, output)
@@ -2504,7 +2504,7 @@ func TestShareSyncOrgNonMemberError(t *testing.T) {
 
 	output, err := critShareCmdExpectFail(t, binary, baseURL, dir, []string{"--org", "nonexistent-org-xyz"}, authEnv, []string{"readme.md"})
 	if err == nil {
-		t.Fatalf("expected crit share to fail for non-existent org, but it succeeded.\nOutput: %s", output)
+		t.Fatalf("expected drover share to fail for non-existent org, but it succeeded.\nOutput: %s", output)
 	}
 	t.Logf("Expected failure output: %s", output)
 	t.Logf("Expected failure error: %v", err)
@@ -2541,7 +2541,7 @@ func TestShareSyncOrgUnpublish(t *testing.T) {
 	unpubCmd.Dir = dir
 	unpubOut, err := unpubCmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("crit unpublish failed: %s\n%s", err, unpubOut)
+		t.Fatalf("drover unpublish failed: %s\n%s", err, unpubOut)
 	}
 	t.Logf("Unpublish output: %s", unpubOut)
 

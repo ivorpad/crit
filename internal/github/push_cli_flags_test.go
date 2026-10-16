@@ -275,7 +275,7 @@ func TestLoadPushReview(t *testing.T) {
 			t.Fatalf("path = %q, want %q", gotPath, identity)
 		}
 		if cj.Branch != "main" || cj.ReviewRound != 2 {
-			t.Fatalf("crit json = %+v", cj)
+			t.Fatalf("drover json = %+v", cj)
 		}
 	})
 
@@ -346,7 +346,7 @@ func TestLoadPushReview(t *testing.T) {
 			t.Fatalf("path = %q, want %q", gotPath, identity)
 		}
 		if cj.Branch != "feature" || cj.ReviewRound != 3 {
-			t.Fatalf("crit json = %+v", cj)
+			t.Fatalf("drover json = %+v", cj)
 		}
 	})
 }

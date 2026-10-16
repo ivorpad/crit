@@ -1049,7 +1049,7 @@
       pendingUpdates.push({
         kind: 'crit-update',
         version: configRes.latest_version,
-        label: 'Crit ' + configRes.latest_version + ' available',
+        label: 'Upstream Crit ' + configRes.latest_version + ' available',
         labelUrl: 'https://github.com/tomasz-tomczyk/crit/releases/tag/v' + configRes.latest_version,
         hint: 'Open Updates for release-specific update instructions'
       });
@@ -1074,7 +1074,7 @@
           kind: 'missing-integration',
           agent: agent,
           label: name + ' detected — install integration',
-          hint: 'crit install ' + agent
+          hint: 'drover install ' + agent
         });
       });
     }
@@ -1195,9 +1195,9 @@
     }
 
     updateHeaderRound();
-    setDocumentTitle(isHerdr() ? 'Crit — herdr' : session.mode === 'git'
-      ? 'Crit — ' + (session.branch || 'review')
-      : 'Crit — ' + (session.files || []).map(f => f.path).join(', '));
+    setDocumentTitle(isHerdr() ? 'Drover — herdr' : session.mode === 'git'
+      ? 'Drover — ' + (session.branch || 'review')
+      : 'Drover — ' + (session.files || []).map(f => f.path).join(', '));
 
     files = await loadAllFileData(session.files || [], currentFileDataScope());
     hiddenUnresolved = session.hidden_unresolved || 0;
@@ -1421,7 +1421,7 @@
           const rep = await fetch('/api/comment/' + c.id + '/replies?path=' + enc(filePath), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ body: receipt, author: 'crit' }),
+            body: JSON.stringify({ body: receipt, author: 'drover' }),
           });
           if (!rep.ok) throw new Error('reply: ' + rep.status);
           const resv = await fetch('/api/comment/' + c.id + '/resolve?path=' + enc(filePath), {
@@ -2817,7 +2817,7 @@
   function renderPierreFiles() {
     if (!window.PierreDiffs) {
       const container = document.getElementById('filesContainer');
-      container.innerHTML = '<div class="pierre-load-error" role="alert">The diff renderer failed to load. Reload the page; if this persists, rebuild crit (make build).</div>';
+      container.innerHTML = '<div class="pierre-load-error" role="alert">The diff renderer failed to load. Reload the page; if this persists, rebuild drover (make build).</div>';
       return;
     }
     document.body.classList.add('pierre-review');
@@ -6975,7 +6975,7 @@
       extra.push('Set <kbd>agent_cmd</kbd> in your config to send comments directly to your AI agent for immediate feedback.');
     }
     if (shareURL && !authUserName) {
-      extra.push('Run <kbd>crit auth login</kbd> to link shared reviews with your account.');
+      extra.push('Run <kbd>drover auth login</kbd> to link shared reviews with your account.');
     }
     if (shareURL) {
       extra.push('Create a team on <kbd>' + shareURL.replace(/^https?:\/\//, '') + '</kbd> to group and secure your shared reviews.');

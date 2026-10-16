@@ -66,7 +66,7 @@ func TestCommandHelpFlagsDoNotInvokeHandlers(t *testing.T) {
 				if invoked {
 					t.Fatal("help invoked the command handler")
 				}
-				if !strings.Contains(out, "Usage: crit "+name) {
+				if !strings.Contains(out, "Usage: drover "+name) {
 					t.Fatalf("command help missing scoped usage:\n%s", out)
 				}
 			})
@@ -86,7 +86,7 @@ func TestHelpCommand(t *testing.T) {
 					t.Fatal("help command was not dispatched")
 				}
 			})
-			if !strings.Contains(out, "Usage: crit "+name) {
+			if !strings.Contains(out, "Usage: drover "+name) {
 				t.Fatalf("help output missing command usage:\n%s", out)
 			}
 		})
@@ -101,7 +101,7 @@ func TestNestedAuthHelpDoesNotInvokeHandler(t *testing.T) {
 					t.Fatal(err)
 				}
 			})
-			if !strings.Contains(out, "Usage: crit auth "+subcommand) {
+			if !strings.Contains(out, "Usage: drover auth "+subcommand) {
 				t.Fatalf("nested help missing usage:\n%s", out)
 			}
 		})
@@ -122,7 +122,7 @@ func TestNestedAuthHelpDoesNotInvokeHandler(t *testing.T) {
 				if invoked {
 					t.Fatal("nested auth help invoked the auth handler")
 				}
-				if !strings.Contains(out, "Usage: crit auth "+subcommand) {
+				if !strings.Contains(out, "Usage: drover auth "+subcommand) {
 					t.Fatalf("nested auth help missing usage:\n%s", out)
 				}
 			})
@@ -138,7 +138,7 @@ func TestRootHelpAliasesAndHiddenOmission(t *testing.T) {
 					t.Fatal(err)
 				}
 			})
-			if !strings.Contains(out, "crit — inline code review") {
+			if !strings.Contains(out, "drover — inline code review") {
 				t.Fatalf("root help missing heading:\n%s", out)
 			}
 			for _, hidden := range []string{"plan-hook", "_serve"} {

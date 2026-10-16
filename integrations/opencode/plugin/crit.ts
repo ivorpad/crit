@@ -16,7 +16,7 @@
 //   - The hook fires for every chat turn including opencode's internal
 //     title-generator subagent. We skip injection there so the title model
 //     isn't seeded with sharing copy.
-//   - Crit config is read by shelling out to `crit config`, which prints a
+//   - Crit config is read by shelling out to `drover config`, which prints a
 //     JSON object. We parse `share_url` and bail out if empty.
 
 import { createRequire } from "node:module"
@@ -51,7 +51,7 @@ let cachedShareURL: string | null | undefined
 async function loadShareURL($: any): Promise<string | null> {
   if (cachedShareURL !== undefined) return cachedShareURL
   try {
-    const result = await $`crit config`.quiet()
+    const result = await $`drover config`.quiet()
     const text = result.stdout.toString()
     const parsed = JSON.parse(text) as CritConfig
     cachedShareURL = parsed.share_url && parsed.share_url.length > 0 ? parsed.share_url : null

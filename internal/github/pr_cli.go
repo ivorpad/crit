@@ -11,7 +11,7 @@ import (
 
 func RunPR(args []string) error {
 	if len(args) != 1 {
-		fmt.Fprintln(os.Stderr, "Usage: crit pr <num|url>")
+		fmt.Fprintln(os.Stderr, "Usage: drover pr <num|url>")
 		return clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 	}
 	return session.RunReview([]string{"--pr", args[0]})

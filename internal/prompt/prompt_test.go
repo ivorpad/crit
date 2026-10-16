@@ -80,8 +80,8 @@ func TestRenderFinish_DiscoveredProjectFile(t *testing.T) {
 func TestRenderFinish_DefaultUnchanged(t *testing.T) {
 	ctx := prompt.Context{
 		ReviewPath:             "/tmp/review.json",
-		CommentsCmd:            "crit comments --json '/tmp/review.json'",
-		NextRoundCmd:           "crit --session abcd",
+		CommentsCmd:            "drover comments --json '/tmp/review.json'",
+		NextRoundCmd:           "drover --session abcd",
 		Mode:                   "files",
 		UnresolvedCount:        2,
 		TotalCount:             2,
@@ -163,7 +163,7 @@ func TestRenderFinish_CustomTemplate(t *testing.T) {
 		UnresolvedCount:     3,
 		InternalSessionMode: "files",
 		Approved:            false,
-		NextRoundCmd:        "crit",
+		NextRoundCmd:        "drover",
 	}
 	result := prompt.RenderFinish(nil, project, dir, "", true, ctx)
 	if !strings.Contains(result.Prompt, "CUSTOM 3") {

@@ -47,8 +47,8 @@ func connectToPreviewDaemon(key string, noOpen bool, openCmd string, quiet bool)
 		return false
 	}
 	if !quiet {
-		fmt.Fprintf(os.Stderr, "[crit] connected to preview daemon at %s\n", entry.BaseURL())
-		fmt.Fprintf(os.Stderr, "[crit] open %s/preview\n", entry.BaseURL())
+		fmt.Fprintf(os.Stderr, "[drover] connected to preview daemon at %s\n", entry.BaseURL())
+		fmt.Fprintf(os.Stderr, "[drover] open %s/preview\n", entry.BaseURL())
 	}
 	if !noOpen && !daemon.DaemonHasBrowser(entry) {
 		go browser.OpenBrowserWithCommand(entry.BaseURL()+"/preview", openCmd)
@@ -96,19 +96,19 @@ func RunPreview(args []string) {
 	quietResolved := *quiet || cfg.Quiet
 
 	if rawPath == "" {
-		fmt.Fprintln(os.Stderr, "Usage: crit preview <file.html>")
+		fmt.Fprintln(os.Stderr, "Usage: drover preview <file.html>")
 		os.Exit(1)
 	}
 
 	absPath, err := filepath.Abs(rawPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "crit preview: cannot resolve path %q: %v\n", rawPath, err)
+		fmt.Fprintf(os.Stderr, "drover preview: cannot resolve path %q: %v\n", rawPath, err)
 		os.Exit(1)
 	}
 
 	info, err := os.Stat(absPath)
 	if err != nil || info.IsDir() {
-		fmt.Fprintf(os.Stderr, "crit preview: %q is not a file\n", rawPath)
+		fmt.Fprintf(os.Stderr, "drover preview: %q is not a file\n", rawPath)
 		os.Exit(1)
 	}
 
@@ -125,8 +125,8 @@ func RunPreview(args []string) {
 	}
 
 	if !quietResolved {
-		fmt.Fprintf(os.Stderr, "[crit] preview mode: %s\n", filepath.Base(absPath))
-		fmt.Fprintf(os.Stderr, "[crit] open %s/preview\n", entry.BaseURL())
+		fmt.Fprintf(os.Stderr, "[drover] preview mode: %s\n", filepath.Base(absPath))
+		fmt.Fprintf(os.Stderr, "[drover] open %s/preview\n", entry.BaseURL())
 	}
 
 	installDaemonSignalHandler(entry.PID)

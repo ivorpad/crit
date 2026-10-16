@@ -19,13 +19,13 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 PORT="${1:-3199}"
-BINARY="$ROOT/crit"
+BINARY="$ROOT/drover"
 SLUG="test-plan"
 PLAN_DIR="$HOME/.crit/plans/$SLUG"
 
 if [ ! -f "$BINARY" ]; then
   echo "Binary not found — building..."
-  (cd "$ROOT" && go build -o crit ./cmd/crit)
+  (cd "$ROOT" && go build -o drover ./cmd/crit)
 fi
 
 # Kill any stale process on our test port

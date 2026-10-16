@@ -366,7 +366,7 @@ func TestResolveCommentsCritPathExplicitPathWinsConfiguredOutput(t *testing.T) {
 		t.Fatal(err)
 	}
 	if got != explicitPath {
-		t.Fatalf("crit path = %q, want explicit review path %q", got, explicitPath)
+		t.Fatalf("drover path = %q, want explicit review path %q", got, explicitPath)
 	}
 }
 

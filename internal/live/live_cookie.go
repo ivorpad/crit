@@ -131,7 +131,7 @@ func resolveLiveCookiesWithCDP(
 	fromCDP, err := fetchCDPCookies(ctx, cdpURL, origin)
 	if err != nil {
 		if manual != "" {
-			fmt.Fprintf(os.Stderr, "[crit] warning: could not read cookies from Chrome DevTools (%v); using configured cookies\n", err)
+			fmt.Fprintf(os.Stderr, "[drover] warning: could not read cookies from Chrome DevTools (%v); using configured cookies\n", err)
 			return manual, nil
 		}
 		return "", err

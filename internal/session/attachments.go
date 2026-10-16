@@ -201,7 +201,7 @@ func StripAttachmentReferences(body string) (string, int) {
 	if count != 1 {
 		noun = "images"
 	}
-	out += fmt.Sprintf("\n\n_[%d %s removed — view in Crit]_", count, noun)
+	out += fmt.Sprintf("\n\n_[%d %s removed — view in Drover]_", count, noun)
 	return out, count
 }
 

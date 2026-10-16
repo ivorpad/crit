@@ -15,7 +15,7 @@ func readIntegrationForPolicyTest(t *testing.T, path string) string {
 }
 
 func TestInteractiveSkillsRequireExplicitCritWording(t *testing.T) {
-	const sharedDescription = "Review code changes, a plan, a live page (running dev server), or a local HTML file with Crit inline comments and structured human feedback. Use only when the user explicitly invokes /crit or directly asks to use Crit; a generic review request does not count."
+	const sharedDescription = "Review code changes, a plan, a live page (running dev server), or a local HTML file with Drover inline comments and structured human feedback. Use only when the user explicitly invokes /crit or directly asks to use Drover; a generic review request does not count."
 	paths := []string{
 		"integrations/claude-code/skills/crit/SKILL.md",
 		"integrations/cursor/skills/crit/SKILL.md",
@@ -176,7 +176,7 @@ func TestCritStorySkillsAreWordingGated(t *testing.T) {
 func TestPlanExitHooksRemainEnabled(t *testing.T) {
 	cases := map[string]string{
 		"integrations/claude-code/hooks/hooks.json":       "ExitPlanMode",
-		"integrations/codex/plugin/crit/hooks/hooks.json": "crit plan-hook --mode codex",
+		"integrations/codex/plugin/crit/hooks/hooks.json": "drover plan-hook --mode codex",
 		"integrations/gemini/hooks/settings-snippet.json": "exit_plan_mode",
 	}
 	for path, marker := range cases {

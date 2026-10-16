@@ -64,9 +64,9 @@ e2e_native_tempdir() {
 # spawn the binary from Node need the .exe suffix in CRIT_BIN.
 e2e_bin_name() {
   if [ "$E2E_IS_WINDOWS" -eq 1 ]; then
-    printf 'crit.exe'
+    printf 'drover.exe'
   else
-    printf 'crit'
+    printf 'drover'
   fi
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 func TestDesktopCommandSpecs(t *testing.T) {
-	title := "Crit"
+	title := "Drover"
 	body := "Round 2 is ready for review"
 	url := "http://127.0.0.1:3456"
 
@@ -54,7 +54,7 @@ func TestDesktopCommandSpecs(t *testing.T) {
 			return name == "notify-send" || name == "zenity"
 		})
 		want := []commandSpec{
-			{name: "notify-send", args: []string{"--app-name=crit", title, body}},
+			{name: "notify-send", args: []string{"--app-name=drover", title, body}},
 			{name: "zenity", args: []string{"--notification", "--text=" + title + ": " + body}},
 		}
 		if !reflect.DeepEqual(specs, want) {

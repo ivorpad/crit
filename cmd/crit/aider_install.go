@@ -134,7 +134,7 @@ func mergeAiderConfYAML(existing []byte, readEntry string) ([]byte, error) {
 	// Reject multi-document YAML before we silently destroy the trailing
 	// docs by re-marshaling only the first.
 	if isMultiDocYAML(existing) {
-		return nil, fmt.Errorf("multi-document YAML in .aider.conf.yml is not supported by crit install — please consolidate or skip")
+		return nil, fmt.Errorf("multi-document YAML in .aider.conf.yml is not supported by drover install — please consolidate or skip")
 	}
 
 	// Empty or whitespace-only file: produce a fresh document.

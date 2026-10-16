@@ -120,7 +120,7 @@ func TestReconnectDeadSession_RestartsDaemon(t *testing.T) {
 			t.Fatalf("port = %d, want 3001", entry.Port)
 		}
 	})
-	if !strings.Contains(stderr, "Restarted crit daemon") {
+	if !strings.Contains(stderr, "Restarted drover daemon") {
 		t.Fatalf("stderr = %q, want restart message", stderr)
 	}
 }
@@ -575,8 +575,8 @@ func TestReconnectCommand(t *testing.T) {
 		key  string
 		want string
 	}{
-		{"839f3b4cd5d6", "crit --session 839f3b4cd5d6"},
-		{"", "crit"},
+		{"839f3b4cd5d6", "drover --session 839f3b4cd5d6"},
+		{"", "drover"},
 	}
 	for _, tc := range tests {
 		if got := ReconnectCommand(tc.key); got != tc.want {
@@ -586,28 +586,28 @@ func TestReconnectCommand(t *testing.T) {
 }
 
 func TestPlanReconnectCommand(t *testing.T) {
-	if got := PlanReconnectCommand("auth-flow"); got != "crit plan --name auth-flow" {
+	if got := PlanReconnectCommand("auth-flow"); got != "drover plan --name auth-flow" {
 		t.Errorf("PlanReconnectCommand() = %q", got)
 	}
-	if got := PlanReconnectCommand(""); got != "crit plan" {
+	if got := PlanReconnectCommand(""); got != "drover plan" {
 		t.Errorf("PlanReconnectCommand(empty) = %q", got)
 	}
 }
 
 func TestNextRoundCommand(t *testing.T) {
 	plan := &Session{Mode: "plan", PlanDir: "/home/user/.crit/plans/auth-flow", SessionKey: "abc123def456"}
-	if got := NextRoundCommand(plan); got != "crit plan --name auth-flow" {
+	if got := NextRoundCommand(plan); got != "drover plan --name auth-flow" {
 		t.Errorf("plan NextRoundCommand() = %q", got)
 	}
 	file := &Session{Mode: "files", SessionKey: "839f3b4cd5d6"}
-	if got := NextRoundCommand(file); got != "crit --session 839f3b4cd5d6" {
+	if got := NextRoundCommand(file); got != "drover --session 839f3b4cd5d6" {
 		t.Errorf("file NextRoundCommand() = %q", got)
 	}
-	if got := NextRoundCommand(nil); got != "crit" {
+	if got := NextRoundCommand(nil); got != "drover" {
 		t.Errorf("nil NextRoundCommand() = %q", got)
 	}
 	planNoSlug := &Session{Mode: "plan", PlanDir: ".", SessionKey: "abc123def456"}
-	if got := NextRoundCommand(planNoSlug); got != "crit --session abc123def456" {
+	if got := NextRoundCommand(planNoSlug); got != "drover --session abc123def456" {
 		t.Errorf("plan without slug NextRoundCommand() = %q", got)
 	}
 	plan.SetPlanHook("plan_mode")

@@ -61,7 +61,7 @@ func RunStop(args []string) error {
 	// Exact key not found — fall back to scanning by cwd + branch.
 	_, foundKey, matchCount := daemon.FindSessionForCWDBranch(cwd, branch)
 	if matchCount > 1 {
-		fmt.Fprintf(os.Stderr, "Error: multiple daemons running on branch %q. Use 'crit stop --all' or specify file args.\n", branch)
+		fmt.Fprintf(os.Stderr, "Error: multiple daemons running on branch %q. Use 'drover stop --all' or specify file args.\n", branch)
 		return clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 	}
 	if matchCount == 0 {

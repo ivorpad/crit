@@ -214,7 +214,7 @@ func TestSelfhostedShareRequiresAuthToken(t *testing.T) {
 
 	output, err := runCritShareEnv(t, binary, baseURL, dir, []string{"HOME=" + homeDir}, "plan.md")
 	if err == nil {
-		t.Fatalf("expected crit share to fail without auth in selfhosted mode; output:\n%s", output)
+		t.Fatalf("expected drover share to fail without auth in selfhosted mode; output:\n%s", output)
 	}
 	lower := strings.ToLower(output)
 	if !strings.Contains(lower, "auth") && !strings.Contains(lower, "401") &&
@@ -257,7 +257,7 @@ func TestSelfhostedShareSucceedsWithAuthToken(t *testing.T) {
 			"HOME=" + homeDir,
 		}, "plan.md")
 	if err != nil {
-		t.Fatalf("crit share with auth failed: %v\n%s", err, output)
+		t.Fatalf("drover share with auth failed: %v\n%s", err, output)
 	}
 	logReview(t, output)
 	token := extractToken(t, output)
@@ -323,7 +323,7 @@ func TestSelfhostedExportWithAuthToken(t *testing.T) {
 			"HOME=" + homeDir,
 		}, "plan.md")
 	if err != nil {
-		t.Fatalf("crit share: %v\n%s", err, output)
+		t.Fatalf("drover share: %v\n%s", err, output)
 	}
 	logReview(t, output)
 	token := extractToken(t, output)

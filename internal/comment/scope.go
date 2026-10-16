@@ -95,10 +95,10 @@ func resolveCommentScopeAtPathWithFocus(override CommentFocusOverride, critPath 
 		return session.InheritedScope{}, nil
 	case ScopeOverrideFullStack:
 		return resolveExplicitCommentScope(daemonFocus, critPath, session.DiffScopeFullStack, "full_stack",
-			"--scope=full-stack: no active full-stack focus to attach to (start `crit --pr <n> --scope=full-stack` first)")
+			"--scope=full-stack: no active full-stack focus to attach to (start `drover --pr <n> --scope=full-stack` first)")
 	case ScopeOverrideLayer:
 		return resolveExplicitCommentScope(daemonFocus, critPath, session.DiffScopeLayer, "layer",
-			"--scope=layer: no active layer focus to attach to (start `crit --pr <n>` first)")
+			"--scope=layer: no active layer focus to attach to (start `drover --pr <n>` first)")
 	case ScopeOverrideUnset:
 		return resolveAutoCommentScope(daemonFocus, critPath), nil
 	}

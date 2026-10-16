@@ -45,11 +45,11 @@ func parsePullFlags(args []string) (pullFlags, error) {
 			continue
 		}
 		if f.spec != "" {
-			fmt.Fprintf(os.Stderr, "Usage: crit pull [--session <id>] [--output <dir>] [number|url]\n")
+			fmt.Fprintf(os.Stderr, "Usage: drover pull [--session <id>] [--output <dir>] [number|url]\n")
 			return f, clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 		}
 		if _, err := ParsePRSpec(arg); err != nil {
-			fmt.Fprintf(os.Stderr, "Usage: crit pull [--session <id>] [--output <dir>] [number|url]\n")
+			fmt.Fprintf(os.Stderr, "Usage: drover pull [--session <id>] [--output <dir>] [number|url]\n")
 			return f, clicmd.ExitError{Code: 1, Err: errors.New("exit")}
 		}
 		f.spec = arg
@@ -150,7 +150,7 @@ func RunPull(args []string) error { //nolint:gocyclo
 		cj.ReviewRound = 1
 	}
 
-	if err := share.CheckGitHubSyncAllowed(cj, "crit pull"); err != nil {
+	if err := share.CheckGitHubSyncAllowed(cj, "drover pull"); err != nil {
 		return err
 	}
 
@@ -167,6 +167,6 @@ func RunPull(args []string) error { //nolint:gocyclo
 	}
 
 	fmt.Printf("Pulled %d comments from PR #%d into %s\n", added, id.Number, critPath)
-	fmt.Println("Run 'crit' to view them in the browser.")
+	fmt.Println("Run 'drover' to view them in the browser.")
 	return nil
 }

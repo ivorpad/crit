@@ -38,7 +38,7 @@ func RunAuth(args []string) {
 }
 
 func printAuthUsage() {
-	fmt.Fprintln(os.Stderr, "Usage: crit auth <command>")
+	fmt.Fprintln(os.Stderr, "Usage: drover auth <command>")
 	fmt.Fprintln(os.Stderr, "")
 	fmt.Fprintln(os.Stderr, "Commands:")
 	fmt.Fprintln(os.Stderr, "  login     Log in to crit-web")
@@ -284,7 +284,7 @@ func handlePollError(errStr string) (pollResult, error) {
 	case "slow_down":
 		return pollResult{slowDown: true}, nil
 	case "expired_token":
-		return pollResult{}, fmt.Errorf("login timed out. Run 'crit auth login' to try again")
+		return pollResult{}, fmt.Errorf("login timed out. Run 'drover auth login' to try again")
 	default:
 		return pollResult{}, fmt.Errorf("server error: %s", errStr)
 	}
@@ -440,7 +440,7 @@ func runAuthWhoami(args []string) {
 	token := target.Auth.Token
 
 	if token == "" {
-		fmt.Fprintln(os.Stderr, "  Not logged in. Run 'crit auth login' to authenticate.")
+		fmt.Fprintln(os.Stderr, "  Not logged in. Run 'drover auth login' to authenticate.")
 		return
 	}
 
@@ -449,7 +449,7 @@ func runAuthWhoami(args []string) {
 	defer cancel()
 	who, err := fetchWhoami(ctx, serverURL, token)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "  Token is invalid or revoked. Run 'crit auth login' to re-authenticate.\n")
+		fmt.Fprintf(os.Stderr, "  Token is invalid or revoked. Run 'drover auth login' to re-authenticate.\n")
 		return
 	}
 
@@ -627,7 +627,7 @@ func ShowLoginHint() {
 		if v, ok := m["login_hint_shown"]; ok && string(v) == "true" {
 			return errHintAlreadyShown
 		}
-		fmt.Fprintln(os.Stderr, "  Tip: Run 'crit auth login' to link reviews to your account.")
+		fmt.Fprintln(os.Stderr, "  Tip: Run 'drover auth login' to link reviews to your account.")
 		m["login_hint_shown"] = json.RawMessage("true")
 		return nil
 	})

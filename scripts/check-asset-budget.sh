@@ -89,10 +89,10 @@ if [ "$MODE" = "all" ] || [ "$MODE" = "--binary-only" ]; then
   rm -rf "$tmpdir"
   trap - EXIT
   if [ "$size" -gt "$bin_cap" ]; then
-    echo "OVER  crit binary (linux/amd64) ${size}B cap=${bin_cap}B (+$((size - bin_cap))B)"
+    echo "OVER  drover binary (linux/amd64) ${size}B cap=${bin_cap}B (+$((size - bin_cap))B)"
     FAIL=1
   else
-    echo "ok    crit binary (linux/amd64) ${size}B cap=${bin_cap}B"
+    echo "ok    drover binary (linux/amd64) ${size}B cap=${bin_cap}B"
   fi
 fi
 

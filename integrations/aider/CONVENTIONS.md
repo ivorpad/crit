@@ -1,32 +1,32 @@
-# Crit - Manual Review Workflow
+# Drover - Manual Review Workflow
 
-Use this workflow only when the user explicitly asks to use Crit. A generic
+Use this workflow only when the user explicitly asks to use Drover. A generic
 request to review code, a plan, a diff, a PR, or a page does not authorize
-launching Crit.
+launching Drover.
 
 ## Review with Crit
 
-After the user explicitly asks to use Crit, launch it:
+After the user explicitly asks to use Drover, launch it:
 
 ```bash
-crit $PLAN_FILE                       # Review a specific file
-crit                                  # Review all changed files in the repo
-crit --pr <num|url>                   # Review a GitHub PR (range mode)
-crit --mr <iid|url>                   # Review a GitLab MR (range mode)
-crit --range <baseSHA>..<headSHA>     # Review a commit range (range mode)
+drover $PLAN_FILE                       # Review a specific file
+drover                                  # Review all changed files in the repo
+drover --pr <num|url>                   # Review a GitHub PR (range mode)
+drover --mr <iid|url>                   # Review a GitLab MR (range mode)
+drover --range <baseSHA>..<headSHA>     # Review a commit range (range mode)
 ```
 
-**CRITICAL — you MUST run `crit` and block until it completes.**
+**CRITICAL — you MUST run `drover` and block until it completes.**
 
-`crit` starts the daemon if needed, opens the browser, and blocks until the user clicks "Finish Review". It prints the review URL on startup (e.g. `Started crit daemon at http://localhost:<port>`) — relay that URL verbatim.
+`drover` starts the daemon if needed, opens the browser, and blocks until the user clicks "Finish Review". It prints the review URL on startup (e.g. `Started drover daemon at http://localhost:<port>`) — relay that URL verbatim.
 
-- Do NOT proceed until `crit` completes.
+- Do NOT proceed until `drover` completes.
 - Do NOT ask the user to type anything.
 - Do NOT read the review file early.
 
 ## After review
 
-When `crit` completes, read **stdout** and follow its instructions. Check **stderr** for `approved: true` or `approved: false`.
+When `drover` completes, read **stdout** and follow its instructions. Check **stderr** for `approved: true` or `approved: false`.
 
 Field guidance:
 - `quote`: the specific text the reviewer selected — focus changes on the quoted text rather than the whole range.
@@ -35,7 +35,7 @@ Field guidance:
 
 For each unresolved comment:
 1. Revise the referenced file using your edit tools.
-2. Reply with what you did: `crit comment --reply-to <id> --author 'Aider' '<what you did>'` (markdown supported).
+2. Reply with what you did: `drover comment --reply-to <id> --author 'Aider' '<what you did>'` (markdown supported).
 3. **Never pass `--resolve`** unless the user explicitly asks. Resolving is the reviewer's call.
 
 When replying to multiple comments, use `--json`:
@@ -44,7 +44,7 @@ When replying to multiple comments, use `--json`:
 echo '[
   {"reply_to": "c_a1b2c3", "body": "Fixed"},
   {"reply_to": "c_d4e5f6", "body": "Refactored as suggested"}
-]' | crit comment --json --author 'Aider'
+]' | drover comment --json --author 'Aider'
 ```
 
 For multi-paragraph reply bodies, prefer `--file <path>`. Raw newlines inside JSON strings are invalid, and shell heredocs make it easy to slip one in:
@@ -55,7 +55,7 @@ cat > /tmp/replies.json <<'EOF'
   {"reply_to": "c_a1b2c3", "body": "Fixed.\n\nDetails: split helper, added null guard."}
 ]
 EOF
-crit comment --json --file /tmp/replies.json --author 'Aider'
+drover comment --json --file /tmp/replies.json --author 'Aider'
 ```
 
 `--file -` reads stdin (same as the default).
@@ -64,21 +64,21 @@ crit comment --json --file /tmp/replies.json --author 'Aider'
 
 The finish prompt on stdout includes the command to run again — use it to start a new round.
 
-Then tell the user only that you replied in Crit and that they can click Finish Review when ready. Do not repeat your replies or list the comments in chat. The reviewer reads them in Crit.
+Then tell the user only that you replied in Drover and that they can click Finish Review when ready. Do not repeat your replies or list the comments in chat. The reviewer reads them in Drover.
 
-`crit` automatically signals round-complete, then blocks until the next "Finish Review" click. Only proceed after the user approves (a round finishes with zero comments).
+`drover` automatically signals round-complete, then blocks until the next "Finish Review" click. Only proceed after the user approves (a round finishes with zero comments).
 
 ## CLI Reference
 
-### `crit comment`
+### `drover comment`
 
 ```bash
-crit comment --author 'Aider' '<body>'                       # Review-level
-crit comment --author 'Aider' <path> '<body>'                # File-level
-crit comment --author 'Aider' <path>:<line> '<body>'         # Line
-crit comment --author 'Aider' <path>:<start>-<end> '<body>'  # Line range
-crit comment --author 'Aider' --selector '<css>' [--route <path>] '<body>'  # Live or HTML preview pin
-crit comment --reply-to <id> --author 'Aider' '<body>'       # Reply (c_… or r_…)
+drover comment --author 'Aider' '<body>'                       # Review-level
+drover comment --author 'Aider' <path> '<body>'                # File-level
+drover comment --author 'Aider' <path>:<line> '<body>'         # Line
+drover comment --author 'Aider' <path>:<start>-<end> '<body>'  # Line range
+drover comment --author 'Aider' --selector '<css>' [--route <path>] '<body>'  # Live or HTML preview pin
+drover comment --reply-to <id> --author 'Aider' '<body>'       # Reply (c_… or r_…)
 ```
 
 Hard rules:
@@ -88,14 +88,14 @@ Hard rules:
 - Reply bodies support markdown.
 - Only pass `--resolve` when the user explicitly asks.
 
-If `crit comment` errors with "comment found in multiple files", disambiguate with `--path src/foo.go`.
+If `drover comment` errors with "comment found in multiple files", disambiguate with `--path src/foo.go`.
 
 ### Bulk `--json`
 
 For 3+ comments, prefer `--json` (atomic, single write). Synopsis:
 
 ```
-crit comment --json [--file <path>] [--author <name>]
+drover comment --json [--file <path>] [--author <name>]
 ```
 
 Stdin form (short single-line bodies):
@@ -107,7 +107,7 @@ echo '[
   {"file": "src/auth.go", "line": 42, "body": "Missing null check"},
   {"file": "src/auth.go", "line": "50-55", "body": "Extract to helper"},
   {"reply_to": "c_a1b2c3", "body": "Fixed — added null check"}
-]' | crit comment --json --author 'Aider'
+]' | drover comment --json --author 'Aider'
 ```
 
 `--file <path>` form — preferred whenever a body has paragraph breaks (raw newlines in a JSON string are invalid):
@@ -118,7 +118,7 @@ cat > /tmp/crit-bulk.json <<'EOF'
   {"file": "src/auth.go", "line": 42, "body": "Para 1.\n\nPara 2."}
 ]
 EOF
-crit comment --json --file /tmp/crit-bulk.json --author 'Aider'
+drover comment --json --file /tmp/crit-bulk.json --author 'Aider'
 ```
 
 Scope inference: `reply_to` → reply; no `file`/`line` → review; `path` only → file; `path` + `line` → line.
@@ -126,11 +126,11 @@ Scope inference: `reply_to` → reply; no `file`/`line` → review; `path` only 
 ### Sharing
 
 ```bash
-crit share <file> [file...]                          # Upload and print URL
-crit share --qr <file>                               # Also print QR code (terminal only)
-crit share --org <slug> <file>                       # Share under an organization
-crit share --org <slug> --visibility unlisted <file> # Org share with explicit visibility
-crit unpublish [file...]                              # Remove shared review
+drover share <file> [file...]                          # Upload and print URL
+drover share --qr <file>                               # Also print QR code (terminal only)
+drover share --org <slug> <file>                       # Share under an organization
+drover share --org <slug> --visibility unlisted <file> # Org share with explicit visibility
+drover unpublish [file...]                              # Remove shared review
 ```
 
 Always relay the full output (URL, QR) directly in your response — don't make the user dig through tool output.
@@ -139,8 +139,8 @@ Always relay the full output (URL, QR) directly in your response — don't make 
 ### GitHub PR / GitLab MR sync
 
 ```bash
-crit pull [number|url]                                   # Fetch PR/MR comments
-crit push [--dry-run] [--event <type>] [-m <msg>] [pr]   # Post review as PR review
+drover pull [number|url]                                   # Fetch PR/MR comments
+drover push [--dry-run] [--event <type>] [-m <msg>] [pr]   # Post review as PR review
 ```
 
 Requires `gh` CLI. `--event`: `comment` (default), `approve`, `request-changes`.

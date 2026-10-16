@@ -642,7 +642,7 @@ func TestIsDaemonAlive_AcceptsCritResponse(t *testing.T) {
 	port, _ := strconv.Atoi(srv.URL[len("http://127.0.0.1:"):])
 	entry := SessionEntry{PID: os.Getpid(), Port: port}
 	if !isDaemonAlive(entry) {
-		t.Error("isDaemonAlive should return true for valid crit health response")
+		t.Error("isDaemonAlive should return true for valid drover health response")
 	}
 }
 

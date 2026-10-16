@@ -88,7 +88,7 @@ type daemonFlagSet struct {
 }
 
 func parseDaemonFlags(args []string) daemonFlagSet {
-	fs := flag.NewFlagSet("crit", flag.ExitOnError)
+	fs := flag.NewFlagSet("drover", flag.ExitOnError)
 	port := fs.Int("port", 0, "Port to listen on (default: random available port)")
 	fs.IntVar(port, "p", 0, "Port to listen on (shorthand)")
 	host := fs.String("host", "", "Host to listen on (default: 127.0.0.1)")
@@ -98,8 +98,8 @@ func parseDaemonFlags(args []string) daemonFlagSet {
 	showVersion := fs.Bool("version", false, "Print version and exit")
 	fs.BoolVar(showVersion, "v", false, "Print version and exit (shorthand)")
 	shareURL := fs.String("share-url", "", "Base URL of hosted Crit service for sharing reviews (overrides CRIT_SHARE_URL env var)")
-	outputDir := fs.String("output", "", "Crit data root for reviews (default: ~/.crit); reviews live in <root>/reviews/<key>/")
-	fs.StringVar(outputDir, "o", "", "Crit data root for reviews (shorthand)")
+	outputDir := fs.String("output", "", "Drover data root for reviews (default: ~/.crit); reviews live in <root>/reviews/<key>/")
+	fs.StringVar(outputDir, "o", "", "Drover data root for reviews (shorthand)")
 	quiet := fs.Bool("quiet", false, "On success, suppress connect/start status, tips, and session summary")
 	fs.BoolVar(quiet, "q", false, "On success, suppress connect/start status, tips, and session summary (shorthand)")
 	noIgnore := fs.Bool("no-ignore", false, "Disable all ignore patterns from config files")
@@ -230,7 +230,7 @@ func applyDaemonConfigDefaults(sf *daemonFlagSet, cfg config.Config) { //nolint:
 func daemonMustGetwd() string {
 	wd, err := os.Getwd()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "crit: unable to determine current working directory: %v\n", err)
+		fmt.Fprintf(os.Stderr, "drover: unable to determine current working directory: %v\n", err)
 		os.Exit(1)
 	}
 	return wd
@@ -366,8 +366,8 @@ func PreflightCheck(sc *DaemonCLIConfig) string {
 	v := vcs.DetectVCS(sc.VCSOverride)
 	if v == nil {
 		return "Not in a version-controlled repository.\n\n" +
-			"  crit              review changed files (run inside a git/sapling/jj repo)\n" +
-			"  crit <file...>    review specific file(s)\n"
+			"  drover              review changed files (run inside a git/sapling/jj repo)\n" +
+			"  drover <file...>    review specific file(s)\n"
 	}
 	if sc.BaseBranch != "" {
 		v.SetDefaultBranchOverride(sc.BaseBranch)
@@ -381,8 +381,8 @@ func PreflightCheck(sc *DaemonCLIConfig) string {
 		return ""
 	}
 	return "No changed files found.\n\n" +
-		"  crit              review changed files (needs changes against the base branch)\n" +
-		"  crit <file...>    review specific file(s)\n"
+		"  drover              review changed files (needs changes against the base branch)\n" +
+		"  drover <file...>    review specific file(s)\n"
 }
 
 // FocusKeyArgs returns the args slice used to key the daemon session for a
