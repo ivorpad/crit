@@ -165,6 +165,13 @@ dialog.hp-rename { width: min(520px, 92vw); }
 .hp-rn-input:focus { outline: none; border-color: var(--crit-brand); }
 .hp-rn-result { margin: 10px 0 0; font-size: 13px; color: var(--crit-fg-secondary); }
 .hp-rn-clear { margin-right: auto; }
+/* Exit and Close pane: apart from the reply buttons, and their dialog (herdr-page.end.js) */
+.hp-actions .hp-end-first { margin-left: auto; }
+dialog.hp-end { width: min(560px, 92vw); }
+.hp-end-body p { margin: 0 0 10px; font-size: 14px; line-height: 1.5; }
+.hp-end-body code { font: 13px var(--crit-font-mono); }
+.hp-end-resume { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; padding: 8px 10px; background: var(--crit-editor-code-bg); border: 1px solid var(--crit-border); border-radius: 8px; font-size: 13px; color: var(--crit-fg-secondary); }
+.hp-end-resume code { flex: 1 1 auto; color: var(--crit-fg-primary); overflow-wrap: anywhere; }
 .hp-selbtn { position: fixed; z-index: 60; font-size: 12px; box-shadow: var(--crit-shadow); }
 
 /* transcript rows (herdr-transcript-view.js) */

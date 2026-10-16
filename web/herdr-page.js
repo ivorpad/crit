@@ -6,7 +6,7 @@
 // send per pane: Finish review shows the exact text, then POST
 // /api/herdr/send. Contract: docs/herdr-api.md.
 // Dependencies: window.crit.shared, sse, herdrModel, herdrPageModel,
-// herdrPageView, herdrTranscriptParse, herdrTranscriptView, herdrTranscriptCtl.
+// herdrPageView, herdrPageEnd, herdrTranscriptParse, herdrTranscriptView, herdrTranscriptCtl.
 (function () {
   'use strict';
   var C = window.crit, SH = C.shared, HM = C.herdrModel, PM = C.herdrPageModel, PV = C.herdrPageView;
@@ -18,6 +18,7 @@
     raw: null, snap: null, byPath: {}, machines: {}, order: [], states: {}, pass: null,
     current: null, previous: null, resume: null, confirming: null, confirmTimer: null,
     tx: {}, docs: {}, dots: {}, stripKey: '', refreshing: null, again: false, restore: null,
+    closed: {}, // panes this page exited or closed: their leaving the sweep needs no toast
   };
 
   // ---------- the browser's own records: watch list, reply drafts, sent copies ----------
@@ -255,6 +256,15 @@
       toast(clear ? 'Name cleared. It shows from the next sweep.' : 'Renamed to ' + name + '. It shows from the next sweep.', 'success');
     }, function (err) { $('rn-error').textContent = 'Rename failed: ' + err.message; $('rn-error').hidden = false; $('rn-save').disabled = false; });
   }
+  // Exit and Close pane (herdr-page.end.js): a dialog, then the receipt.
+  var endDlg = C.herdrPageEnd.create({
+    item: function (path) { return S.byPath[path]; }, name: nameOf, post: post, toast: toast,
+    ended: function (path) { S.closed[path] = true; }, refresh: refreshSnapshot,
+  });
+  function openEnd(kind) {
+    var it = S.current && S.byPath[S.current];
+    if (it && !S.confirming) endDlg.open(kind, it);
+  }
   function toggleWatch() {
     var path = S.current;
     if (!path || S.confirming) return;
@@ -471,7 +481,7 @@
     patchStrip();
     renderTop();
     if (S.current && !S.byPath[S.current]) {
-      toast(nameOf(S.current) + ' left herdr.');
+      if (!S.closed[S.current]) toast(nameOf(S.current) + ' left herdr.');
       var nx = PM.queue(S.pass, S.current, S.resume).filter(function (q) { return S.byPath[q]; })[0] || null;
       S.current = null;
       setCurrent(nx);
@@ -541,6 +551,8 @@
     else if (t.id === 'skip') skip();
     else if (t.id === 'watch') toggleWatch();
     else if (t.id === 'rename') openRename();
+    else if (t.id === 'exitPane') openEnd('exit');
+    else if (t.id === 'closePane') openEnd('close');
     else if (t.id === 'toggleDoc') toggleDoc();
     else if (t.id === 'startPass') startPass();
     else if (t.id === 'bootRetry') boot();

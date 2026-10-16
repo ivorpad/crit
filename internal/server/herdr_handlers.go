@@ -36,6 +36,12 @@ type HerdrProvider interface {
 	// RenameJSON sets or clears herdr's agent name for the pane at path, as HTTP
 	// status and JSON body.
 	RenameJSON(ctx context.Context, body []byte) (status int, resp []byte)
+	// ExitJSON quits the agent in the pane at path with its own keys, then types
+	// exit into its shell, which closes the pane; as HTTP status and JSON body.
+	ExitJSON(ctx context.Context, body []byte) (status int, resp []byte)
+	// CloseJSON closes the pane at path (`herdr pane close`), as HTTP status and
+	// JSON body.
+	CloseJSON(ctx context.Context, body []byte) (status int, resp []byte)
 	// ImageBytes is one picture of the pane's transcript: the line with that uuid,
 	// block "i" or "i.j" of its message. On 200 the body is the picture and
 	// contentType its media type; otherwise a JSON error.
@@ -132,6 +138,36 @@ func (s *Server) handleHerdrRename(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	status, resp := p.RenameJSON(r.Context(), body)
+	writeHerdrJSON(w, status, resp)
+}
+
+// POST /api/herdr/exit {"path"} and POST /api/herdr/close {"path"}: the pane's
+// agent quits and its shell closes the pane, or herdr closes the pane outright.
+// An exit takes a few seconds; the page has asked the owner before either.
+func (s *Server) handleHerdrExit(w http.ResponseWriter, r *http.Request) {
+	s.handleHerdrEnd(w, r, HerdrProvider.ExitJSON)
+}
+
+func (s *Server) handleHerdrClose(w http.ResponseWriter, r *http.Request) {
+	s.handleHerdrEnd(w, r, HerdrProvider.CloseJSON)
+}
+
+func (s *Server) handleHerdrEnd(w http.ResponseWriter, r *http.Request, end func(HerdrProvider, context.Context, []byte) (int, []byte)) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	p := s.herdrProvider()
+	if p == nil {
+		http.Error(w, "Not a herdr session", http.StatusNotFound)
+		return
+	}
+	body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 64<<10))
+	if err != nil {
+		http.Error(w, "Body too large or unreadable", http.StatusBadRequest)
+		return
+	}
+	status, resp := end(p, r.Context(), body)
 	writeHerdrJSON(w, status, resp)
 }
 

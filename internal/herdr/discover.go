@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 // herdrAgent is one entry of `herdr agent list` (or the agent fields of `pane list`).
@@ -107,23 +108,23 @@ func discover(ctx context.Context, run runner, m machine) (agents, panes []herdr
 }
 
 // resumeRE matches the line an agent CLI prints when it exits, telling how to come
-// back (herdr-tui-control.md S21, G12, S15).
-var resumeRE = regexp.MustCompile(`(?m)(claude --resume [0-9a-f-]{36}|codex resume [0-9A-Za-z-]{8,}|opencode -s ses_[0-9A-Za-z]+)`)
+// back (herdr-tui-control.md S21, G12, S15, and §4 "Leaving a pane" for pi, grok
+// and cursor-agent).
+var resumeRE = regexp.MustCompile(`(?m)\b(claude --resume [0-9a-f-]{36}|codex resume [0-9A-Za-z-]{8,}|opencode -s ses_[0-9A-Za-z]+|pi --session [0-9a-f-]{36}|grok --resume [0-9a-f-]{36}|agent --resume=[0-9a-f-]{36})`)
 
-// resumeCommand returns the last resume line on a pane's screen.
+// resumeCommand returns the last resume line on a pane's screen and the agent that
+// printed it. cursor-agent prints `agent --resume=<id>`, but `agent` on the Mac and
+// the workboxes is grok's (its installer ran last), so that one comes back as
+// `cursor-agent --resume=<id>`.
 func resumeCommand(screen string) (cmd, kind string, ok bool) {
 	all := resumeRE.FindAllString(screen, -1)
 	if len(all) == 0 {
 		return "", "", false
 	}
 	cmd = all[len(all)-1]
-	switch {
-	case cmd[0] == 'c' && cmd[1] == 'l':
-		kind = "claude"
-	case cmd[0] == 'c':
-		kind = "codex"
-	default:
-		kind = "opencode"
+	if strings.HasPrefix(cmd, "agent ") {
+		return "cursor-" + cmd, "cursor", true
 	}
+	kind, _, _ = strings.Cut(cmd, " ")
 	return cmd, kind, true
 }

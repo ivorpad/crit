@@ -359,6 +359,9 @@ func TestResumeCommand(t *testing.T) {
 		{"Resume this session with:\nclaude --resume 0b1e2c3d-0000-4000-8000-0000000000aa", "claude --resume 0b1e2c3d-0000-4000-8000-0000000000aa", "claude"},
 		{"To reconnect, run: codex resume 019a2b3c-4d5e", "codex resume 019a2b3c-4d5e", "codex"},
 		{"Continue  opencode -s ses_7abC9", "opencode -s ses_7abC9", "opencode"},
+		{"To resume this session: pi --session 01a14439-0c4d-76fc-b5b3-42625543fcfe", "pi --session 01a14439-0c4d-76fc-b5b3-42625543fcfe", "pi"},
+		{"Resume this session with:\n  grok --resume 01a1446d-31f0-7772-b65d-1945b79c3886", "grok --resume 01a1446d-31f0-7772-b65d-1945b79c3886", "grok"},
+		{"To resume this session: agent --resume=0b2d011b-258b-409a-8cba-28ccc78cf656", "cursor-agent --resume=0b2d011b-258b-409a-8cba-28ccc78cf656", "cursor"},
 		{"$ ls", "", ""},
 	}
 	for _, tt := range tests {

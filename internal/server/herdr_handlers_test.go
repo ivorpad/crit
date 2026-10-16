@@ -68,6 +68,14 @@ func (f *fakeHerdr) RenameJSON(_ context.Context, body []byte) (int, []byte) {
 	return http.StatusOK, []byte(`{"path":"local/wA:p1.md","name":"vert"}`)
 }
 
+func (f *fakeHerdr) ExitJSON(_ context.Context, _ []byte) (int, []byte) {
+	return http.StatusNotImplemented, []byte(`{"error":"not in the fake"}`)
+}
+
+func (f *fakeHerdr) CloseJSON(_ context.Context, _ []byte) (int, []byte) {
+	return http.StatusNotImplemented, []byte(`{"error":"not in the fake"}`)
+}
+
 // fakePNG is the start of a PNG, all the fake serves.
 var fakePNG = "\x89PNG\r\n\x1a\nfake"
 

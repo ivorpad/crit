@@ -55,6 +55,16 @@
     <button type="button" class="btn btn-primary" id="rn-save">Save</button>
   </div>
 </dialog>
+<dialog class="hp-preview hp-end" id="endDlg" aria-labelledby="end-title">
+  <h2 id="end-title">Exit</h2>
+  <p class="hp-pv-sub" id="end-sub"></p>
+  <div class="hp-end-body" id="end-body"></div>
+  <p class="hp-pv-error" id="end-error" role="alert" hidden></p>
+  <div class="hp-pv-acts">
+    <button type="button" class="btn" id="end-cancel">Cancel</button>
+    <button type="button" class="btn btn-danger" id="end-go">Exit</button>
+  </div>
+</dialog>
 <script src="crit-shared.js"></script>
 <script src="crit-sse.js"></script>
 <script src="herdr-mode.model.js"></script>
@@ -70,6 +80,7 @@
 <script src="herdr-transcript-ctl.js"></script>
 <script src="herdr-page.model.js"></script>
 <script src="herdr-page.view.js"></script>
+<script src="herdr-page.end.js"></script>
 <script src="herdr-page.js"></script>
 </body>
 </html>

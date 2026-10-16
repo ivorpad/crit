@@ -52,6 +52,8 @@ type Controller struct {
 	sent   map[string]Delivery
 	keyGap time.Duration // pause between send-keys calls; tests set 0
 	kick   chan struct{} // a send asks Run for a sweep now
+	// ending is the panes an exit or close is running on (close.go).
+	ending map[string]bool
 
 	// transcripts is each read pane's Claude transcript, by item id
 	// (transcript.go). In memory only.
@@ -82,6 +84,7 @@ func NewController(o Options) *Controller {
 		sent:     map[string]Delivery{},
 		keyGap:   keyGap,
 		kick:     make(chan struct{}, 1),
+		ending:   map[string]bool{},
 
 		transcripts: map[string]*transcriptState{},
 		reuse:       transcriptReuse,

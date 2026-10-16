@@ -267,6 +267,10 @@ func agentGet(ctx context.Context, run runner, m machine, paneID string) (*herdr
 		return nil, fmt.Errorf("herdr agent get: %s: %s", body.Error.Code, body.Error.Message)
 	}
 	if runErr != nil {
+		// herdr prints its error JSON on stderr, which the runner puts in err.
+		if strings.Contains(runErr.Error(), "agent_not_found") {
+			return nil, refuse(http.StatusNotFound, "herdr lists no agent in pane "+paneID)
+		}
 		return nil, runErr
 	}
 	if body.Result.Agent == nil {

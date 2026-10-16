@@ -193,6 +193,8 @@ func NewServer(session *Session, frontendFS embed.FS, shareURL string, proxyAuth
 	mux.HandleFunc("/api/herdr/image", s.withReady(s.handleHerdrImage))
 	mux.HandleFunc("/api/herdr/file", s.withReady(s.handleHerdrFile))
 	mux.HandleFunc("/api/herdr/rename", s.withReady(s.handleHerdrRename))
+	mux.HandleFunc("/api/herdr/exit", s.withReady(s.handleHerdrExit))
+	mux.HandleFunc("/api/herdr/close", s.withReady(s.handleHerdrClose))
 	mux.HandleFunc("/api/share", s.withReady(s.handleShare))
 	mux.HandleFunc("/api/share-consent", s.withReady(s.handleShareConsent))
 	mux.HandleFunc("/api/project-prompts/trust", s.withReady(s.handleProjectPromptTrust))

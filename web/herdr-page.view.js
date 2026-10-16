@@ -131,8 +131,14 @@
     if (tx.newer) h += '<div class="hp-newer">This pane has new lines since you opened it. <button type="button" class="hp-linkbtn" id="showNewer">Show them</button></div>';
     return h + '<div class="hp-stream">' + stream() + '</div>';
   }
+  // why Exit is off: herdr's own status, which a gateway-unreadable pane keeps in herdr_status
+  function exitBlocked(it) {
+    var s = it.herdr_status || it.status;
+    return s === 'working' ? 'It is working. Stop it in herdr first, or use Close pane.'
+      : s === 'blocked' ? 'A dialog is up in it. Answer it first, or use Close pane.' : '';
+  }
   function replyHTML(p, open, draft) {
-    var can = HM.canSend(p.item);
+    var can = HM.canSend(p.item), busy = exitBlocked(p.item);
     return '<section class="hp-reply" aria-label="Reply to this pane"><label class="hp-sr" for="replyText">Reply to ' + esc(p.name) + '</label>' +
       '<textarea id="replyText" placeholder="Reply to ' + esc(p.name) + '…  (⌘↵ opens Finish review)">' + esc(draft || '') + '</textarea><div class="hp-actions">' +
       '<button type="button" class="btn btn-primary" id="finishReview"' + (can ? '' : ' disabled title="' + esc(p.item.status === 'exited' ? 'The agent has exited.' : 'This pane has no herdr state to send to.') + '"') + '>Finish review' + (open ? ' (' + open + ')' : '') + ' <kbd>⌘↵</kbd></button>' +
@@ -140,7 +146,9 @@
       '<button type="button" class="btn" id="skip">Skip <kbd>N</kbd></button>' +
       '<button type="button" class="btn" id="watch">' + (p.watched ? '★ Watching' : '☆ Watch') + ' <kbd>W</kbd></button>' +
       '<button type="button" class="btn" id="rename">Rename</button>' +
-      '<button type="button" class="btn" data-focus="1">Focus in herdr</button></div>' +
+      '<button type="button" class="btn" data-focus="1">Focus in herdr</button>' +
+      '<button type="button" class="btn hp-end-first" id="exitPane" title="' + esc(busy || 'Quit the agent with its own key, then type exit in its shell, which closes the pane') + '"' + (busy ? ' disabled' : '') + '>Exit</button>' +
+      '<button type="button" class="btn btn-danger" id="closePane" title="Close the pane in herdr, ending everything running in it">Close pane</button></div>' +
       '<p class="hp-hint">Finish review shows the exact text, then sends this reply' + (p.hasTx ? ' and your row comments' : '') + ' to ' + esc(PM.receiptTo(p.item)) + ' as one prompt and opens the next pane that needs you.' +
       (p.hasTx ? ' Send now on one comment sends only that comment and keeps you here.' : '') + '</p>' +
       (p.sent ? '<p class="hp-sentcopy">Last sent ' + F.dayTime(p.sent.at) + ': <span>' + esc(p.sent.text.length > 160 ? p.sent.text.slice(0, 159) + '…' : p.sent.text) + '</span></p>' : '') + '</section>';
@@ -168,11 +176,33 @@
     h += need ? '<p>' + (need === 1 ? '1 pane needs' : need + ' panes need') + ' you right now.</p>' : '<p class="hp-muted">Nothing needs you right now. A dot in the strip changes colour when an agent finishes or asks you something.</p>';
     return h + '<button type="button" class="btn btn-primary" id="startPass">Start next pass' + (need ? ' (' + need + ')' : '') + '</button></div>' + KEYS + '</div>';
   }
+  // ---------- leaving a pane: the Exit / Close pane dialog ----------
+  function resumeHTML(cmd) {
+    return cmd ? '<div class="hp-end-resume"><span>Resume it later with</span><code>' + esc(cmd) + '</code><button type="button" class="btn btn-sm" data-copy="' + esc(cmd) + '">Copy</button></div>' : '';
+  }
+  // what the button will do, before the owner confirms
+  function endHTML(kind, it) {
+    var agent = esc(it.agent || 'the agent');
+    if (kind === 'close') {
+      return '<p>herdr closes the pane and ends everything running in it: ' + agent + ' and any command it started. A turn in progress stops where it is. The transcript stays on disk.</p>' + resumeHTML(it.resume_command);
+    }
+    if (it.status === 'exited') return '<p>' + agent + ' has quit already. drover types <code>exit</code> into its shell, which closes the pane.</p>' + resumeHTML(it.resume_command);
+    return '<p>drover quits ' + agent + ' with <kbd>ctrl+d</kbd>, waits until its shell is back, then types <code>exit</code> there, which closes the pane. The resume command it prints is kept for you.</p>' +
+      '<p class="hp-muted">ctrl+d quits only from an empty input line. If something is typed there or a menu is open, nothing is sent and Exit stops before the shell.</p>';
+  }
+  // what it did, with the resume command to copy
+  function endDoneHTML(kind, it, res) {
+    var what = kind === 'close' ? 'herdr closed ' + esc(it.pane_id) + '.' : esc(res.agent || it.agent || 'The agent') + ' quit, and <code>exit</code> closed ' + esc(it.pane_id) + '.';
+    return '<p>' + what + '</p>' + resumeHTML(res.resume_command);
+  }
   function messageHTML(title, text, retry) {
     return '<div class="hp-col"><div class="hp-alldone"><h1 class="hp-pname">' + esc(title) + '</h1><p>' + esc(text) + '</p>' + (retry ? '<button type="button" class="btn" id="bootRetry">Try again</button>' : '') + '</div></div>';
   }
 
-  var api = { strip: strip, findHTML: findHTML, nameButton: nameButton, paneHTML: paneHTML, confirmHTML: confirmHTML, doneHTML: doneHTML, messageHTML: messageHTML };
+  var api = {
+    strip: strip, findHTML: findHTML, nameButton: nameButton, paneHTML: paneHTML, confirmHTML: confirmHTML, doneHTML: doneHTML, messageHTML: messageHTML,
+    endHTML: endHTML, endDoneHTML: endDoneHTML, resumeHTML: resumeHTML,
+  };
   if (typeof window !== 'undefined') {
     window.crit = window.crit || {};
     window.crit.herdrPageView = api;
