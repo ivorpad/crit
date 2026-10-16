@@ -157,9 +157,9 @@ func connectToLiveDaemon(key string, noOpen bool, openCmd string, quiet bool) bo
 		return false
 	}
 	if !quiet {
-		fmt.Fprintf(os.Stderr, "[crit] connected to live daemon at %s (proxy :%d)\n",
+		fmt.Fprintf(os.Stderr, "[drover] connected to live daemon at %s (proxy :%d)\n",
 			entry.BaseURL(), entry.Port+1)
-		fmt.Fprintf(os.Stderr, "[crit] open %s/live\n", entry.BaseURL())
+		fmt.Fprintf(os.Stderr, "[drover] open %s/live\n", entry.BaseURL())
 	}
 	if !noOpen && !daemon.DaemonHasBrowser(entry) {
 		launchLiveBrowser(entry.BaseURL()+"/live", openCmd)
@@ -214,15 +214,16 @@ func parseLiveCLIFlags(args []string) liveCLIFlags {
 		}
 	}
 	if rawURL == "" {
-		fmt.Fprintln(os.Stderr, "Usage: crit live <url>")
+		fmt.Fprintln(os.Stderr, "Usage: drover live <url>")
 		os.Exit(1)
 	}
 	u, err := url.Parse(rawURL)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") {
-		fmt.Fprintf(os.Stderr, "crit live: %q is not a valid http/https URL\n", rawURL)
+		fmt.Fprintf(os.Stderr, "drover live: %q is not a valid http/https URL\n", rawURL)
 		os.Exit(1)
 	}
-	u.RawQuery = ""
+	// The query stays: it picks what the first page shows (a Storybook story's
+	// ?id=, a preview route's ?screen=).
 	u.Fragment = ""
 	return liveCLIFlags{
 		port:                        *port,
@@ -291,9 +292,9 @@ func RunLive(args []string) {
 	}
 
 	if !quiet {
-		fmt.Fprintf(os.Stderr, "[crit] starting daemon on :%d (api), :%d (proxy)\n",
+		fmt.Fprintf(os.Stderr, "[drover] starting daemon on :%d (api), :%d (proxy)\n",
 			entry.Port, entry.Port+1)
-		fmt.Fprintf(os.Stderr, "[crit] open %s/live\n", entry.BaseURL())
+		fmt.Fprintf(os.Stderr, "[drover] open %s/live\n", entry.BaseURL())
 	}
 
 	installLiveDaemonSignalHandler(entry.PID)
@@ -308,13 +309,13 @@ func checkLiveSmoke(origin, cookies string) {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", result.message)
 		os.Exit(1)
 	case smokeNon2xx, smokeMissingBody:
-		fmt.Fprintf(os.Stderr, "[crit] warning: %s\n", result.message)
+		fmt.Fprintf(os.Stderr, "[drover] warning: %s\n", result.message)
 	}
 	if result.hasCSPFrameAncestors {
-		fmt.Fprintf(os.Stderr, "[crit] note: upstream has frame-ancestors CSP; stripped by proxy\n")
+		fmt.Fprintf(os.Stderr, "[drover] note: upstream has frame-ancestors CSP; stripped by proxy\n")
 	}
 	for _, n := range result.frameworkNotes {
-		fmt.Fprintf(os.Stderr, "[crit] note: %s\n", n)
+		fmt.Fprintf(os.Stderr, "[drover] note: %s\n", n)
 	}
 }
 

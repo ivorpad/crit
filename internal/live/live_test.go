@@ -300,10 +300,10 @@ func TestGitHubSyncGuard(t *testing.T) {
 		op        string
 		wantError bool
 	}{
-		{"live review pull", CritJSON{ReviewType: "live", Origin: "http://localhost:3000"}, "crit pull", true},
-		{"live review push", CritJSON{ReviewType: "live", Origin: "http://localhost:3000"}, "crit push", true},
-		{"code review pull", CritJSON{ReviewRound: 1}, "crit pull", false},
-		{"code review push", CritJSON{ReviewRound: 1}, "crit push", false},
+		{"live review pull", CritJSON{ReviewType: "live", Origin: "http://localhost:3000"}, "drover pull", true},
+		{"live review push", CritJSON{ReviewType: "live", Origin: "http://localhost:3000"}, "drover push", true},
+		{"code review pull", CritJSON{ReviewRound: 1}, "drover pull", false},
+		{"code review push", CritJSON{ReviewRound: 1}, "drover push", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -332,7 +332,7 @@ func TestCommentCLIGuard_LiveReview(t *testing.T) {
 	if err := saveCritJSON(critPath, cj); err != nil {
 		t.Fatalf("saveCritJSON: %v", err)
 	}
-	err := checkCommentCLIAllowed(critPath, "crit comment <path>:<line>")
+	err := checkCommentCLIAllowed(critPath, "drover comment <path>:<line>")
 	if err == nil {
 		t.Fatal("expected error for live review")
 	}
@@ -348,8 +348,8 @@ func TestCommentCLIGuard_CodeReview_Allowed(t *testing.T) {
 	if err := saveCritJSON(critPath, cj); err != nil {
 		t.Fatalf("saveCritJSON: %v", err)
 	}
-	if err := checkCommentCLIAllowed(critPath, "crit comment <path>:<line>"); err != nil {
-		t.Errorf("code review should allow crit comment: %v", err)
+	if err := checkCommentCLIAllowed(critPath, "drover comment <path>:<line>"); err != nil {
+		t.Errorf("code review should allow drover comment: %v", err)
 	}
 }
 
@@ -483,7 +483,7 @@ func TestParseLiveCLIFlags(t *testing.T) {
 		"--cdp-url", "http://127.0.0.1:9222",
 		"https://example.com/app?q=1#frag",
 	})
-	if f.origin != "https://example.com/app" {
+	if f.origin != "https://example.com/app?q=1" {
 		t.Fatalf("origin = %q", f.origin)
 	}
 	if f.port != 8080 || f.host != "0.0.0.0" || f.publicURL != "https://mymac.ts.net" || !f.noOpen || !f.quiet {

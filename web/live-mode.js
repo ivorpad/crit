@@ -20,6 +20,7 @@
    * @property {object|null} session         /api/session payload
    * @property {string[]}    routes          Pathnames seen this session
    * @property {string}      currentRoute    Currently displayed pathname
+   * @property {string}      initialSearch   The live URL's query, for the first load only
    * @property {{w:number,h:number,key:string}} viewport
    * @property {"navigate"|"pin"} mode
    * @property {object[]}    comments        Flat list (cached per route)
@@ -39,6 +40,7 @@
     session: null,
     routes: [],
     currentRoute: '/',
+    initialSearch: '',
     viewport: { w: 1280, h: 800, key: 'desktop' },
     mode: 'pin',
     comments: [],
@@ -277,9 +279,9 @@
         '</div>' +
         '<div class="crit-live-context" id="liveUnavailableFlash" data-kind="flash" hidden role="status">' +
         '<span class="crit-live-context-primary">' +
-        '<span><strong>Commenting unavailable</strong> — Crit could not connect to this page.</span>' +
+        '<span><strong>Commenting unavailable</strong> — Drover could not connect to this page.</span>' +
         '</span>' +
-        '<p class="crit-live-context-help">You can still browse. Crit cannot inject its commenting agent. ' +
+        '<p class="crit-live-context-help">You can still browse. Drover cannot inject its commenting agent. ' +
         '<a class="crit-live-context-guide" id="liveUnavailableGuide" href="https://github.com/tomasz-tomczyk/crit/blob/main/docs/live-mode.md" target="_blank" rel="noopener noreferrer">Troubleshooting guide</a>' +
         '</p>' +
         '</div>' +
@@ -450,20 +452,22 @@
     if (state.isPreview) {
       var firstFile = (state.session.files && state.session.files.length)
         ? state.session.files[0].path : 'preview';
-      setDocumentTitle('Crit — ' + firstFile);
+      setDocumentTitle('Drover — ' + firstFile);
     } else {
-      setDocumentTitle('Crit — ' + (state.session.origin || 'live'));
+      setDocumentTitle('Drover — ' + (state.session.origin || 'live'));
     }
 
     // Extract initial route from the origin URL path (e.g.
     // "http://localhost:3333/live.html" → "/live.html") so the iframe
-    // loads the correct page instead of always requesting "/".
+    // loads the correct page instead of always requesting "/". The query
+    // goes on the first load only; routes stay pathnames.
     if (state.isPreview) {
       state.currentRoute = '/preview-content';
     } else if (state.session.origin) {
       try {
-        var originPath = new URL(state.session.origin).pathname;
-        if (originPath && originPath !== '/') state.currentRoute = originPath;
+        var originURL = new URL(state.session.origin);
+        if (originURL.pathname && originURL.pathname !== '/') state.currentRoute = originURL.pathname;
+        state.initialSearch = originURL.search;
       } catch (_) { /* malformed origin — keep default "/" */ }
     }
 
@@ -701,7 +705,7 @@
       setActiveModeButton();
     }
     if (s === 'connecting') {
-      announce('Connecting to Crit');
+      announce('Connecting to Drover');
     } else if (s === 'ready') {
       announce('Ready to comment');
     } else {
@@ -816,7 +820,7 @@
     state.currentRoute = utils.normaliseRoute(state.currentRoute);
     if (!els.iframe) return;
     els.iframe.addEventListener('load', onIframeLoad);
-    loadIframe(proxyURL(state.currentRoute));
+    loadIframe(proxyURL(state.currentRoute) + state.initialSearch);
     startConnectionTracking();
   });
 
