@@ -33,6 +33,12 @@ type HerdrProvider interface {
 	// TranscriptJSON is the Claude transcript of the pane at path, filtered, as
 	// HTTP status and JSON body; with since, only the lines after that version.
 	TranscriptJSON(ctx context.Context, path, since string) (status int, resp []byte)
+	// ChildrenJSON lists the sub-agents of the pane at path (Claude subagents and
+	// teammates, Codex sub-agents; this Mac only), as HTTP status and JSON body.
+	ChildrenJSON(ctx context.Context, path string) (status int, resp []byte)
+	// ChildTranscriptJSON is one sub-agent's transcript, shaped like
+	// TranscriptJSON's.
+	ChildTranscriptJSON(ctx context.Context, path, child, since string) (status int, resp []byte)
 	// RenameJSON sets or clears herdr's agent name for the pane at path, as HTTP
 	// status and JSON body.
 	RenameJSON(ctx context.Context, body []byte) (status int, resp []byte)
@@ -52,7 +58,7 @@ type HerdrProvider interface {
 	FileBytes(ctx context.Context, path, file string) (status int, contentType string, body []byte)
 }
 
-// GET /api/herdr/transcript?path=<review path>[&since=<version>]
+// GET /api/herdr/transcript?path=<review path>[&child=<sub-agent id>][&since=<version>]
 func (s *Server) handleHerdrTranscript(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -64,7 +70,27 @@ func (s *Server) handleHerdrTranscript(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	q := r.URL.Query()
+	if child := q.Get("child"); child != "" {
+		status, resp := p.ChildTranscriptJSON(r.Context(), q.Get("path"), child, q.Get("since"))
+		writeHerdrJSON(w, status, resp)
+		return
+	}
 	status, resp := p.TranscriptJSON(r.Context(), q.Get("path"), q.Get("since"))
+	writeHerdrJSON(w, status, resp)
+}
+
+// GET /api/herdr/children?path=<review path>
+func (s *Server) handleHerdrChildren(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	p := s.herdrProvider()
+	if p == nil {
+		writeHerdrJSON(w, http.StatusNotFound, []byte(`{"error":"unknown pane"}`))
+		return
+	}
+	status, resp := p.ChildrenJSON(r.Context(), r.URL.Query().Get("path"))
 	writeHerdrJSON(w, status, resp)
 }
 

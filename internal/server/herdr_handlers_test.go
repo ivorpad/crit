@@ -68,6 +68,14 @@ func (f *fakeHerdr) RenameJSON(_ context.Context, body []byte) (int, []byte) {
 	return http.StatusOK, []byte(`{"path":"local/wA:p1.md","name":"vert"}`)
 }
 
+func (f *fakeHerdr) ChildrenJSON(_ context.Context, _ string) (int, []byte) {
+	return http.StatusNotImplemented, []byte(`{"error":"not in the fake"}`)
+}
+
+func (f *fakeHerdr) ChildTranscriptJSON(_ context.Context, _, _, _ string) (int, []byte) {
+	return http.StatusNotImplemented, []byte(`{"error":"not in the fake"}`)
+}
+
 func (f *fakeHerdr) ExitJSON(_ context.Context, _ []byte) (int, []byte) {
 	return http.StatusNotImplemented, []byte(`{"error":"not in the fake"}`)
 }

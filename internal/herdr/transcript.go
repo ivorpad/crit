@@ -74,6 +74,7 @@ func (e *transcriptEntry) after(since string) int {
 // transcriptView is the answer of GET /api/herdr/transcript.
 type transcriptView struct {
 	Path         string `json:"path"`
+	Child        string `json:"child,omitempty"`
 	Machine      string `json:"machine"`
 	PaneID       string `json:"pane_id"`
 	Kind         string `json:"kind"`
@@ -104,16 +105,22 @@ func (c *Controller) TranscriptJSON(ctx context.Context, path, since string) (in
 	if err != nil {
 		return marshalStatus(transcriptRefusal(err))
 	}
-	from := e.after(since)
 	kind := refClaudeJSONL
 	if lr, ok := localReaders[it.Agent]; ok {
 		kind = lr.kind
 	}
+	return answerTranscript(path, "", it, kind, e, since)
+}
+
+// answerTranscript is a transcript as GET /api/herdr/transcript sends it: the
+// lines after since when since is a version of e's text, else all of them.
+func answerTranscript(path, child string, it Item, kind string, e *transcriptEntry, since string) (int, []byte) {
+	from := e.after(since)
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
 	_ = enc.Encode(transcriptView{
-		Path: path, Machine: it.Machine, PaneID: it.PaneID, Kind: kind, Source: e.source,
+		Path: path, Child: child, Machine: it.Machine, PaneID: it.PaneID, Kind: kind, Source: e.source,
 		SessionID: e.session, File: e.file, Bytes: e.offset, DroppedBytes: e.dropped, Clipped: e.clipped,
 		Version: e.version(), From: from, JSONL: string(e.text[from:]), FetchedAt: e.fetchedAt.UTC().Format(time.RFC3339),
 	})
@@ -280,6 +287,11 @@ func (c *Controller) keepTranscripts(old, now *Snapshot) {
 	for id := range c.transcripts {
 		if !live[id] {
 			delete(c.transcripts, id)
+		}
+	}
+	for key := range c.childTx {
+		if parent, _, _ := strings.Cut(key, "#"); !live[parent] {
+			delete(c.childTx, key)
 		}
 	}
 }

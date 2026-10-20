@@ -106,27 +106,38 @@ func rootRollout(paths []string) (file, thread string, ok bool) {
 	return file, thread, file != ""
 }
 
-// readLocalCodex reads the rollout of a Codex pane on this Mac: one herdr call,
-// one lsof and the file from where the last read stopped.
-func readLocalCodex(ctx context.Context, run runner, m machine, it Item, prev *transcriptEntry) (transcriptRead, error) {
+// codexJoin finds a Codex pane's rollout on this Mac: the one its process holds
+// open, else the one its title names in Codex's thread index. The transcript
+// read and the pane's sub-agents (children.go) both start here.
+func codexJoin(ctx context.Context, run runner, m machine, it Item) (pid int, file, thread string, err error) {
 	pids, err := panePIDs(ctx, run, m, it.PaneID, isCodex)
 	if err != nil {
-		return transcriptRead{}, err
+		return 0, "", "", err
 	}
 	if len(pids) == 0 {
-		return transcriptRead{}, &noTranscript{"No codex process in this pane"}
+		return 0, "", "", &noTranscript{"No codex process in this pane"}
 	}
 	paths, err := openRollouts(ctx, run, pids)
 	if err != nil {
-		return transcriptRead{}, err
+		return 0, "", "", err
 	}
-	p, thread, ok := rootRollout(paths)
+	file, thread, ok := rootRollout(paths)
 	if !ok {
-		if p, thread, err = rolloutByTitle(ctx, run, m, it); err != nil {
-			return transcriptRead{}, err
+		if file, thread, err = rolloutByTitle(ctx, run, m, it); err != nil {
+			return 0, "", "", err
 		}
 	}
-	r := transcriptRead{source: "local", kind: refCodexRollout, pid: pids[0], path: p, file: tildePath(p), session: thread}
+	return pids[0], file, thread, nil
+}
+
+// readLocalCodex reads the rollout of a Codex pane on this Mac: one herdr call,
+// one lsof and the file from where the last read stopped.
+func readLocalCodex(ctx context.Context, run runner, m machine, it Item, prev *transcriptEntry) (transcriptRead, error) {
+	pid, p, thread, err := codexJoin(ctx, run, m, it)
+	if err != nil {
+		return transcriptRead{}, err
+	}
+	r := transcriptRead{source: "local", kind: refCodexRollout, pid: pid, path: p, file: tildePath(p), session: thread}
 	offset := int64(0)
 	if prev != nil && prev.session == r.session && prev.path == r.path {
 		offset = prev.offset

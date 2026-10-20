@@ -345,3 +345,41 @@ body.ht-dragging .ht-lb.ht-lend .ht-lplus { opacity: 1; }
   .hp-confirm { animation: none; }
   .hp-bar i, .ht-chev, .ht-add, .ht-lplus { transition: none; }
 }
+
+/* a lead pane's sub-agents (herdr-page.children.js) */
+.hp-kids { margin: 14px 0 0; }
+.hp-kid-list { display: flex; flex-direction: column; border: 1px solid var(--crit-border); border-radius: 10px; overflow: hidden; background: var(--crit-bg-card); }
+.hp-kid { display: grid; grid-template-columns: 92px minmax(110px, 1.1fr) minmax(100px, .9fr) minmax(0, 2fr) auto; align-items: baseline; gap: 12px; width: 100%; padding: 8px 12px; border: 0; border-top: 1px solid var(--crit-border); background: transparent; color: var(--crit-fg-primary); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.hp-kid:first-child { border-top: 0; }
+.hp-kid:hover { background: var(--crit-editor-bg-hover); }
+.hp-kid:focus-visible { outline: 2px solid var(--crit-brand); outline-offset: -2px; }
+.hp-kid-st { font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
+.hp-kid-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hp-kid-kind { font: 12px var(--crit-font-mono); color: var(--crit-fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hp-kid-task { color: var(--crit-fg-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hp-kid-when { font-size: 12px; color: var(--crit-fg-muted); white-space: nowrap; }
+.hp-kids-note { margin: 6px 0 0; font-size: 12px; color: var(--crit-fg-muted); }
+@media (max-width: 760px) {
+  .hp-kid { grid-template-columns: 84px minmax(0, 1fr); }
+  .hp-kid-kind, .hp-kid-task, .hp-kid-when { grid-column: 2; }
+}
+/* the five states: the word in the row, the chip, the reason line */
+.hp-ks-working .hp-kid-st, .hp-kid-why.hp-ks-working { color: var(--crit-green); }
+.hp-ks-stale .hp-kid-st, .hp-kid-why.hp-ks-stale { color: var(--crit-herdr-needs-you); }
+.hp-ks-gone .hp-kid-st, .hp-kid-why.hp-ks-gone { color: var(--crit-red); }
+.hp-ks-idle .hp-kid-st { color: var(--crit-fg-muted); }
+.hp-ks-finished .hp-kid-st { color: var(--crit-fg-secondary); }
+.hp-kid.hp-ks-stale { background: color-mix(in srgb, var(--crit-herdr-needs-you) 7%, transparent); }
+.hp-kid.hp-ks-gone { background: color-mix(in srgb, var(--crit-red) 7%, transparent); }
+.hp-chip.hp-ks-working { color: var(--crit-green); background: color-mix(in srgb, var(--crit-green) 12%, transparent); }
+.hp-chip.hp-ks-stale { color: var(--crit-herdr-needs-you); background: color-mix(in srgb, var(--crit-herdr-needs-you) 14%, transparent); }
+.hp-chip.hp-ks-gone { color: var(--crit-red); background: color-mix(in srgb, var(--crit-red) 12%, transparent); }
+.hp-kid-why { margin: 10px 0 0; font-size: 13px; color: var(--crit-fg-secondary); }
+.hp-kid-line { margin: 6px 0 0; font-size: 13px; color: var(--crit-fg-secondary); }
+.hp-kid-line b { margin-right: 6px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--crit-fg-muted); }
+.hp-kid-line code { font: 12px var(--crit-font-mono); }
+.hp-crumb { font-weight: 600; color: var(--crit-fg-muted); }
+/* the strip: a lead's count of sub-agents, amber while one is stale or gone */
+.hp-kidn { position: absolute; top: -5px; left: -4px; min-width: 14px; height: 14px; padding: 0 3px; border-radius: 7px; font: 700 9px/14px var(--crit-font-mono); text-align: center; color: var(--crit-fg-on-brand); background: var(--crit-fg-muted); }
+.hp-kidn[hidden] { display: none; }
+.hp-kidn-warn { background: var(--crit-herdr-needs-you); }

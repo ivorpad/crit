@@ -6,10 +6,11 @@
 // send per pane: Finish review shows the exact text, then POST
 // /api/herdr/send. Contract: docs/herdr-api.md.
 // Dependencies: window.crit.shared, sse, herdrModel, herdrPageModel,
-// herdrPageView, herdrPageEnd, herdrTranscriptParse, herdrTranscriptView, herdrTranscriptCtl.
+// herdrPageView, herdrPageEnd, herdrPageChildren, herdrTranscriptParse, herdrTranscriptView,
+// herdrTranscriptCtl.
 (function () {
   'use strict';
-  var C = window.crit, SH = C.shared, HM = C.herdrModel, PM = C.herdrPageModel, PV = C.herdrPageView;
+  var C = window.crit, SH = C.shared, HM = C.herdrModel, PM = C.herdrPageModel, PV = C.herdrPageView, KC = C.herdrPageChildren;
   var TP = C.herdrTranscriptParse, TC = C.herdrTranscriptCtl, TM = C.herdrTranscriptMd, F = C.herdrTranscriptView.fmt;
   var STORE = 'crit-herdr:v1:';
   var main = document.getElementById('hpMain');
@@ -19,6 +20,7 @@
     current: null, previous: null, resume: null, confirming: null, confirmTimer: null,
     tx: {}, docs: {}, dots: {}, stripKey: '', refreshing: null, again: false, restore: null,
     closed: {}, // panes this page exited or closed: their leaving the sweep needs no toast
+    child: null, // the open sub-agent of the current pane (herdr-page.children.js), or null
   };
 
   // ---------- the browser's own records: watch list, reply drafts, sent copies ----------
@@ -51,18 +53,30 @@
     };
   }
   function storeKey(path) { var t = S.tx[path]; return path + '|' + (t && t.session ? t.session : 'none'); }
+  // A transcript key is a pane path, or "<pane path>~<child id>" for one of the
+  // pane's sub-agents; pane paths and child ids never hold a "~".
+  function txKey() { return S.child ? S.current + '~' + S.child : S.current; }
+  function paneOf(key) { var i = key.indexOf('~'); return i < 0 ? key : key.slice(0, i); }
+  function childOf(key) { var i = key.indexOf('~'); return i < 0 ? '' : key.slice(i + 1); }
+  // the sub-agent lists, one per lead pane, read when the pane is shown
+  var kids = KC.create({ changed: function (path) { if (path === S.current && !S.confirming) { patchStrip(); renderMain(); } } });
+  function kid(key) { var c = childOf(key); return c ? kids.child(paneOf(key), c) : null; }
 
   // ---------- the transcript area (shared controller) ----------
   var ctl = TC.create({
     root: main,
     current: function () {
       if (S.confirming || !S.current || !S.byPath[S.current]) return null;
-      var t = S.tx[S.current], it = S.byPath[S.current];
-      return { pane: { id: S.current, store: storeKey(S.current) }, model: PM.wantsTranscript(it) && t && t.status === 'ok' ? t.shown : null };
+      var key = txKey(), t = S.tx[key], it = S.byPath[S.current];
+      return { pane: { id: key, store: storeKey(key) }, model: (S.child || PM.wantsTranscript(it)) && t && t.status === 'ok' ? t.shown : null };
     },
-    title: function (p) { return PM.previewTitle(S.byPath[p.id]); },
-    compose: PM.compose,
-    receiptTo: function (p) { return PM.receiptTo(S.byPath[p.id]); },
+    title: function (p) { var ch = kid(p.id); return ch ? 'Ask ' + nameOf(paneOf(p.id)) + ' about ' + ch.name : PM.previewTitle(S.byPath[p.id]); },
+    // a question about a sub-agent goes to its lead, saying which one it is about
+    compose: function (list, extra) {
+      var text = PM.compose(list, extra), ch = S.child && kids.child(S.current, S.child);
+      return ch && text ? KC.prefix(ch) + '\n\n' + text : text;
+    },
+    receiptTo: function (p) { return PM.receiptTo(S.byPath[paneOf(p.id)]); },
     deliver: deliver,
     changed: function () { renderAll(); },
     sent: afterSend,
@@ -75,9 +89,9 @@
     return t && t.status === 'ok' && typeof t.readSeq === 'number' ? t.readSeq : it.state_change_seq;
   }
   function deliver(p, text) {
-    var it = S.byPath[p.id];
+    var it = S.byPath[paneOf(p.id)];
     if (!it || !HM.canSend(it)) return Promise.resolve({ ok: false, message: 'This pane cannot take text: it has no herdr state to send to.' });
-    var seq = readSeq(p.id);
+    var seq = readSeq(paneOf(p.id));
     return fetch('/api/herdr/send', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: it.path, expect_state_change_seq: seq, text: text }) })
       .then(function (res) {
         return res.json().catch(function () { return null; }).then(function (body) {
@@ -87,9 +101,14 @@
       }, function (err) { return { ok: false, message: 'Send failed: ' + (err && err.message ? err.message : String(err)) }; });
   }
   function afterSend(p, info) {
-    addSent(p.id, { at: info.at, text: info.text, completion_seq: info.res.completion_seq, state_change_seq: info.res.state_change_seq });
-    if (info.tag === 'finish') { setDraft(p.id, ''); handled(p.id, 'send'); }
-    else { toast('Sent to ' + info.to + ' at ' + F.hhmm(info.at) + '.', 'success'); renderAll(); }
+    var path = paneOf(p.id);
+    addSent(path, { at: info.at, text: info.text, completion_seq: info.res.completion_seq, state_change_seq: info.res.state_change_seq });
+    // asking a lead about a sub-agent keeps you on the sub-agent
+    if (info.tag === 'finish' && path === p.id) { setDraft(p.id, ''); handled(p.id, 'send'); }
+    else {
+      if (info.tag === 'finish') setDraft(p.id, '');
+      toast('Sent to ' + info.to + ' at ' + F.hhmm(info.at) + '.', 'success'); renderAll();
+    }
     refreshSnapshot();
   }
 
@@ -100,25 +119,27 @@
     grok_jsonl: C.herdrTranscriptGrok.parseSession, cursor_jsonl: C.herdrTranscriptCursor.parseSession,
   };
   function seqsMoved(t, it) { return !!t.seen && (t.seen.c !== it.completion_seq || t.seen.s !== it.state_change_seq); }
-  function ensureTranscript(path) {
-    var it = S.byPath[path];
-    if (!it || !PM.wantsTranscript(it)) return;
-    var t = S.tx[path];
-    if (!t) { S.tx[path] = { status: 'loading' }; loadTranscript(path, false); return; }
-    if (t.status === 'error' && !t.inflight) { t.status = 'loading'; loadTranscript(path, false); return; }
+  function ensureTranscript(key) {
+    var it = S.byPath[paneOf(key)];
+    if (!it || !(childOf(key) || PM.wantsTranscript(it))) return;
+    var t = S.tx[key];
+    if (!t) { S.tx[key] = { status: 'loading' }; loadTranscript(key, false); return; }
+    if (t.status === 'error' && !t.inflight) { t.status = 'loading'; loadTranscript(key, false); return; }
     if (t.status === 'ok') {
       if (t.newer) settle(t);
-      // lines added while you were elsewhere: fetch them and show them, no banner
-      if (seqsMoved(t, it)) { t.settleNext = true; loadTranscript(path, true); }
+      // lines added while you were elsewhere: fetch them and show them, no banner.
+      // A sub-agent moves no seq of its pane's, so it is asked every time.
+      if (childOf(key) || seqsMoved(t, it)) { t.settleNext = true; loadTranscript(key, true); }
     }
   }
   function settle(t) { t.shown = t.model; t.newer = false; t.readSeq = t.seen.s; }
-  function loadTranscript(path, incremental) {
-    var t = S.tx[path], it = S.byPath[path];
+  function loadTranscript(key, incremental) {
+    var t = S.tx[key], it = S.byPath[paneOf(key)], child = childOf(key), path = key;
     if (!t || !it) return;
     if (t.inflight) { t.again = true; return; }
     var seqs = { c: it.completion_seq, s: it.state_change_seq }, t0 = performance.now();
-    var url = '/api/herdr/transcript?path=' + encodeURIComponent(path) + (incremental && t.version ? '&since=' + encodeURIComponent(t.version) : '');
+    var url = '/api/herdr/transcript?path=' + encodeURIComponent(paneOf(key)) + (child ? '&child=' + encodeURIComponent(child) : '') +
+      (incremental && t.version ? '&since=' + encodeURIComponent(t.version) : '');
     t.inflight = true;
     fetch(url).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (body) { return { res: res, body: body || {} }; });
@@ -141,7 +162,7 @@
       t.seen = seqs;
       // on screen, new lines wait for "Show them"; anywhere else (or right as
       // you open the pane) they just land
-      if (!first && grew && S.current === path && !t.settleNext) t.newer = true; else settle(t);
+      if (!first && grew && txKey() === path && !t.settleNext) t.newer = true; else settle(t);
       t.settleNext = false;
       finishLoad(path);
     }, function (err) {
@@ -153,7 +174,7 @@
   function finishLoad(path) {
     var t = S.tx[path];
     if (t && t.again) { t.again = false; loadTranscript(path, t.status === 'ok'); return; }
-    if (S.current === path && !S.confirming) { patchStrip(); renderTop(); renderMain(); }
+    if (S.current && txKey() === path && !S.confirming) { patchStrip(); renderTop(); renderMain(); }
     else patchStrip();
   }
 
@@ -162,6 +183,8 @@
     S.current = path;
     if (path && S.pass && S.pass.ids.indexOf(path) >= 0) S.resume = path;
     if (path) ensureTranscript(path);
+    var it = path && S.byPath[path];
+    if (it && it.children && it.children.count) kids.load(path);
   }
   function cancelConfirm() {
     if (S.confirmTimer) clearTimeout(S.confirmTimer);
@@ -173,8 +196,27 @@
     cancelConfirm();
     if (opts && opts.back) S.previous = null;
     else if (S.current && S.current !== path) S.previous = S.current;
+    S.child = null;
     setCurrent(path);
     renderAll();
+  }
+  // one of the current pane's sub-agents, and back to the pane
+  function openChild(id) {
+    if (!S.current || S.confirming || !id) return;
+    S.child = id;
+    if (!kids.get(S.current)) kids.load(S.current);
+    ensureTranscript(txKey());
+    renderAll();
+    main.scrollTop = 0;
+  }
+  function leadView() {
+    if (!S.child) return;
+    S.child = null;
+    ensureTranscript(S.current);
+    renderAll();
+  }
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(function () { toast('Copied.', 'success'); }, function (err) { toast('Copy failed: ' + err.message, 'error'); });
   }
   function goBack() { if (S.previous) open(S.previous, { back: true }); }
   function step(d) {
@@ -311,14 +353,20 @@
   // tab opens it. sessionStorage keeps the pass, Back, and how far down the
   // pane you had scrolled, for this tab only.
   var WHERE = STORE + 'where', rememberTimer = null;
-  function hashPath() {
+  // the hash is "<pane>" or "<pane>~<sub-agent id>" (#local/wSJ:pR~tm:reader-a)
+  function hashParts() {
     var h;
-    try { h = decodeURI(location.hash.slice(1)); } catch (_) { return ''; }
+    try { h = decodeURI(location.hash.slice(1)); } catch (_) { return ['', '']; }
+    var i = h.indexOf('~');
+    return i < 0 ? [h, ''] : [h.slice(0, i), h.slice(i + 1)];
+  }
+  function hashPath() {
+    var h = hashParts()[0];
     return !h ? '' : S.byPath[h + '.md'] ? h + '.md' : h;
   }
   function remember() {
     var here = S.confirming ? S.confirming.from : S.current;
-    var url = location.pathname + location.search + (here ? '#' + encodeURI(here.replace(/\.md$/, '')) : '');
+    var url = location.pathname + location.search + (here ? '#' + encodeURI(here.replace(/\.md$/, '') + (S.child && !S.confirming ? '~' + S.child : '')) : '');
     if (url !== location.pathname + location.search + location.hash) history.replaceState(null, '', url);
     try {
       sessionStorage.setItem(WHERE, JSON.stringify({ current: here, previous: S.previous, resume: S.resume, pass: S.pass,
@@ -336,6 +384,11 @@
     var cur = S.byPath[want] ? want : saved && S.byPath[saved.current] ? saved.current : PM.firstToOpen(S.pass);
     if (want && !S.byPath[want]) toast(want + ' is not in the sweep any more.');
     setCurrent(cur);
+    if (cur === want && hashParts()[1]) {
+      S.child = hashParts()[1];
+      if (!kids.get(cur)) kids.load(cur);
+      ensureTranscript(txKey());
+    }
     S.restore = saved && saved.scroll && saved.scroll.path === cur && saved.scroll.top > 0 ? saved.scroll : null;
   }
   // the scroll you had, once the pane is drawn in full (its transcript read)
@@ -351,7 +404,12 @@
     if (!rememberTimer) rememberTimer = setTimeout(function () { rememberTimer = null; remember(); }, 250);
   });
   window.addEventListener('pagehide', function () { remember(); });
-  window.addEventListener('hashchange', function () { var p = hashPath(); if (p && p !== S.current && S.byPath[p]) open(p); });
+  window.addEventListener('hashchange', function () {
+    var p = hashPath(), c = hashParts()[1];
+    if (!p || !S.byPath[p] || (p === S.current && c === (S.child || ''))) return;
+    open(p);
+    if (c) openChild(c);
+  });
 
   // ---------- finding a pane: / (or ⌘K, or Find), then type ----------
   var finding = { results: [], sel: 0 };
@@ -400,8 +458,14 @@
       var dc = 'hp-dot hp-' + p.state + ' hp-adot', mk = PM.agentMark(p.item.agent);
       if (b.firstChild.className !== dc) b.firstChild.className = dc;
       if (b.firstChild.textContent !== mk) b.firstChild.firstChild.textContent = mk;
+      var bd = KC.badge(p.item.children), kb = b.querySelector('.hp-kidn');
+      if (kb) {
+        kb.hidden = !bd;
+        if (bd && kb.textContent !== bd.text) kb.textContent = bd.text;
+        if (bd) kb.className = 'hp-kidn' + (bd.warn ? ' hp-kidn-warn' : '');
+      }
       var tip = (p.watched ? '★ ' : '') + p.name + ' · ' + (p.item.agent || 'no agent') + ' · ' + p.item.machine + ' ' + p.item.pane_id + ' · ' + PM.STATE_LABEL[p.state] +
-        (p.came ? ' · came back, see New' : '') + (path === here ? ' · you are here' : '');
+        (p.came ? ' · came back, see New' : '') + (bd ? ' · ' + bd.tip : '') + (path === here ? ' · you are here' : '');
       b.setAttribute('data-tip', tip);
       b.setAttribute('aria-label', p.item.machine + ': ' + tip);
       if (path === here) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
@@ -432,7 +496,7 @@
     return { status: 'ok', model: t.shown, kind: t.kind, bytes: t.bytes, sent: Math.max(0, (t.bytes || 0) - (t.dropped || 0)), fetchedAt: t.fetchedAt, ms: t.ms, newer: t.newer };
   }
   function renderMain() {
-    var view = S.confirming ? 'confirm:' + S.confirming.from : (S.current || 'done');
+    var view = S.confirming ? 'confirm:' + S.confirming.from : (S.current ? txKey() : 'done');
     var same = main.getAttribute('data-view') === view;
     var ta = $('replyText'), active = document.activeElement;
     var taFocus = same && ta && active === ta, sel = ta ? [ta.selectionStart, ta.selectionEnd] : [0, 0];
@@ -447,11 +511,16 @@
     } else if (!S.current || !S.byPath[S.current]) {
       var info = PM.passInfo(S.pass), need = S.order.filter(function (p) { return PM.needsAttention(S.states[p]); }).length;
       html = PV.doneHTML(S.previous ? pane(S.previous) : null, info, need, info.arrivals.map(nameButton).join(', '));
+    } else if (S.child) {
+      var lead = pane(S.current), ch = kids.child(S.current, S.child), list = kids.get(S.current), key = txKey();
+      html = ch ? KC.childHTML({ lead: lead, child: ch, tx: txView(key), stream: ctl.stream, draft: draft(key), open: TC.openCount(storeKey(key)) })
+        : list && list.list ? KC.missingHTML(lead, S.child) : PV.messageHTML('Reading the sub-agents of ' + lead.name + '…', 'It takes a moment.', false);
     } else {
       var p = pane(S.current);
       html = PV.paneHTML(p, {
         prev: S.previous && S.previous !== S.current ? pane(S.previous) : null, open: TC.openCount(storeKey(S.current)), draft: draft(S.current),
         tx: p.hasTx ? txView(S.current) : null, stream: ctl.stream, docState: S.docs[S.current],
+        kids: p.item.children && p.item.children.count ? KC.sectionHTML(kids.get(S.current) || { status: 'loading' }, p.name) : '',
       });
     }
     ctl.keepFrames(function () { main.innerHTML = html; }); // live preview frames survive the redraw
@@ -476,20 +545,24 @@
     S.order = PM.stripOrder(S.order, S.snap.machines, S.snap.items);
     S.states = {}; S.order.forEach(function (p) { S.states[p] = PM.stateOf(S.byPath[p]); });
     if (!S.pass) S.pass = PM.startPass(S.order, S.states); else PM.noteStates(S.pass, prevStates, S.states);
-    Object.keys(S.tx).forEach(function (p) { if (!S.byPath[p]) delete S.tx[p]; });
+    Object.keys(S.tx).forEach(function (p) { if (!S.byPath[paneOf(p)]) delete S.tx[p]; });
     buildStrip();
     patchStrip();
     renderTop();
     if (S.current && !S.byPath[S.current]) {
       if (!S.closed[S.current]) toast(nameOf(S.current) + ' left herdr.');
       var nx = PM.queue(S.pass, S.current, S.resume).filter(function (q) { return S.byPath[q]; })[0] || null;
-      S.current = null;
+      S.current = null; S.child = null;
       setCurrent(nx);
       if (!S.confirming) renderMain();
       return;
     }
     var cur = S.current && S.byPath[S.current], t = S.current && S.tx[S.current];
     if (cur && t && t.status === 'ok' && seqsMoved(t, cur)) loadTranscript(S.current, true);
+    // the pane's sub-agents and the open one: read again on every sweep
+    if (cur && ((cur.children && cur.children.count) || S.child)) kids.load(S.current);
+    var tc = S.child && S.tx[txKey()];
+    if (tc && tc.status === 'ok') loadTranscript(txKey(), true);
     // panes you sent to: keep their transcript current, so came-back can read it
     S.order.forEach(function (q) {
       var tq = S.tx[q], iq = S.byPath[q];
@@ -545,6 +618,10 @@
     if (!t || !main.contains(t)) return;
     if (t.id === 'backLink') goBack();
     else if (t.hasAttribute('data-go')) open(t.getAttribute('data-go'));
+    else if (t.hasAttribute('data-child')) openChild(t.getAttribute('data-child'));
+    else if (t.hasAttribute('data-lead')) leadView();
+    else if (t.hasAttribute('data-copy')) copyText(t.getAttribute('data-copy'));
+    else if (t.id === 'kidsRetry' && S.current) kids.load(S.current);
     else if (t.hasAttribute('data-focus')) focusPane();
     else if (t.id === 'finishReview') openFinish();
     else if (t.id === 'markRead') markRead();
@@ -560,7 +637,7 @@
     else if (t.id === 'showNewer' && S.current && S.tx[S.current]) { settle(S.tx[S.current]); renderMain(); }
     else if (t.id === 'toReply') { var r = $('replyText'); if (r) { r.scrollIntoView({ block: 'center' }); r.focus({ preventScroll: true }); } }
   });
-  main.addEventListener('input', function (e) { if (e.target.id === 'replyText' && S.current) setDraft(S.current, e.target.value); });
+  main.addEventListener('input', function (e) { if (e.target.id === 'replyText' && S.current) setDraft(txKey(), e.target.value); });
   main.addEventListener('keydown', function (e) {
     if (e.target.id === 'replyText' && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); openFinish(); }
   });

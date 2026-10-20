@@ -259,12 +259,14 @@ func tildePath(p string) string {
 	return p
 }
 
-// readLocal reads the transcript of a pane on this Mac. The join runs on every
-// read: one herdr call and a few small file reads.
-func readLocal(ctx context.Context, run runner, m machine, it Item, prev *transcriptEntry) (transcriptRead, error) {
+// claudeJoin finds a Claude pane's session on this Mac: the pane's claude
+// process, its sessions/<pid>.json, then the session's transcript. path is ""
+// when the session has written none yet. The transcript read and the pane's
+// sub-agents (children.go) both start here.
+func claudeJoin(ctx context.Context, run runner, m machine, it Item) (j joined, path string, err error) {
 	pids, err := panePIDs(ctx, run, m, it.PaneID, isClaude)
 	if err != nil {
-		return transcriptRead{}, err
+		return joined{}, "", err
 	}
 	dirs := claudeConfigDirs()
 	j, ok := locateLocal(dirs, pids)
@@ -272,12 +274,21 @@ func readLocal(ctx context.Context, run runner, m machine, it Item, prev *transc
 		j = fallbackJoin(m, it, pids)
 	}
 	if j.session == "" {
-		return transcriptRead{}, &noTranscript{j.reason}
+		return j, "", &noTranscript{j.reason}
 	}
 	if j.dir != "" {
 		dirs = []string{j.dir}
 	}
-	p := findLocalTranscript(dirs, j.cwd, j.session)
+	return j, findLocalTranscript(dirs, j.cwd, j.session), nil
+}
+
+// readLocal reads the transcript of a pane on this Mac. The join runs on every
+// read: one herdr call and a few small file reads.
+func readLocal(ctx context.Context, run runner, m machine, it Item, prev *transcriptEntry) (transcriptRead, error) {
+	j, p, err := claudeJoin(ctx, run, m, it)
+	if err != nil {
+		return transcriptRead{}, err
+	}
 	if p == "" {
 		return transcriptRead{}, missingTranscript(m, j, prev)
 	}

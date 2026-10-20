@@ -190,6 +190,7 @@ func NewServer(session *Session, frontendFS embed.FS, shareURL string, proxyAuth
 	mux.HandleFunc("/api/herdr/send", s.withReady(s.handleHerdrSend))
 	mux.HandleFunc("/api/herdr/keys", s.withReady(s.handleHerdrKeys))
 	mux.HandleFunc("/api/herdr/transcript", s.withReady(s.handleHerdrTranscript))
+	mux.HandleFunc("/api/herdr/children", s.withReady(s.handleHerdrChildren))
 	mux.HandleFunc("/api/herdr/image", s.withReady(s.handleHerdrImage))
 	mux.HandleFunc("/api/herdr/file", s.withReady(s.handleHerdrFile))
 	mux.HandleFunc("/api/herdr/rename", s.withReady(s.handleHerdrRename))

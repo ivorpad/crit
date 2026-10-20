@@ -67,6 +67,9 @@ type Item struct {
 
 	// ResumeCommand is the line an exited agent left on screen (claude --resume <id>).
 	ResumeCommand string `json:"resume_command,omitempty"`
+	// Children counts the agent's sub-agents and teammates by state, for a local
+	// Claude or Codex pane that has any (children.go).
+	Children *ChildSummary `json:"children,omitempty"`
 
 	// Notes says what this item is missing and why: a gateway without a reader for
 	// this agent, a read the gateway refused, an ANSI read it does not support yet.

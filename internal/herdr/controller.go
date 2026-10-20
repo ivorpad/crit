@@ -54,6 +54,13 @@ type Controller struct {
 	kick   chan struct{} // a send asks Run for a sweep now
 	// ending is the panes an exit or close is running on (close.go).
 	ending map[string]bool
+	// childTx is each read sub-agent transcript, by "<item id>#<child id>"
+	// (children.go). In memory only.
+	childTx map[string]*transcriptEntry
+	// teamFiles maps a team to its teammates' transcripts, found once by a scan
+	// of their project dirs (children.go).
+	kidsMu    sync.Mutex
+	teamFiles map[string]map[string]string
 
 	// transcripts is each read pane's Claude transcript, by item id
 	// (transcript.go). In memory only.
@@ -85,6 +92,9 @@ func NewController(o Options) *Controller {
 		keyGap:   keyGap,
 		kick:     make(chan struct{}, 1),
 		ending:   map[string]bool{},
+		childTx:  map[string]*transcriptEntry{},
+
+		teamFiles: map[string]map[string]string{},
 
 		transcripts: map[string]*transcriptState{},
 		reuse:       transcriptReuse,
@@ -132,6 +142,7 @@ func (c *Controller) Sweep(ctx context.Context) ([]session.SyntheticFile, error)
 		return nil, err
 	}
 	snap.Items = orderItems(snap)
+	c.summarizeChildren(ctx, snap.Items)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	old := c.snap

@@ -37,7 +37,7 @@
         (g.paths.length ? '<span class="hp-mdots">' + g.paths.map(function (p) {
           var it = (byPath && byPath[p]) || {};
           return '<button type="button" class="hp-fdot" data-path="' + esc(p) + '">' + dotHTML('read', it.agent) +
-            '<span class="hp-pid">' + esc(it.pane_id || '') + '</span><span class="hp-cb" aria-hidden="true">↩</span></button>';
+            '<span class="hp-pid">' + esc(it.pane_id || '') + '</span><span class="hp-cb" aria-hidden="true">↩</span><span class="hp-kidn" aria-hidden="true" hidden></span></button>';
         }).join('') + '</span>' : '<span class="hp-none" title="' + esc(n ? n.text : 'no agent panes') + '">' + esc(n && n.state === 'paused' ? 'paused' : n && n.state !== 'reachable' ? n.state : 'none') + '</span>') + '</div>';
     }).join('') +
       '<span class="hp-legend" aria-hidden="true"><span><i class="hp-dot hp-asks"></i>asks you</span><span><i class="hp-dot hp-unread"></i>new answer</span>' +
@@ -153,11 +153,12 @@
       (p.hasTx ? ' Send now on one comment sends only that comment and keeps you here.' : '') + '</p>' +
       (p.sent ? '<p class="hp-sentcopy">Last sent ' + F.dayTime(p.sent.at) + ': <span>' + esc(p.sent.text.length > 160 ? p.sent.text.slice(0, 159) + '…' : p.sent.text) + '</span></p>' : '') + '</section>';
   }
-  // o: { prev, open, draft, tx (entry or null), stream (fn), docState }
+  // o: { prev, open, draft, tx (entry or null), stream (fn), docState, kids (its sub-agents' HTML) }
   function paneHTML(p, o) {
     var h = '<div class="hp-col' + (p.hasTx ? ' hp-wide' : '') + '">' + backHTML(o.prev) +
       '<h1 class="hp-pname">' + esc(p.name) + (p.watched ? ' <span class="hp-pin" title="Watching">★</span>' : '') + '</h1>' + metaHTML(p, o.open);
     if (p.why) h += '<p class="hp-why">' + esc(p.why) + '</p>';
+    h += o.kids || '';
     h += extrasHTML(p.item);
     if (p.hasTx) {
       h += txHTML(p, o.tx, o.stream);
@@ -201,7 +202,7 @@
 
   var api = {
     strip: strip, findHTML: findHTML, nameButton: nameButton, paneHTML: paneHTML, confirmHTML: confirmHTML, doneHTML: doneHTML, messageHTML: messageHTML,
-    endHTML: endHTML, endDoneHTML: endDoneHTML, resumeHTML: resumeHTML,
+    endHTML: endHTML, endDoneHTML: endDoneHTML, resumeHTML: resumeHTML, txHTML: txHTML,
   };
   if (typeof window !== 'undefined') {
     window.crit = window.crit || {};
