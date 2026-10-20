@@ -116,12 +116,17 @@ func (f *fakeGateway) run(_ context.Context, stdin []byte, argv []string) ([]byt
 		if rest[0] == "--machine" {
 			label, rest = rest[1], rest[2:]
 		}
-		key := map[string]string{"agent": "agents", "pane": "panes"}[rest[0]]
-		list := f.herdr[label][rest[0]]
-		if list == "" {
-			list = "[]"
+		list := func(kind string) string {
+			if l := f.herdr[label][kind]; l != "" {
+				return l
+			}
+			return "[]"
 		}
-		return []byte(`{"id":"cli","result":{"` + key + `":` + list + `}}`), nil
+		if rest[0] == "api" {
+			return []byte(`{"id":"cli","result":{"snapshot":{"agents":` + list("agent") + `,"panes":` + list("pane") + `}}}`), nil
+		}
+		key := map[string]string{"agent": "agents", "pane": "panes"}[rest[0]]
+		return []byte(`{"id":"cli","result":{"` + key + `":` + list(rest[0]) + `}}`), nil
 	}
 	host := ""
 	if argv[0] == "ssh" {

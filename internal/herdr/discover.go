@@ -53,9 +53,65 @@ func herdrArgv(m machine, args ...string) ([]string, error) {
 	return append([]string{"herdr", "--machine", m.Label}, args...), nil
 }
 
+// herdrRead runs a read-only herdr API command on the machine and returns the
+// result object of its answer.
+func herdrRead(ctx context.Context, run runner, m machine, args ...string) (map[string]json.RawMessage, error) {
+	what := strings.Join(args, " ")
+	argv, err := herdrArgv(m, args...)
+	if err != nil {
+		return nil, err
+	}
+	out, err := run(ctx, nil, argv)
+	if err != nil {
+		return nil, err
+	}
+	var body struct {
+		Result map[string]json.RawMessage `json:"result"`
+		Error  *struct {
+			Code, Message string
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(out, &body); err != nil {
+		return nil, fmt.Errorf("parsing herdr %s: %w", what, err)
+	}
+	if body.Error != nil {
+		return nil, fmt.Errorf("herdr %s: %s: %s", what, body.Error.Code, body.Error.Message)
+	}
+	return body.Result, nil
+}
+
+// refusedByHerdr tells a request herdr's server answered with an error (herdr
+// prints {"error":{"code":…}} and exits 1) from a call that never reached it,
+// which fails in plain text.
+func refusedByHerdr(err error) bool {
+	return strings.Contains(err.Error(), `{"error":{"code":`)
+}
+
 // discover lists the machine's agents (with seqs) and its panes (including those
-// whose agent is gone) straight from herdr.
+// whose agent is gone) straight from herdr, in one `herdr api snapshot`, which
+// holds both lists. Every herdr --machine call is two SSH sessions, and DSM on
+// the NAS logs each session as a login. A herdr that refuses the snapshot is
+// asked for the two lists.
 func discover(ctx context.Context, run runner, m machine) (agents, panes []herdrAgent, err error) {
+	res, err := herdrRead(ctx, run, m, "api", "snapshot")
+	if err != nil {
+		if refusedByHerdr(err) {
+			return discoverLists(ctx, run, m)
+		}
+		return nil, nil, err
+	}
+	var s struct {
+		Agents []herdrAgent `json:"agents"`
+		Panes  []herdrAgent `json:"panes"`
+	}
+	if err := json.Unmarshal(res["snapshot"], &s); err != nil {
+		return nil, nil, fmt.Errorf("parsing herdr api snapshot: %w", err)
+	}
+	return s.Agents, s.Panes, nil
+}
+
+// discoverLists is discover through `herdr agent list` and `herdr pane list`.
+func discoverLists(ctx context.Context, run runner, m machine) (agents, panes []herdrAgent, err error) {
 	type res struct {
 		list []herdrAgent
 		err  error
@@ -63,36 +119,14 @@ func discover(ctx context.Context, run runner, m machine) (agents, panes []herdr
 	get := func(kind, key string) <-chan res {
 		ch := make(chan res, 1)
 		go func() {
-			argv, err := herdrArgv(m, kind, "list")
-			if err != nil {
-				ch <- res{err: err}
-				return
-			}
-			out, err := run(ctx, nil, argv)
-			if err != nil {
-				ch <- res{err: err}
-				return
-			}
-			var body struct {
-				Result map[string]json.RawMessage `json:"result"`
-				Error  *struct {
-					Code, Message string
-				} `json:"error"`
-			}
-			if err := json.Unmarshal(out, &body); err != nil {
-				ch <- res{err: fmt.Errorf("parsing herdr %s list: %w", kind, err)}
-				return
-			}
-			if body.Error != nil {
-				ch <- res{err: fmt.Errorf("herdr %s list: %s: %s", kind, body.Error.Code, body.Error.Message)}
-				return
-			}
+			result, err := herdrRead(ctx, run, m, kind, "list")
 			var list []herdrAgent
-			if err := json.Unmarshal(body.Result[key], &list); err != nil {
-				ch <- res{err: fmt.Errorf("parsing herdr %s list: %w", kind, err)}
-				return
+			if err == nil {
+				if err = json.Unmarshal(result[key], &list); err != nil {
+					err = fmt.Errorf("parsing herdr %s list: %w", kind, err)
+				}
 			}
-			ch <- res{list: list}
+			ch <- res{list: list, err: err}
 		}()
 		return ch
 	}

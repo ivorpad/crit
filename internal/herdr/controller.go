@@ -77,7 +77,7 @@ func NewController(o Options) *Controller {
 		opts: o,
 		col: collectOptions{
 			endpoints: endpointsPath(), overrides: o.Overrides, callTimeout: o.CallTimeout,
-			run: execRunner, now: time.Now,
+			run: execRunner, gateways: newGatewaySessions(), now: time.Now,
 		},
 		read:     map[string]string{},
 		baseline: map[string]string{},
@@ -163,6 +163,7 @@ func (c *Controller) Run(ctx context.Context, sess *session.Session) {
 	c.mu.Lock()
 	c.sess = sess
 	c.mu.Unlock()
+	defer c.col.gateways.close()
 	c.publish(sess)
 	for {
 		select {

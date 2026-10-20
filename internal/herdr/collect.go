@@ -50,7 +50,10 @@ type collectOptions struct {
 	wake        bool
 	callTimeout time.Duration
 	run         runner
-	now         func() time.Time
+	// gateways keeps each remote machine's gateway running between sweeps
+	// (gateway_session.go); nil starts one for every call, as --print does.
+	gateways *gatewaySessions
+	now      func() time.Time
 }
 
 // collect polls every machine in parallel. A machine that fails never fails the
@@ -101,6 +104,10 @@ func collectMachine(ctx context.Context, o collectOptions, m machine, boxes map[
 		st.MS = time.Since(start).Milliseconds()
 		return st
 	}
+	gw := o.run // for the gateway calls
+	if o.gateways != nil && m.Target != "" {
+		gw = o.gateways.runner(m.Target, o.run)
+	}
 	if m.Box != "" {
 		b := boxes[m.Box]
 		st.BoxState = b.State
@@ -108,7 +115,7 @@ func collectMachine(ctx context.Context, o collectOptions, m machine, boxes map[
 			if !o.wake {
 				return done("paused", nil), nil
 			}
-			reachable, _, err := wakeBox(ctx, o.run, m)
+			reachable, _, err := wakeBox(ctx, gw, m)
 			if err != nil {
 				return done("error", fmt.Errorf("waking %s: %w", m.Box, err)), nil
 			}
@@ -133,7 +140,7 @@ func collectMachine(ctx context.Context, o collectOptions, m machine, boxes map[
 		defer wg.Done()
 		hAgents, hPanes, discErr = discover(callCtx, o.run, m)
 	}()
-	cs, gwErr := snapshotOf(callCtx, o.run, m)
+	cs, gwErr := snapshotOf(callCtx, gw, m)
 	wg.Wait()
 	if discErr != nil && gwErr != nil {
 		return done("unreachable", fmt.Errorf("herdr: %w; gateway: %w", discErr, gwErr)), nil
@@ -147,7 +154,7 @@ func collectMachine(ctx context.Context, o collectOptions, m machine, boxes map[
 
 	items, candidates := merge(m, cs, hAgents, hPanes, gwErr)
 	if gwErr == nil {
-		readMore(callCtx, o.run, m, &items, candidates, &st)
+		readMore(callCtx, gw, m, &items, candidates, &st)
 	} else {
 		st.UninspectedPanes = len(candidates)
 	}
